@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   const handleChange = (e) => {
@@ -11,7 +12,11 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Login Attempt:", formData);
-    // Backend integration will go here later
+    
+    // --- DEMO LOGIN LOGIC ---
+    // In a real app, you would check the database here.
+    // For now, we force the user to go to the dashboard.
+    navigate('/dashboard'); 
   };
 
   return (

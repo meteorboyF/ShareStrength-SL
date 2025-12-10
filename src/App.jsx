@@ -8,6 +8,7 @@ import UserDashboard from './pages/UserDashboard';
 import PaymentHistory from './pages/PaymentHistory';
 import PaymentInsights from './pages/PaymentInsights';
 import Resources from './pages/Resources';
+import Marketplace from './pages/Marketplace'; // <--- Import this
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/payment" element={<PaymentHistory />} />
         <Route path="/payment-insights" element={<PaymentInsights />} />
         <Route path="/resources" element={<Resources />} />
+        <Route path="/marketplace" element={<Marketplace />} />
       </Routes>
     </Router>
   );

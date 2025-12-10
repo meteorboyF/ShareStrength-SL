@@ -43,7 +43,7 @@ const UserDashboard = () => {
       
       {/* --- Header --- */}
       <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
                 <img src={USER_DATA.profile_photo} alt="Profile" className="h-12 w-12 rounded-full border-2 border-primary object-cover" />
                 <div>
@@ -52,6 +52,11 @@ const UserDashboard = () => {
                 </div>
             </div>
             <div className="flex items-center gap-4">
+                {/* Marketplace Link */}
+                <Link to="/marketplace" className="hidden sm:inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 border border-slate-200 transition">
+                    Marketplace
+                </Link>
+
                 <button className="relative p-2 text-neutral-dark hover:text-primary transition">
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     {USER_DATA.cart_count > 0 && <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">{USER_DATA.cart_count}</span>}
@@ -73,9 +78,10 @@ const UserDashboard = () => {
                     <h2 className="text-xl font-bold">Explore the Marketplace</h2>
                     <p className="text-purple-200 text-sm mt-1">Find assistive devices and tools.</p>
                 </div>
-                <button className="mt-4 sm:mt-0 bg-white text-primary font-bold px-6 py-2 rounded-lg shadow hover:bg-neutral-100 transition z-10">
+                {/* Banner Link */}
+                <Link to="/marketplace" className="mt-4 sm:mt-0 bg-white text-primary font-bold px-6 py-2 rounded-lg shadow hover:bg-neutral-100 transition z-10">
                     Browse Products &rarr;
-                </button>
+                </Link>
                 <button onClick={() => setShowBanner(false)} className="absolute top-2 right-2 text-white/50 hover:text-white">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -166,31 +172,32 @@ const UserDashboard = () => {
                     </ul>
                 </section>
 
-{/* Quick Access */}
-<section className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-    <h2 className="text-lg font-bold text-neutral-darkest mb-4">Quick Access</h2>
-    <div className="grid grid-cols-2 gap-3">
-        {/* Placeholder Button */}
-        <button className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center text-neutral-dark">
-            My Profile
-        </button>
+                {/* Quick Access */}
+                <section className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+                    <h2 className="text-lg font-bold text-neutral-darkest mb-4">Quick Access</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        
+                        {/* 1. My Profile (Placeholder) */}
+                        <button className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center text-neutral-dark">
+                            My Profile
+                        </button>
 
-        {/* LINK TO PAYMENT HISTORY */}
-        <Link to="/payment" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
-            Payment History
-        </Link>
+                        {/* 2. Payment History (Link) */}
+                        <Link to="/payment" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
+                            Payment History
+                        </Link>
 
-        {/* Placeholder Button */}
-<Link to="/resources" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
-    Resources
-</Link>
+                        {/* 3. Resources (Link) */}
+                        <Link to="/resources" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
+                            Resources
+                        </Link>
 
-        {/* Placeholder Button */}
-        <button className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center text-neutral-dark">
-            Find Help
-        </button>
-    </div>
-</section>
+                        {/* 4. Find Help (Link to Marketplace for now, or placeholder) */}
+                         <Link to="/marketplace" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
+                            Find Help
+                        </Link>
+                    </div>
+                </section>
             </aside>
         </div>
       </div>

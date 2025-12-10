@@ -181,9 +181,9 @@ const UserDashboard = () => {
         </Link>
 
         {/* Placeholder Button */}
-        <button className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center text-neutral-dark">
-            Resources
-        </button>
+<Link to="/resources" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
+    Resources
+</Link>
 
         {/* Placeholder Button */}
         <button className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center text-neutral-dark">

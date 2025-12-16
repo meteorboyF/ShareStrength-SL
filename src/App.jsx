@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './context/CartContext'; // <--- Import Provider
+
 // Import all your pages
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -17,6 +18,7 @@ import ProductDetails from './pages/ProductDetails'; // <--- New
 import Cart from './pages/Cart'; // <--- New
 import Checkout from './pages/Checkout'; // <--- New
 import ProfileView from './pages/ProfileView'; // <--- Import this
+import TaskStatus from './pages/TaskStatus'; // <--- Import this
 function App() {
   return (
     <CartProvider>
@@ -41,6 +43,7 @@ function App() {
         <Route path="/register-helpmate" element={<RegisterHelpMate />} />
         <Route path="/register-user" element={<RegisterUser />} />
         <Route path="/profile/:type/:id" element={<ProfileView />} />
+        <Route path="/task-status" element={<TaskStatus />} />
         
       </Routes>
     </Router>

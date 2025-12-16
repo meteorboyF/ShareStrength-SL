@@ -16,7 +16,7 @@ import RegisterHelpMate from './pages/RegisterHelpMate';   // Updated filename
 import ProductDetails from './pages/ProductDetails'; // <--- New
 import Cart from './pages/Cart'; // <--- New
 import Checkout from './pages/Checkout'; // <--- New
-
+import ProfileView from './pages/ProfileView'; // <--- Import this
 function App() {
   return (
     <CartProvider>
@@ -40,6 +40,7 @@ function App() {
         <Route path="/helpmate-dashboard" element={<HelpMateDashboard />} />
         <Route path="/register-helpmate" element={<RegisterHelpMate />} />
         <Route path="/register-user" element={<RegisterUser />} />
+        <Route path="/profile/:type/:id" element={<ProfileView />} />
         
       </Routes>
     </Router>

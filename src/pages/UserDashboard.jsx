@@ -135,7 +135,10 @@ const UserDashboard = () => {
                                                 <div className="flex items-center gap-3">
                                                     <img src={app.photo} alt={app.name} className="w-10 h-10 rounded-full" />
                                                     <div>
-                                                        <p className="font-bold text-sm">{app.name}</p>
+                                                        {/* --- UPDATED LINK TO PROFILE --- */}
+                                                        <Link to={`/profile/helpmate/${app.id}`} className="font-bold text-sm hover:text-primary hover:underline">
+                                                            {app.name}
+                                                        </Link>
                                                         <p className="text-xs text-yellow-500">★ {app.rating}</p>
                                                     </div>
                                                 </div>

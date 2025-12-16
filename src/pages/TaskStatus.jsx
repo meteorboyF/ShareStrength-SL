@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 // --- MOCK DATA ---
@@ -35,7 +35,15 @@ const MY_APPLICATIONS = [
   }
 ];
 
+// Mock contacts to show when revealed
+const MOCK_CONTACTS = [
+    { name: "Martha (Daughter)", phone: "+1 (555) 012-3456" },
+    { name: "Dr. Stevens", phone: "+1 (555) 098-7654" }
+];
+
 const TaskStatus = () => {
+  // Track which task's emergency contacts are being viewed
+  const [viewingContactsId, setViewingContactsId] = useState(null);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -56,7 +64,7 @@ const TaskStatus = () => {
                 <h1 className="text-3xl font-extrabold text-neutral-darkest">My Applications</h1>
                 <p className="text-neutral-medium mt-1">Track the status of your job applications.</p>
             </div>
-            <Link to="/helpmate-dashboard" className="text-sm font-bold text-primary hover:underline">
+            <Link to="/helpmate-dashboard" className="text-sm font-bold text-green-600 hover:underline">
                 &larr; Back to Dashboard
             </Link>
         </div>
@@ -66,13 +74,13 @@ const TaskStatus = () => {
             {MY_APPLICATIONS.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-xl shadow-sm">
                     <p className="text-neutral-medium">You haven't applied to any tasks yet.</p>
-                    <Link to="/helpmate-dashboard" className="mt-4 inline-block text-primary font-bold">Browse Jobs</Link>
+                    <Link to="/helpmate-dashboard" className="mt-4 inline-block text-green-600 font-bold">Browse Jobs</Link>
                 </div>
             ) : (
                 MY_APPLICATIONS.map((task) => (
                     <div key={task.id} className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200 flex flex-col md:flex-row gap-6 hover:shadow-md transition">
                         
-                        {/* Status Column (Mobile: Top, Desktop: Left Border) */}
+                        {/* Status Column */}
                         <div className={`md:w-2 rounded-full ${getStatusColor(task.status).split(' ')[0].replace('bg-', 'bg-')}`}></div>
 
                         {/* Main Content */}
@@ -84,7 +92,7 @@ const TaskStatus = () => {
                                 </span>
                             </div>
                             
-                            <p className="text-sm text-primary font-semibold mb-3">Posted by {task.user_name}</p>
+                            <p className="text-sm text-green-700 font-semibold mb-3">Posted by {task.user_name}</p>
                             <p className="text-neutral-medium text-sm leading-relaxed mb-4">{task.description}</p>
                             
                             <div className="flex flex-wrap gap-4 text-sm text-neutral-500">
@@ -101,14 +109,42 @@ const TaskStatus = () => {
                                     Applied on {task.date}
                                 </div>
                             </div>
+
+                            {/* CONDITIONAL: CONTACTS DISPLAY */}
+                            {viewingContactsId === task.id && (
+                                <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4 animate-fade-in-up">
+                                    <h4 className="font-bold text-red-800 text-sm mb-2 flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                                        Emergency Trusted Contacts for {task.user_name}
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {MOCK_CONTACTS.map((contact, idx) => (
+                                            <div key={idx} className="bg-white p-3 rounded-lg border border-red-100 shadow-sm flex justify-between items-center">
+                                                <span className="font-semibold text-neutral-700">{contact.name}</span>
+                                                <a href={`tel:${contact.phone}`} className="text-blue-600 font-bold text-sm hover:underline">{contact.phone}</a>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Action Column */}
-                        <div className="flex md:flex-col justify-end gap-2 md:w-32">
+                        <div className="flex md:flex-col justify-end gap-2 md:w-44">
                             {task.status === 'accepted' && (
-                                <button className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition text-sm">
-                                    Start Job
-                                </button>
+                                <>
+                                    <button className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition text-sm shadow-sm">
+                                        Start Job
+                                    </button>
+                                    
+                                    {/* TOGGLE CONTACTS BUTTON */}
+                                    <button 
+                                        onClick={() => setViewingContactsId(viewingContactsId === task.id ? null : task.id)}
+                                        className="w-full bg-red-50 text-red-600 border border-red-200 font-bold py-2 px-4 rounded-lg hover:bg-red-100 transition text-sm flex items-center justify-center gap-1"
+                                    >
+                                        {viewingContactsId === task.id ? 'Hide Info' : 'Emergency Info'}
+                                    </button>
+                                </>
                             )}
                             <button className="w-full border border-neutral-300 text-neutral-dark font-semibold py-2 px-4 rounded-lg hover:bg-neutral-50 transition text-sm">
                                 View Details

@@ -20,6 +20,7 @@ import Checkout from './pages/Checkout'; // <--- New
 import ProfileView from './pages/ProfileView'; // <--- Import this
 import TaskStatus from './pages/TaskStatus'; // <--- Import this
 import ServicePayment from './pages/ServicePayment'; // <--- Import this
+import TrustedContacts from './pages/TrustedContacts'; // <--- Import this
 function App() {
   return (
     <CartProvider>
@@ -46,6 +47,7 @@ function App() {
         <Route path="/profile/:type/:id" element={<ProfileView />} />
         <Route path="/task-status" element={<TaskStatus />} />
         <Route path="/service-payment" element={<ServicePayment />} />
+        <Route path="/trusted-contacts" element={<TrustedContacts />} />
       </Routes>
     </Router>
     </CartProvider>

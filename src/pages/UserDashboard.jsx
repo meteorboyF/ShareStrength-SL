@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Chatbot from '../components/Chatbot';
-import { useCart } from '../context/CartContext'; // <--- Import Cart Context
+import { useCart } from '../context/CartContext'; // <--- Context for Cart Badge
 
 // --- MOCK DATA ---
 const USER_DATA = {
   name: "Alex Johnson",
   profile_photo: "https://placehold.co/100x100", 
-  // cart_count removed, we use context now
 };
 
 const IN_PROGRESS_TASKS = [
@@ -57,7 +56,7 @@ const UserDashboard = () => {
                     Marketplace
                 </Link>
 
-                {/* --- CART ICON LINK (FIXED) --- */}
+                {/* Cart Link with Badge */}
                 <Link to="/cart" className="relative p-2 text-neutral-dark hover:text-primary transition">
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     {cartCount > 0 && (
@@ -94,6 +93,7 @@ const UserDashboard = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* --- Main Column --- */}
             <main className="lg:col-span-2 space-y-8">
                 
                 {/* 1. In Progress Tasks */}
@@ -155,6 +155,7 @@ const UserDashboard = () => {
                 </section>
             </main>
 
+            {/* --- Sidebar --- */}
             <aside className="space-y-8">
                 
                 {/* Pending Payments */}
@@ -185,6 +186,11 @@ const UserDashboard = () => {
                 <section className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm animate-fade-in-up" style={{ animationDelay: '300ms' }}>
                     <h2 className="text-lg font-bold text-neutral-darkest mb-4">Quick Access</h2>
                     <div className="grid grid-cols-2 gap-3">
+                        {/* Trusted Contacts Link */}
+                        <Link to="/trusted-contacts" className="col-span-2 p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
+                            Manage Trusted Contacts
+                        </Link>
+
                         <button className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center text-neutral-dark">
                             My Profile
                         </button>

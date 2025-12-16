@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
+import { CartProvider } from './context/CartContext'; // <--- Import Provider
 // Import all your pages
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -13,9 +13,13 @@ import PostTask from './pages/PostTask'; // <--- Import this
 import HelpMateDashboard from './pages/HelpMateDashboard'; // <--- Import this
 import RegisterUser from './pages/RegisterUser';
 import RegisterHelpMate from './pages/RegisterHelpMate';   // Updated filename
+import ProductDetails from './pages/ProductDetails'; // <--- New
+import Cart from './pages/Cart'; // <--- New
+import Checkout from './pages/Checkout'; // <--- New
 
 function App() {
   return (
+    <CartProvider>
     <Router>
       <Routes>
         {/* Public Routes */}
@@ -28,6 +32,9 @@ function App() {
         <Route path="/payment-insights" element={<PaymentInsights />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/marketplace/product/:id" element={<ProductDetails />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/post-task" element={<PostTask />} />
         <Route path="/helper-dashboard" element={<HelpMateDashboard />} />
         <Route path="/helpmate-dashboard" element={<HelpMateDashboard />} />
@@ -36,6 +43,7 @@ function App() {
         
       </Routes>
     </Router>
+    </CartProvider>
   );
 }
 

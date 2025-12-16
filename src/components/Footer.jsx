@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { Link } from 'react-router-dom'; // <--- ADD THIS LINE
 const Footer = () => {
   return (
     <footer className="bg-neutral-darkest text-white border-t border-neutral-dark">
@@ -24,7 +24,7 @@ const Footer = () => {
                     <div className="flex flex-col gap-3">
                         <a href="#" className="text-neutral-300 hover:text-primary-light transition-colors text-sm">How it Works</a>
                         <a href="#" className="text-neutral-300 hover:text-primary-light transition-colors text-sm">Find Help</a>
-                        <a href="/register" className="text-neutral-300 hover:text-primary-light transition-colors text-sm">Become a HelpMate</a>
+                        <Link to="/register-helpmate" className="text-neutral-300 hover:text-primary-light transition-colors text-sm">Become a HelpMate</Link>
                     </div>
                 </div>
 

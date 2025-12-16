@@ -12,21 +12,21 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Login Attempt:", formData);
-    
+
     // --- DEMO LOGIN LOGIC ---
     // In a real app, you would check the database here.
     // For now, we force the user to go to the dashboard.
-    navigate('/dashboard'); 
+    navigate('/dashboard');
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-neutral-light font-sans">
       <div className="w-full max-w-5xl flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
-        
+
         {/* Left Side: Image and Quote */}
         <div className="w-full md:w-1/2 bg-primary text-white p-12 hidden md:flex flex-col items-center justify-center text-center relative">
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-20" 
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-20"
             style={{ backgroundImage: "url('/img/indexbg.jpg')" }}
           ></div>
           <div className="relative z-10">
@@ -53,12 +53,12 @@ const Login = () => {
               <div>
                 <label htmlFor="email" className="block text-sm font-medium leading-6 text-neutral-dark">Email address</label>
                 <div className="mt-2">
-                  <input 
-                    id="email" 
-                    name="email" 
-                    type="email" 
-                    autoComplete="email" 
-                    required 
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
                     value={formData.email}
                     onChange={handleChange}
                     className="block w-full rounded-lg border-0 p-3 text-neutral-dark shadow-sm ring-1 ring-inset ring-neutral-medium/30 placeholder:text-neutral-medium focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 bg-neutral-light/50"
@@ -74,12 +74,12 @@ const Login = () => {
                   </div>
                 </div>
                 <div className="mt-2">
-                  <input 
-                    id="password" 
-                    name="password" 
-                    type="password" 
-                    autoComplete="current-password" 
-                    required 
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
                     value={formData.password}
                     onChange={handleChange}
                     className="block w-full rounded-lg border-0 p-3 text-neutral-dark shadow-sm ring-1 ring-inset ring-neutral-medium/30 placeholder:text-neutral-medium focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 bg-neutral-light/50"
@@ -88,8 +88,8 @@ const Login = () => {
               </div>
 
               <div>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="flex w-full justify-center rounded-lg bg-primary px-3 py-3 text-base font-semibold leading-6 text-white shadow-lg hover:bg-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-transform hover:-translate-y-0.5"
                 >
                   Sign in
@@ -99,11 +99,15 @@ const Login = () => {
 
             <p className="mt-10 text-center text-sm text-neutral-medium">
               Not a member?{' '}
-              <a href="/register" className="font-semibold leading-6 text-primary hover:text-primary-dark">Register for a new account</a>
+              <Link to="/register-user" className="font-semibold leading-6 text-primary hover:text-primary-dark">
+                Register as a User
+              </Link>
             </p>
             <p className="mt-2 text-center text-sm text-neutral-medium">
               Want to become a HelpMate?{' '}
-              <a href="/register-helper" className="font-semibold leading-6 text-primary hover:text-primary-dark">Join as a Helper</a>
+              <Link to="/register-helpmate" className="font-semibold leading-6 text-secondary hover:text-green-700">
+                Register as a HelpMate
+              </Link>
             </p>
           </div>
         </div>

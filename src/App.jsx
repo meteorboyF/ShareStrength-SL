@@ -10,6 +10,9 @@ import PaymentInsights from './pages/PaymentInsights';
 import Resources from './pages/Resources';
 import Marketplace from './pages/MarketPlace'; // <--- Import this
 import PostTask from './pages/PostTask'; // <--- Import this
+import HelpMateDashboard from './pages/HelpMateDashboard'; // <--- Import this
+import RegisterUser from './pages/RegisterUser';
+import RegisterHelpMate from './pages/RegisterHelpMate';   // Updated filename
 
 function App() {
   return (
@@ -26,6 +29,11 @@ function App() {
         <Route path="/resources" element={<Resources />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/post-task" element={<PostTask />} />
+        <Route path="/helper-dashboard" element={<HelpMateDashboard />} />
+        <Route path="/helpmate-dashboard" element={<HelpMateDashboard />} />
+        <Route path="/register-helpmate" element={<RegisterHelpMate />} />
+        <Route path="/register-user" element={<RegisterUser />} />
+        
       </Routes>
     </Router>
   );

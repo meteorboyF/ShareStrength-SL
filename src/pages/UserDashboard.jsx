@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Chatbot from '../components/Chatbot';
+import { useCart } from '../context/CartContext'; // <--- Import Cart Context
 
-// --- MOCK DATA (Simulating your Database) ---
+// --- MOCK DATA ---
 const USER_DATA = {
   name: "Alex Johnson",
-  profile_photo: "https://placehold.co/100x100", // Placeholder image
-  cart_count: 2
+  profile_photo: "https://placehold.co/100x100", 
+  // cart_count removed, we use context now
 };
 
 const IN_PROGRESS_TASKS = [
-  { id: 101, title: "Math Tutoring", helpmate: "Sarah Smith", start_time: Date.now() - 3600000 } // Started 1 hour ago
+  { id: 101, title: "Math Tutoring", helpmate: "Sarah Smith", start_time: Date.now() - 3600000 }
 ];
 
 const TASKS_WITH_APPLICANTS = [
@@ -30,10 +31,10 @@ const PENDING_PAYMENTS = [
 ];
 
 const UserDashboard = () => {
+  const { cartCount } = useCart(); // <--- Get real count
   const [openApplicantTask, setOpenApplicantTask] = useState(null);
   const [showBanner, setShowBanner] = useState(true);
 
-  // Toggle Accordion for Applicants
   const toggleApplicants = (taskId) => {
     setOpenApplicantTask(openApplicantTask === taskId ? null : taskId);
   };
@@ -52,15 +53,20 @@ const UserDashboard = () => {
                 </div>
             </div>
             <div className="flex items-center gap-4">
-                {/* Marketplace Link */}
                 <Link to="/marketplace" className="hidden sm:inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 border border-slate-200 transition">
                     Marketplace
                 </Link>
 
-                <button className="relative p-2 text-neutral-dark hover:text-primary transition">
+                {/* --- CART ICON LINK (FIXED) --- */}
+                <Link to="/cart" className="relative p-2 text-neutral-dark hover:text-primary transition">
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                    {USER_DATA.cart_count > 0 && <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">{USER_DATA.cart_count}</span>}
-                </button>
+                    {cartCount > 0 && (
+                        <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
+                            {cartCount}
+                        </span>
+                    )}
+                </Link>
+
                 <Link to="/post-task" className="hidden sm:inline-flex bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary-dark transition">
                     + Post New Task
                 </Link>
@@ -78,7 +84,6 @@ const UserDashboard = () => {
                     <h2 className="text-xl font-bold">Explore the Marketplace</h2>
                     <p className="text-purple-200 text-sm mt-1">Find assistive devices and tools.</p>
                 </div>
-                {/* Banner Link */}
                 <Link to="/marketplace" className="mt-4 sm:mt-0 bg-white text-primary font-bold px-6 py-2 rounded-lg shadow hover:bg-neutral-100 transition z-10">
                     Browse Products &rarr;
                 </Link>
@@ -89,7 +94,6 @@ const UserDashboard = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* --- Main Column --- */}
             <main className="lg:col-span-2 space-y-8">
                 
                 {/* 1. In Progress Tasks */}
@@ -127,7 +131,6 @@ const UserDashboard = () => {
                                     <svg className={`w-5 h-5 text-neutral-400 transform transition-transform ${openApplicantTask === task.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                                 </div>
                                 
-                                {/* Accordion Body */}
                                 {openApplicantTask === task.id && (
                                     <div className="border-t border-neutral-100 bg-neutral-50 p-4 space-y-3">
                                         {task.applicants.map(app => (
@@ -135,7 +138,6 @@ const UserDashboard = () => {
                                                 <div className="flex items-center gap-3">
                                                     <img src={app.photo} alt={app.name} className="w-10 h-10 rounded-full" />
                                                     <div>
-                                                        {/* --- UPDATED LINK TO PROFILE --- */}
                                                         <Link to={`/profile/helpmate/${app.id}`} className="font-bold text-sm hover:text-primary hover:underline">
                                                             {app.name}
                                                         </Link>
@@ -153,7 +155,6 @@ const UserDashboard = () => {
                 </section>
             </main>
 
-            {/* --- Sidebar --- */}
             <aside className="space-y-8">
                 
                 {/* Pending Payments */}
@@ -169,7 +170,12 @@ const UserDashboard = () => {
                                     </div>
                                     <span className="font-bold text-neutral-darkest">${pay.amount}</span>
                                 </div>
-                                <button className="w-full bg-green-50 text-green-700 text-xs font-bold py-2 rounded-lg hover:bg-green-100 transition">Confirm & Pay</button>
+                                <Link 
+                                    to="/service-payment" 
+                                    className="block w-full text-center bg-green-50 text-green-700 text-xs font-bold py-2 rounded-lg hover:bg-green-100 transition"
+                                >
+                                    Confirm & Pay
+                                </Link>
                             </li>
                         ))}
                     </ul>
@@ -179,23 +185,15 @@ const UserDashboard = () => {
                 <section className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm animate-fade-in-up" style={{ animationDelay: '300ms' }}>
                     <h2 className="text-lg font-bold text-neutral-darkest mb-4">Quick Access</h2>
                     <div className="grid grid-cols-2 gap-3">
-                        
-                        {/* 1. My Profile (Placeholder) */}
                         <button className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center text-neutral-dark">
                             My Profile
                         </button>
-
-                        {/* 2. Payment History (Link) */}
                         <Link to="/payment" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
                             Payment History
                         </Link>
-
-                        {/* 3. Resources (Link) */}
                         <Link to="/resources" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
                             Resources
                         </Link>
-
-                        {/* 4. Find Help (Link to Marketplace for now, or placeholder) */}
                          <Link to="/marketplace" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
                             Find Help
                         </Link>
@@ -205,9 +203,7 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      {/* Chatbot Widget Overlay */}
       <Chatbot />
-
     </div>
   );
 };

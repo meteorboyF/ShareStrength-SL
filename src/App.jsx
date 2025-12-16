@@ -19,6 +19,7 @@ import Cart from './pages/Cart'; // <--- New
 import Checkout from './pages/Checkout'; // <--- New
 import ProfileView from './pages/ProfileView'; // <--- Import this
 import TaskStatus from './pages/TaskStatus'; // <--- Import this
+import ServicePayment from './pages/ServicePayment'; // <--- Import this
 function App() {
   return (
     <CartProvider>
@@ -44,7 +45,7 @@ function App() {
         <Route path="/register-user" element={<RegisterUser />} />
         <Route path="/profile/:type/:id" element={<ProfileView />} />
         <Route path="/task-status" element={<TaskStatus />} />
-        
+        <Route path="/service-payment" element={<ServicePayment />} />
       </Routes>
     </Router>
     </CartProvider>

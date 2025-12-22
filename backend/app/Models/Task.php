@@ -2,37 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory; // Added this
 use Illuminate\Database\Eloquent\Model;
 
 class Task extends Model
 {
-    use HasFactory;
+    use HasFactory; // Added this
 
+    // Tell Laravel which table to look at
     protected $table = 'tasks';
+
+    // Tell Laravel the name of your ID column
     protected $primaryKey = 'task_id';
 
-    public $timestamps = true;
-
-    protected $fillable = [
-        'title',
-        'description',
-        'skill_required',
-        'hourly_rate',
-        'urgency',
-        'user_id',
-        'status',
-    ];
-
-    // Relationships
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
-    }
-
-    public function applications()
-    {
-        return $this->hasMany(Application::class, 'task_id', 'task_id');
-    }
+    // Tell Laravel which columns are okay to fill with data
+    protected $fillable = ['title', 'description', 'skill_required', 'hourly_rate', 'urgency', 'status'];
 }

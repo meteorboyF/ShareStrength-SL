@@ -17,11 +17,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'password_hash',
-        'phone_number',
-        'address',
-        'user_type',
-        'profile_photo',
+        'password_hash', // We use this instead of 'password'
+        'user_type',     // This is required in your table
     ];
 
     protected $hidden = [
@@ -33,6 +30,7 @@ class User extends Authenticatable
     {
         return $this->password_hash;
     }
+    public $timestamps = true;
 
     protected function casts(): array
     {

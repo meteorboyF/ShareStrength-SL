@@ -13,6 +13,7 @@ class Helper extends Authenticatable
     protected $table = 'helpers';
     protected $primaryKey = 'helper_id';
 
+    // We only need this line once!
     public $timestamps = true;
 
     protected $fillable = [
@@ -31,20 +32,15 @@ class Helper extends Authenticatable
         'password_hash',
     ];
 
+    /**
+     * Tell Laravel to use 'password_hash' instead of 'password'
+     */
     public function getAuthPassword()
     {
         return $this->password_hash;
     }
 
-    protected function casts(): array
-    {
-        return [
-            'password_hash' => 'hashed',
-        ];
-    }
-
     // Relationships
-
     public function applications()
     {
         return $this->hasMany(Application::class, 'helper_id', 'helper_id');

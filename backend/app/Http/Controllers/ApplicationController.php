@@ -44,4 +44,18 @@ class ApplicationController extends Controller
 
         return response()->json($application, 201);
     }
+
+    // Get applications received for tasks created by the current user
+    public function received(Request $request)
+    {
+        $userId = Auth::id();
+        // Get applications where the related task was created by the current user
+        $applications = Application::whereHas('task', function ($query) use ($userId) {
+            $query->where('created_by', $userId);
+        })
+            ->with(['task', 'helper']) // Load task and helper info
+            ->get();
+
+        return response()->json($applications);
+    }
 }

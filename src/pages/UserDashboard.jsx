@@ -14,22 +14,54 @@ const UserDashboard = () => {
     const [showBanner, setShowBanner] = useState(true);
     const [tasks, setTasks] = useState([]);
     const [user, setUser] = useState({ name: 'User', profile_photo: 'https://placehold.co/100x100' });
+    const [tasksWithApplicants, setTasksWithApplicants] = useState([]);
 
     useEffect(() => {
         const currentUser = authService.getCurrentUser();
         if (currentUser) {
             setUser(currentUser);
             fetchTasks();
+            fetchApplications();
         }
     }, []);
 
     const fetchTasks = async () => {
         try {
-            const response = await api.get('/tasks');
-            // Backend returns pagination object { data: [...], ... }
+            const response = await api.get('/my-tasks');
             setTasks(response.data.data || response.data);
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const fetchApplications = async () => {
+        try {
+            const res = await api.get('/applications/received');
+            // Group by Task
+            const grouped = {};
+            res.data.forEach(app => {
+                const tId = app.task_id;
+                if (!grouped[tId]) {
+                    grouped[tId] = {
+                        id: tId,
+                        title: app.task?.title || 'Unknown Task',
+                        applicant_count: 0,
+                        applicants: []
+                    };
+                }
+                grouped[tId].applicants.push({
+                    id: app.helper?.id,
+                    application_id: app.id,
+                    name: app.helper?.name || 'Helper',
+                    photo: app.helper?.profile_photo_url || 'https://placehold.co/150',
+                    rating: 'New', // mock unless helper has rating
+                    status: app.status
+                });
+                grouped[tId].applicant_count++;
+            });
+            setTasksWithApplicants(Object.values(grouped));
+        } catch (err) {
+            console.error("Failed to fetch applications", err);
         }
     };
 
@@ -121,39 +153,47 @@ const UserDashboard = () => {
                         <section className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                             <h2 className="text-lg font-bold text-neutral-darkest mb-4">Review Applicants</h2>
                             <div className="space-y-4">
-                                {TASKS_WITH_APPLICANTS.map(task => (
-                                    <div key={task.id} className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
-                                        <div
-                                            onClick={() => toggleApplicants(task.id)}
-                                            className="p-5 flex justify-between items-center cursor-pointer hover:bg-neutral-50 transition"
-                                        >
-                                            <div>
-                                                <h3 className="font-bold text-neutral-darkest">{task.title}</h3>
-                                                <p className="text-sm text-primary">{task.applicant_count} HelpMate(s) applied</p>
+                                {tasksWithApplicants.length === 0 ? (
+                                    <p className="text-gray-500 text-sm">No new applicants to review.</p>
+                                ) : (
+                                    tasksWithApplicants.map(task => (
+                                        <div key={task.id} className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
+                                            <div
+                                                onClick={() => toggleApplicants(task.id)}
+                                                className="p-5 flex justify-between items-center cursor-pointer hover:bg-neutral-50 transition"
+                                            >
+                                                <div>
+                                                    <h3 className="font-bold text-neutral-darkest">{task.title}</h3>
+                                                    <p className="text-sm text-primary">{task.applicant_count} HelpMate(s) applied</p>
+                                                </div>
+                                                <svg className={`w-5 h-5 text-neutral-400 transform transition-transform ${openApplicantTask === task.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                                             </div>
-                                            <svg className={`w-5 h-5 text-neutral-400 transform transition-transform ${openApplicantTask === task.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                                        </div>
 
-                                        {openApplicantTask === task.id && (
-                                            <div className="border-t border-neutral-100 bg-neutral-50 p-4 space-y-3">
-                                                {task.applicants.map(app => (
-                                                    <div key={app.id} className="flex justify-between items-center bg-white p-3 rounded-lg border border-neutral-100">
-                                                        <div className="flex items-center gap-3">
-                                                            <img src={app.photo} alt={app.name} className="w-10 h-10 rounded-full" />
-                                                            <div>
-                                                                <Link to={`/profile/helpmate/${app.id}`} className="font-bold text-sm hover:text-primary hover:underline">
-                                                                    {app.name}
-                                                                </Link>
-                                                                <p className="text-xs text-yellow-500">★ {app.rating}</p>
+                                            {openApplicantTask === task.id && (
+                                                <div className="border-t border-neutral-100 bg-neutral-50 p-4 space-y-3">
+                                                    {task.applicants.map(app => (
+                                                        <div key={app.id} className="flex justify-between items-center bg-white p-3 rounded-lg border border-neutral-100">
+                                                            <div className="flex items-center gap-3">
+                                                                <img src={app.photo} alt={app.name} className="w-10 h-10 rounded-full" />
+                                                                <div>
+                                                                    <Link to={`/profile/helpmate/${app.id}`} className="font-bold text-sm hover:text-primary hover:underline">
+                                                                        {app.name}
+                                                                    </Link>
+                                                                    <p className="text-xs text-yellow-500">{app.rating === 'New' ? 'New' : `★ ${app.rating}`}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-2 items-center">
+                                                                <span className="text-xs font-bold uppercase text-gray-400">{app.status}</span>
+                                                                {app.status === 'pending' && (
+                                                                    <button className="bg-secondary text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-green-600 transition">Hire</button>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <button className="bg-secondary text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-green-600 transition">Hire</button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )))}
                             </div>
                         </section>
                     </main>

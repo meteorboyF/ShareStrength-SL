@@ -22,6 +22,12 @@ class TaskController extends Controller
         return response()->json($query->with(['creator', 'caregiver'])->latest()->get());
     }
 
+    // Get tasks created by the authenticated user
+    public function myTasks()
+    {
+        return response()->json(Task::where('created_by', Auth::id())->with(['creator', 'caregiver'])->latest()->get());
+    }
+
     // Create task
     public function store(Request $request)
     {

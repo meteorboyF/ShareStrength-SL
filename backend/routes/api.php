@@ -26,12 +26,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
 
         // Feature Routes
+        Route::get('my-tasks', [TaskController::class, 'myTasks']);
         Route::apiResource('tasks', TaskController::class);
         Route::apiResource('trusted-contacts', TrustedContactController::class)->only(['index', 'store']);
         Route::apiResource('messages', MessageController::class)->except(['update']);
         Route::apiResource('communities', CommunityController::class);
         Route::apiResource('resources', \App\Http\Controllers\ResourceController::class);
         Route::apiResource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store']);
+        Route::get('/applications/received', [\App\Http\Controllers\ApplicationController::class, 'received']);
         Route::apiResource('applications', \App\Http\Controllers\ApplicationController::class)->only(['index', 'store']);
 
         // Matching

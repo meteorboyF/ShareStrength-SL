@@ -46,14 +46,49 @@ class ApplicationController extends Controller
     }
 
     // Get applications received for tasks created by the current user
+    // Update application status (e.g. Accept/Reject)
+    public function update(Request $request, $id)
+    {
+        $application = Application::findOrFail($id);
+
+        // Authorization check: User must own the task
+        if ($application->task->created_by != Auth::id()) {
+            return response()->json([
+                'message' => 'Unauthorized. Task Creator ID: ' . $application->task->created_by . ' vs Your ID: ' . Auth::id()
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:accepted,rejected,pending',
+        ]);
+
+        $application->update(['status' => $validated['status']]);
+
+        // If accepted, we might want to update the task status too
+        if ($validated['status'] === 'accepted') {
+            $task = $application->task;
+            $task->status = 'accepted'; // Changed from 'assigned' to match Enum and frontend logic
+            $task->caregiver_id = $application->helper_id;
+            $task->save();
+
+
+            // Optional: Reject other pending applications for this task?
+        }
+
+        return response()->json($application);
+    }
+
     public function received(Request $request)
     {
         $userId = Auth::id();
-        // Get applications where the related task was created by the current user
-        $applications = Application::whereHas('task', function ($query) use ($userId) {
-            $query->where('created_by', $userId);
-        })
-            ->with(['task', 'helper']) // Load task and helper info
+
+        // 1. Get all task IDs created by this user
+        $taskIds = Task::where('created_by', $userId)->pluck('id');
+
+        // 2. Get applications for these tasks
+        $applications = Application::whereIn('task_id', $taskIds)
+            ->with(['task', 'helper'])
+            ->latest('id') // useful to see newest first
             ->get();
 
         return response()->json($applications);

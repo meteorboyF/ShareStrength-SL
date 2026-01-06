@@ -10,7 +10,7 @@ class Application extends Model
     use HasFactory;
 
     protected $table = 'applications';
-    protected $primaryKey = 'application_id';
+    protected $primaryKey = 'id';
 
     public $timestamps = false;
 

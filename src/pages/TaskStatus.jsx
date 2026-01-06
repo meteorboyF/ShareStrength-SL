@@ -2,6 +2,48 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 
+// Real-time timer component
+const TaskTimer = ({ startedAt, hourlyRate }) => {
+    const [elapsed, setElapsed] = React.useState(0);
+
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            const start = new Date(startedAt);
+            const now = new Date();
+            const diff = Math.floor((now - start) / 1000); // seconds
+            setElapsed(diff);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [startedAt]);
+
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+
+    const totalMinutes = elapsed / 60;
+    const billingHours = Math.max(0.5, Math.ceil(totalMinutes / 30) * 0.5);
+    const estimatedEarnings = (billingHours * (hourlyRate || 15)).toFixed(2);
+
+    return (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 my-3">
+            <div className="flex justify-between items-center">
+                <div>
+                    <p className="text-xs font-bold text-blue-600 uppercase mb-1">⏱️ Time Elapsed</p>
+                    <p className="text-2xl font-mono font-bold text-blue-900">
+                        {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-xs font-bold text-green-600 uppercase mb-1">Estimated Earnings</p>
+                    <p className="text-2xl font-bold text-green-700">${estimatedEarnings}</p>
+                    <p className="text-xs text-slate-500">({billingHours} hrs × ${hourlyRate}/hr)</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const TaskStatus = () => {
     const [applications, setApplications] = useState([]);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -15,6 +57,8 @@ const TaskStatus = () => {
             const res = await api.get('/applications');
             const mapped = res.data.map(app => ({
                 id: app.id,
+                task_id: app.task_id,
+                task_status: app.task?.status, // Get the actual task status
                 title: app.task?.title || 'Unknown Task',
                 user_name: app.task?.creator?.name || 'Unknown User',
                 description: app.task?.description || 'No description',
@@ -22,11 +66,34 @@ const TaskStatus = () => {
                 skill: app.task?.required_skills?.[0] || 'General',
                 rate: `$${app.task?.budget || 0} /hr`,
                 status: app.status,
+                started_at: app.task?.started_at,
+                completed_at: app.task?.completed_at,
                 date: app.created_at ? new Date(app.created_at).toLocaleDateString() : 'Recently'
             }));
             setApplications(mapped);
         } catch (err) {
             console.error("Failed to fetch applications", err);
+        }
+    };
+
+    const handleTaskAction = async (taskId, action) => {
+        try {
+            const response = await api.put(`/tasks/${taskId}/${action}`);
+
+            // Show success message with details
+            if (action === 'complete' && response.data.payment) {
+                const { amount, hours_worked, hourly_rate } = response.data.payment;
+                alert(`Task completed successfully!\n\nPayment Details:\nHours Worked: ${hours_worked}\nHourly Rate: $${hourlyRate}\nTotal Amount: $${amount}\nStatus: Pending`);
+            } else {
+                alert(response.data.message || `Task ${action === 'start' ? 'started' : 'completed'} successfully!`);
+            }
+
+            fetchApplications(); // Refresh to show new status
+            setSelectedTask(null); // Close modal
+        } catch (err) {
+            console.error(`Failed to ${action} task`, err);
+            const errorMsg = err.response?.data?.message || err.message || 'Unknown error';
+            alert(`Failed to ${action} task.\n\n${errorMsg}`);
         }
     };
 
@@ -126,25 +193,77 @@ const TaskStatus = () => {
                                     <span className="text-xs font-bold text-slate-500 uppercase">Location</span>
                                     <p className="text-slate-800">{selectedTask.location}</p>
                                 </div>
-                                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 mt-2">
-                                    <span className="font-bold text-green-700">{selectedTask.rate}</span>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded full uppercase ${getStatusColor(selectedTask.status)}`}>{selectedTask.status}</span>
+                                <span className="text-xs font-bold text-slate-500 uppercase">Status</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase ${getStatusColor(selectedTask.status)}`}>{selectedTask.status}</span>
+                                    {selectedTask.task_status && (
+                                        <span className="text-xs text-slate-600">Task: {selectedTask.task_status}</span>
+                                    )}
                                 </div>
                             </div>
-                            <div className="mt-6 flex justify-end">
+
+                            {/* Show timestamps if available */}
+                            {selectedTask.started_at && (
+                                <div>
+                                    <span className="text-xs font-bold text-slate-500 uppercase">Started At</span>
+                                    <p className="text-slate-800 text-sm">{new Date(selectedTask.started_at).toLocaleString()}</p>
+                                </div>
+                            )}
+                            {selectedTask.completed_at && (
+                                <div>
+                                    <span className="text-xs font-bold text-slate-500 uppercase">Completed At</span>
+                                    <p className="text-slate-800 text-sm">{new Date(selectedTask.completed_at).toLocaleString()}</p>
+                                </div>
+                            )}
+
+                            {/* Real-time Timer for In-Progress Tasks */}
+                            {selectedTask.task_status === 'in_progress' && selectedTask.started_at && (
+                                <TaskTimer
+                                    startedAt={selectedTask.started_at}
+                                    hourlyRate={parseFloat(selectedTask.rate.replace(/[^0-9.]/g, '')) || 15}
+                                />
+                            )}
+
+                            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 mt-2">
+                                <span className="font-bold text-green-700">{selectedTask.rate}</span>
+                                {selectedTask.task_status === 'completed' && (
+                                    <span className="text-xs font-bold text-blue-600">Payment Pending</span>
+                                )}
+                            </div>
+                            <div className="mt-6 flex justify-end gap-3">
                                 <button
                                     onClick={() => setSelectedTask(null)}
                                     className="px-4 py-2 bg-slate-200 text-slate-800 font-bold rounded-lg hover:bg-slate-300 transition"
                                 >
                                     Close
                                 </button>
+
+                                {/* Start Task Button - Show when application accepted AND task status is 'accepted' */}
+                                {selectedTask.status === 'accepted' && selectedTask.task_status === 'accepted' && (
+                                    <button
+                                        onClick={() => handleTaskAction(selectedTask.task_id, 'start')}
+                                        className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition"
+                                    >
+                                        🚀 Start Task
+                                    </button>
+                                )}
+
+                                {/* Complete Task Button - Show when task status is 'in_progress' */}
+                                {selectedTask.task_status === 'in_progress' && (
+                                    <button
+                                        onClick={() => handleTaskAction(selectedTask.task_id, 'complete')}
+                                        className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+                                    >
+                                        ✅ Complete Task
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
                 )}
 
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -16,21 +16,124 @@ const HelpMateDashboard = () => {
     const [selectedTask, setSelectedTask] = useState(null);
 
     useEffect(() => {
-        const currentUser = authService.getCurrentUser();
-        if (currentUser) {
-            setUser({ ...currentUser, skills: currentUser.skills ? currentUser.skills.split(', ') : [] });
-            fetchTasks();
-        }
+        const fetchCurrentUser = async () => {
+            try {
+                // Fetch fresh user data from backend to ensure correct user is displayed
+                const response = await api.get('/me');
+                const currentUser = response.data;
+                setUser({ ...currentUser, skills: currentUser.skills ? currentUser.skills.split(', ') : [] });
+
+                // Update localStorage with fresh data
+                localStorage.setItem('user', JSON.stringify(currentUser));
+
+                loadDashboardData();
+            } catch (error) {
+                console.error('Failed to fetch current user:', error);
+                // Fallback to localStorage if API call fails
+                const cachedUser = authService.getCurrentUser();
+                if (cachedUser) {
+                    setUser({ ...cachedUser, skills: cachedUser.skills ? cachedUser.skills.split(', ') : [] });
+                    loadDashboardData();
+                }
+            }
+        };
+
+        fetchCurrentUser();
+
+        // Listen for storage changes from other tabs
+        const handleStorageChange = (e) => {
+            // If token changed in another tab, reload to get correct user
+            if (e.key === 'token' && e.oldValue !== e.newValue) {
+                console.log('Token changed in another tab, reloading...');
+                window.location.reload();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
-    const fetchTasks = async () => {
+    const loadDashboardData = async () => {
         try {
-            const response = await api.get('/tasks');
-            // Filter for open tasks (simplified for demo)
-            setAvailableTasks(response.data.filter(t => t.status !== 'completed'));
+            // Fetch everything in parallel
+            const [tasksRes, appsRes] = await Promise.all([
+                api.get('/tasks'),
+                api.get('/applications')
+            ]);
+
+            const allTasks = tasksRes.data;
+            const myApps = appsRes.data;
+
+            // 1. Set Applied Jobs
+            // Map backend application to UI format
+            const formattedApps = myApps.map(app => ({
+                id: app.id,
+                task_id: app.task_id,
+                title: app.task?.title || 'Unknown Task',
+                user_name: app.task?.creator?.name || 'Unknown User', // Assuming task.creator is loaded
+                status: app.status
+            }));
+            setAppliedJobs(formattedApps);
+
+            // 2. Filter Available Tasks
+            const appliedTaskIds = new Set(myApps.map(app => app.task_id));
+            const currentUserId = authService.getCurrentUser()?.id;
+
+            const filteredTasks = allTasks.filter(t =>
+                t.status === 'open' && // ONLY show open tasks in available
+                !appliedTaskIds.has(t.id) &&
+                t.created_by !== currentUserId
+            );
+            setAvailableTasks(filteredTasks);
+
+            // 3. Set Active Jobs (Assigned to me)
+            // Filter all tasks -> status is assigned/in_progress AND caregiver_id is me
+            // Since backend "my-tasks" only returns created_by me, we assume '/tasks' returns ALL tasks or we need a new way.
+            // Actually /tasks (TaskController@index) returns ALL tasks. So we can filter here.
+            // Ideally backend should provide /my-jobs-as-helper, but for now filtering is fine.
+            const myActiveJobs = allTasks.filter(t =>
+                (t.status === 'assigned' || t.status === 'in_progress') &&
+                t.caregiver_id === currentUserId
+            );
+
+            // Map to UI format
+            setActiveJobs(myActiveJobs.map(t => ({
+                id: t.id,
+                title: t.title,
+                user_name: t.creator?.name || 'User',
+                start_time: t.started_at ? new Date(t.started_at).getTime() : null,
+                status: t.status
+            })));
+
         } catch (error) {
-            console.error("Error fetching tasks:", error);
+            console.error("Error loading dashboard data:", error);
         }
+    };
+
+    const handleStartTask = async (taskId) => {
+        try {
+            await api.put(`/tasks/${taskId}/start`);
+            alert("Task Started!");
+            loadDashboardData();
+        } catch (e) {
+            console.error(e);
+            alert("Failed to start task");
+        }
+    };
+
+    const handleEndTask = async (taskId) => {
+        try {
+            await api.put(`/tasks/${taskId}/complete`);
+            alert("Task Completed! Payment calculated.");
+            loadDashboardData();
+        } catch (e) {
+            console.error(e);
+            alert("Failed to complete task");
+        }
+    };
+
+    const fetchTasks = async () => {
+        // Deprecated
     };
 
     // --- Live Timer Component ---
@@ -38,14 +141,26 @@ const HelpMateDashboard = () => {
         const [elapsed, setElapsed] = useState("00:00:00");
 
         useEffect(() => {
+            // Validate startTime
+            if (!startTime || typeof startTime !== 'number' || startTime <= 0) {
+                setElapsed("00:00:00");
+                return;
+            }
+
             const interval = setInterval(() => {
                 const now = Date.now();
                 const diff = now - startTime;
-                if (diff < 0) return;
 
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                // If diff is negative, show 00:00:00
+                if (diff < 0) {
+                    setElapsed("00:00:00");
+                    return;
+                }
+
+                const totalSeconds = Math.floor(diff / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
 
                 setElapsed(
                     `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
@@ -69,13 +184,13 @@ const HelpMateDashboard = () => {
         try {
             await api.post('/applications', { task_id: selectedTask.id });
 
-            // Remove from available
+            // Remove from available immediately for responsiveness
             setAvailableTasks(availableTasks.filter(t => t.id !== selectedTask.id));
 
-            // Add to applied (UI update)
-            setAppliedJobs([{ id: Date.now(), title: selectedTask.title, user_name: selectedTask.user_name }, ...appliedJobs]);
-
             alert("Application submitted!");
+
+            // Reload to ensure sync
+            loadDashboardData();
         } catch (err) {
             alert("Failed to apply: " + (err.response?.data?.message || err.message));
         }
@@ -168,9 +283,9 @@ const HelpMateDashboard = () => {
                                     <li className="text-xs text-slate-400">No active applications.</li>
                                 ) : (
                                     appliedJobs.map(job => (
-                                        <li key={job.id} className="text-sm p-2 bg-slate-50 rounded-md border border-slate-100 flex justify-between items-center">
-                                            <span className="font-medium text-slate-700">{job.title}</span>
-                                            <span className="text-xs text-slate-500">{job.user_name}</span>
+                                        <li key={job.id} className="text-sm p-2 bg-slate-50 rounded-md border border-slate-100">
+                                            <div className="font-medium text-slate-700">{job.title}</div>
+                                            <div className="text-xs text-slate-500">Posted by {job.user_name}</div>
                                         </li>
                                     ))
                                 )}
@@ -224,13 +339,31 @@ const HelpMateDashboard = () => {
                                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                                                     <div>
                                                         <p className="font-bold text-blue-800">{job.title}</p>
-                                                        <p className="text-xs text-blue-600">for {job.user_name}</p>
+                                                        <p className="text-xs text-blue-600">for {job.user_name} ({job.status})</p>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <div className="bg-white px-3 py-1 rounded border border-blue-100 shadow-sm">
-                                                            <Timer startTime={job.start_time} />
-                                                        </div>
-                                                        <button className="text-xs font-bold bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition">End Work</button>
+                                                        {job.status === 'assigned' && (
+                                                            <button
+                                                                onClick={() => handleStartTask(job.id)}
+                                                                className="text-xs font-bold bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition"
+                                                            >
+                                                                Start Task
+                                                            </button>
+                                                        )}
+
+                                                        {job.status === 'in_progress' && (
+                                                            <>
+                                                                <div className="bg-white px-3 py-1 rounded border border-blue-100 shadow-sm">
+                                                                    <Timer startTime={job.start_time} />
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleEndTask(job.id)}
+                                                                    className="text-xs font-bold bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition"
+                                                                >
+                                                                    End Task
+                                                                </button>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </li>

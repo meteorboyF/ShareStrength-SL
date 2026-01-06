@@ -1,0 +1,83 @@
+SHARESTRENGTH - CONNECTED FEATURES TEST PLAN
+==========================================
+
+This document outlines the test cases for features that have been successfully connected between the React Frontend and Laravel Backend.
+
+1. AUTHENTICATION (REGISTER)
+---------------------------
+Component: RegisterUser.jsx
+API Endpoint: POST /api/v1/register
+
+[TEST ID: AUTH-01] Successful Registration
+- Input: Valid Name, Unique Email, Password (8+ chars), Matching Confirm Password.
+- Expected Result: Redirect to User Dashboard. Token stored in LocalStorage. Database new user created.
+
+[TEST ID: AUTH-02] Validation Failure (Password mismatch)
+- Input: Password "12345678", Confirm "87654321".
+- Expected Result: Frontend alert "Passwords do not match". No API call made.
+
+[TEST ID: AUTH-03] Backend Validation (Duplicate Email)
+- Input: Email that already exists (e.g., alice@example.com).
+- Expected Result: Backend returns 422 error. UI shows "Email already taken".
+
+
+2. AUTHENTICATION (LOGIN)
+------------------------
+Component: Login.jsx
+API Endpoint: POST /api/v1/login
+
+[TEST ID: LOGIN-01] Successful Login
+- Input: Existing Email, Correct Password.
+- Expected Result: Redirect to Dashboard. Token saved.
+
+[TEST ID: LOGIN-02] Invalid Credentials
+- Input: Correct Email, Wrong Password.
+- Expected Result: UI Alert "Invalid credentials". Login denied.
+
+
+3. TRUSTED CONTACTS
+------------------
+Component: TrustedContacts.jsx
+API Endpoint: POST /api/v1/trusted-contacts
+
+[TEST ID: CONTACT-01] Add Contact Success
+- Input: Name "Emergency Contact", Relation "Sibling", Phone "555-0000".
+- Expected Result: Contact added to list immediately. Persisted on refresh.
+
+[TEST ID: CONTACT-02] Missing Required Field
+- Input: Empty Name.
+- Expected Result: Form validation error or backend 422 error. Contact NOT added.
+
+
+4. POST TASK (USER)
+------------------
+Component: PostTask.jsx
+API Endpoint: POST /api/v1/tasks
+
+[TEST ID: TASK-01] Post Task Success
+- Input: Title "Gardening", Desc "Mow lawn", Category "Household Help", Urgency "Low", Rate "20".
+- Expected Result: Success Alert. Redirect to Dashboard. Task saved in DB.
+
+[TEST ID: TASK-02] Invalid Rate
+- Input: Rate "5" (Below minimum 10).
+- Expected Result: Frontend HTML5 validation prevents submission.
+
+
+5. RESOURCE LIBRARY
+------------------
+Component: Resources.jsx
+API Endpoint: GET /api/v1/resources
+
+[TEST ID: RES-01] View Resources
+- Action: Navigate to Resources page.
+- Expected Result: List of resources loads dynamically from backend.
+
+
+6. PAYMENT HISTORY
+-----------------
+Component: PaymentHistory.jsx
+API Endpoint: GET /api/v1/payments
+
+[TEST ID: PAY-01] View History
+- Action: Navigate to Payment History.
+- Expected Result: Table of transactions loads. logic calculates total spent correctly.

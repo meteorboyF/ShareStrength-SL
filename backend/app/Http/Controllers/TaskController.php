@@ -19,7 +19,7 @@ class TaskController extends Controller
         }
 
         // Returns all tasks, in production would paginate and filter by visibility
-        return response()->json($query->with(['creator', 'caregiver'])->latest()->paginate(20));
+        return response()->json($query->with(['creator', 'caregiver'])->latest()->get());
     }
 
     // Create task

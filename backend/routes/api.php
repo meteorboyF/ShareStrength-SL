@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('communities', CommunityController::class);
         Route::apiResource('resources', \App\Http\Controllers\ResourceController::class);
         Route::apiResource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store']);
+        Route::apiResource('applications', \App\Http\Controllers\ApplicationController::class)->only(['index', 'store']);
 
         // Matching
         Route::get('/tasks/{id}/match', [MatchingController::class, 'matchCaregivers']);

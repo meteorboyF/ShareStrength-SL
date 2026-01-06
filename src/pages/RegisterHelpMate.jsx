@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 
 const SKILLS_LIST = [
@@ -98,8 +100,8 @@ const RegisterHelpMate = () => {
                     type="button"
                     onClick={() => handleSkillChange(skill)}
                     className={`px-3 py-1 text-xs font-bold rounded-full border transition ${formData.skills.includes(skill)
-                        ? 'bg-secondary text-white border-secondary'
-                        : 'bg-white text-neutral-medium border-neutral-300 hover:border-secondary'
+                      ? 'bg-secondary text-white border-secondary'
+                      : 'bg-white text-neutral-medium border-neutral-300 hover:border-secondary'
                       }`}
                   >
                     {skill}

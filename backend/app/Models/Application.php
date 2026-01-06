@@ -24,11 +24,11 @@ class Application extends Model
 
     public function helper()
     {
-        return $this->belongsTo(Helper::class, 'helper_id', 'helper_id');
+        return $this->belongsTo(User::class, 'helper_id');
     }
 
     public function task()
     {
-        return $this->belongsTo(Task::class, 'task_id', 'task_id');
+        return $this->belongsTo(Task::class, 'task_id');
     }
 }

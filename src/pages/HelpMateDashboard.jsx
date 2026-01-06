@@ -63,14 +63,22 @@ const HelpMateDashboard = () => {
         setShowModal(true);
     };
 
-    const confirmApply = () => {
+    const confirmApply = async () => {
         if (!selectedTask) return;
 
-        // Remove from available
-        setAvailableTasks(availableTasks.filter(t => t.id !== selectedTask.id));
+        try {
+            await api.post('/applications', { task_id: selectedTask.id });
 
-        // Add to applied
-        setAppliedJobs([{ id: Date.now(), title: selectedTask.title, user_name: selectedTask.user_name }, ...appliedJobs]);
+            // Remove from available
+            setAvailableTasks(availableTasks.filter(t => t.id !== selectedTask.id));
+
+            // Add to applied (UI update)
+            setAppliedJobs([{ id: Date.now(), title: selectedTask.title, user_name: selectedTask.user_name }, ...appliedJobs]);
+
+            alert("Application submitted!");
+        } catch (err) {
+            alert("Failed to apply: " + (err.response?.data?.message || err.message));
+        }
 
         setShowModal(false);
         setSelectedTask(null);
@@ -89,7 +97,7 @@ const HelpMateDashboard = () => {
             <header className="bg-white shadow-sm sticky top-0 z-40 border-b border-green-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome, {HELPMATE_PROFILE.name}!</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome, {user.name}!</h1>
                         <p className="text-xs text-slate-500">Manage your jobs and find new tasks.</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -112,24 +120,24 @@ const HelpMateDashboard = () => {
                         {/* Profile Card */}
                         <section className="bg-green-700 text-white p-6 rounded-xl shadow-lg animate-fade-in-up">
                             <div className="flex items-center gap-4">
-                                <img className="h-16 w-16 rounded-full object-cover border-2 border-green-400" src={HELPMATE_PROFILE.photo} alt="Profile" />
+                                <img className="h-16 w-16 rounded-full object-cover border-2 border-green-400" src={user.photo || 'https://placehold.co/150'} alt="Profile" />
                                 <div>
-                                    <h3 className="font-bold text-lg">{HELPMATE_PROFILE.name}</h3>
-                                    <p className="text-sm text-green-100">{HELPMATE_PROFILE.email}</p>
+                                    <h3 className="font-bold text-lg">{user.name}</h3>
+                                    <p className="text-sm text-green-100">{user.email}</p>
                                 </div>
                             </div>
                             <div className="mt-4 flex items-center justify-between text-sm">
                                 <span className="font-semibold text-green-200">Rating:</span>
                                 <span className="font-bold text-yellow-300 flex items-center gap-1">
-                                    ★ {HELPMATE_PROFILE.rating}
+                                    ★ {user.rating || 'New'}
                                 </span>
                             </div>
                             <div className="mt-4 pt-4 border-t border-green-600">
                                 <h4 className="font-semibold text-sm text-green-200 mb-2">My Skills</h4>
                                 <div className="flex flex-wrap gap-2">
-                                    {HELPMATE_PROFILE.skills.map(skill => (
+                                    {user.skills && user.skills.length > 0 ? user.skills.map(skill => (
                                         <span key={skill} className="bg-green-600 text-white text-xs font-medium px-2 py-1 rounded-full border border-green-500">{skill}</span>
-                                    ))}
+                                    )) : <span className="text-xs text-green-300">No skills listed</span>}
                                 </div>
                             </div>
                         </section>
@@ -140,11 +148,11 @@ const HelpMateDashboard = () => {
                             <div className="space-y-3">
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-sm text-green-200">Total Earnings</span>
-                                    <span className="text-2xl font-bold text-white">${HELPMATE_PROFILE.total_earnings.toFixed(2)}</span>
+                                    <span className="text-2xl font-bold text-white">${(user.total_earnings || 0).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-sm text-green-200">Completed Jobs</span>
-                                    <span className="text-2xl font-bold text-white">{HELPMATE_PROFILE.completed_jobs}</span>
+                                    <span className="text-2xl font-bold text-white">{user.completed_jobs || 0}</span>
                                 </div>
                             </div>
                         </section>

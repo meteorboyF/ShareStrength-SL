@@ -18,4 +18,14 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Conversation APIs
+export const getConversations = () => api.get('/conversations');
+export const getConversation = (id, page = 1) => api.get(`/conversations/${id}?page=${page}`);
+export const getOrCreateConversation = (data) => api.post('/conversations/get-or-create', data);
+
+// Message APIs
+export const sendMessage = (data) => api.post('/messages', data);
+export const markMessageAsRead = (id) => api.patch(`/messages/${id}/read`);
+export const markConversationAsRead = (conversationId) => api.patch(`/conversations/${conversationId}/read`);
+
 export default api;

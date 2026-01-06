@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MatchingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\TaskController;
@@ -30,6 +31,12 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('tasks', TaskController::class);
         Route::apiResource('trusted-contacts', TrustedContactController::class)->only(['index', 'store']);
         Route::apiResource('messages', MessageController::class)->except(['update']);
+        Route::patch('messages/{id}/read', [MessageController::class, 'markAsRead']);
+        
+        Route::apiResource('conversations', ConversationController::class)->only(['index', 'show']);
+        Route::post('conversations/get-or-create', [ConversationController::class, 'getOrCreate']);
+        Route::patch('conversations/{id}/read', [MessageController::class, 'markConversationAsRead']);
+        
         Route::apiResource('communities', CommunityController::class);
         Route::apiResource('resources', \App\Http\Controllers\ResourceController::class);
         Route::apiResource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store']);

@@ -246,6 +246,9 @@ const UserDashboard = () => {
                                 <Link to="/marketplace" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
                                     Find Help
                                 </Link>
+                                <Link to="/messages" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
+                                    Messages
+                                </Link>
                             </div>
                         </section>
                     </aside>

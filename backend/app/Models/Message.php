@@ -10,6 +10,7 @@ class Message extends Model
     use HasFactory;
 
     protected $fillable = [
+        'conversation_id',
         'task_id',
         'sender_id',
         'receiver_id',
@@ -20,6 +21,11 @@ class Message extends Model
     protected $casts = [
         'is_read' => 'boolean',
     ];
+
+    public function conversation()
+    {
+        return $this->belongsTo(Conversation::class);
+    }
 
     public function task()
     {

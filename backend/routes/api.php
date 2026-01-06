@@ -36,6 +36,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/applications/received', [\App\Http\Controllers\ApplicationController::class, 'received']);
         Route::apiResource('applications', \App\Http\Controllers\ApplicationController::class)->only(['index', 'store', 'update']);
 
+        // User Profile Routes
+        Route::get('/users/{id}', [\App\Http\Controllers\UserController::class, 'show']);
+        Route::put('/profile', [\App\Http\Controllers\UserController::class, 'update']);
+        Route::post('/profile/photo', [\App\Http\Controllers\UserController::class, 'uploadPhoto']);
+
         // Matching
         Route::put('/tasks/{id}/start', [TaskController::class, 'start']);
         Route::put('/tasks/{id}/complete', [TaskController::class, 'complete']);

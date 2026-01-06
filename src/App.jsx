@@ -18,38 +18,40 @@ import ProductDetails from './pages/ProductDetails'; // <--- New
 import Cart from './pages/Cart'; // <--- New
 import Checkout from './pages/Checkout'; // <--- New
 import ProfileView from './pages/ProfileView'; // <--- Import this
+import ProfileEdit from './pages/ProfileEdit'; // <--- Import this
 import TaskStatus from './pages/TaskStatus'; // <--- Import this
 import ServicePayment from './pages/ServicePayment'; // <--- Import this
 import TrustedContacts from './pages/TrustedContacts'; // <--- Import this
 function App() {
   return (
     <CartProvider>
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        
-        {/* User Routes */}
-        <Route path="/dashboard" element={<UserDashboard />} />
-        <Route path="/payment" element={<PaymentHistory />} />
-        <Route path="/payment-insights" element={<PaymentInsights />} />
-        <Route path="/resources" element={<Resources />} />
-        <Route path="/marketplace" element={<Marketplace />} />
-        <Route path="/marketplace/product/:id" element={<ProductDetails />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/post-task" element={<PostTask />} />
-        <Route path="/helper-dashboard" element={<HelpMateDashboard />} />
-        <Route path="/helpmate-dashboard" element={<HelpMateDashboard />} />
-        <Route path="/register-helpmate" element={<RegisterHelpMate />} />
-        <Route path="/register-user" element={<RegisterUser />} />
-        <Route path="/profile/:type/:id" element={<ProfileView />} />
-        <Route path="/task-status" element={<TaskStatus />} />
-        <Route path="/service-payment" element={<ServicePayment />} />
-        <Route path="/trusted-contacts" element={<TrustedContacts />} />
-      </Routes>
-    </Router>
+      <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+
+          {/* User Routes */}
+          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/payment" element={<PaymentHistory />} />
+          <Route path="/payment-insights" element={<PaymentInsights />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/marketplace/product/:id" element={<ProductDetails />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/post-task" element={<PostTask />} />
+          <Route path="/helper-dashboard" element={<HelpMateDashboard />} />
+          <Route path="/helpmate-dashboard" element={<HelpMateDashboard />} />
+          <Route path="/register-helpmate" element={<RegisterHelpMate />} />
+          <Route path="/register-user" element={<RegisterUser />} />
+          <Route path="/profile/:type/:id" element={<ProfileView />} />
+          <Route path="/profile/edit" element={<ProfileEdit />} />
+          <Route path="/task-status" element={<TaskStatus />} />
+          <Route path="/service-payment" element={<ServicePayment />} />
+          <Route path="/trusted-contacts" element={<TrustedContacts />} />
+        </Routes>
+      </Router>
     </CartProvider>
   );
 }

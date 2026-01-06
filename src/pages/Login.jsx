@@ -1,22 +1,34 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import authService from '../services/authService';
 
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login Attempt:", formData);
+    setError('');
 
-    // --- DEMO LOGIN LOGIC ---
-    // In a real app, you would check the database here.
-    // For now, we force the user to go to the dashboard.
-    navigate('/dashboard');
+    try {
+      const user = await authService.login(formData);
+      console.log('Login success:', user);
+
+      // Redirect based on role
+      if (user.role === 'caregiver') {
+        navigate('/helper-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Login failed: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   return (

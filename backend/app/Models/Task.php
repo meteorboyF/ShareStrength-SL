@@ -9,30 +9,36 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $table = 'tasks';
-    protected $primaryKey = 'task_id';
-
-    public $timestamps = true;
-
     protected $fillable = [
+        'created_by',
+        'caregiver_id',
         'title',
         'description',
-        'skill_required',
-        'hourly_rate',
-        'urgency',
-        'user_id',
+        'location',
+        'budget',
         'status',
+        'required_skills',
+        'urgency',
+        'scheduled_at',
     ];
 
-    // Relationships
+    protected $casts = [
+        'required_skills' => 'array',
+        'scheduled_at' => 'datetime',
+    ];
 
-    public function user()
+    public function creator()
     {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function applications()
+    public function caregiver()
     {
-        return $this->hasMany(Application::class, 'task_id', 'task_id');
+        return $this->belongsTo(User::class, 'caregiver_id');
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
     }
 }

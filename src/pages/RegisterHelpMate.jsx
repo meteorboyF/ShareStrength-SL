@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import authService from '../services/authService';
 
 const SKILLS_LIST = [
-  "Mobility Support", "Driving", "Cooking", "Housekeeping", 
+  "Mobility Support", "Driving", "Cooking", "Housekeeping",
   "Tech Support", "Companionship", "Reading Assistance"
 ];
 
@@ -28,22 +27,35 @@ const RegisterHelpMate = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-    console.log("Registering HelpMate:", formData);
-    // In a real app, send to backend here
-    // Redirect to the newly renamed HelpMate Dashboard
-    navigate('/helpmate-dashboard'); 
+
+    try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.confirmPassword,
+        role: 'caregiver',
+        skills: formData.skills.join(', ') // Convert array to string
+      };
+
+      await authService.register(payload);
+      navigate('/helpmate-dashboard');
+    } catch (err) {
+      console.error(err);
+      alert('Registration failed: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-neutral-light font-sans">
       <div className="w-full max-w-5xl flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
-        
+
         {/* Left Side: Visuals (Secondary/Green Theme) */}
         <div className="w-full md:w-1/2 bg-secondary text-white p-12 hidden md:flex flex-col items-center justify-center text-center relative">
           <div className="relative z-10">
@@ -57,59 +69,58 @@ const RegisterHelpMate = () => {
         {/* Right Side: Form */}
         <div className="w-full md:w-1/2 p-8 md:p-12">
           <h2 className="text-2xl font-bold text-center text-neutral-darkest mb-8">HelpMate Registration</h2>
-          
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-neutral-dark mb-1">Full Name</label>
-              <input 
-                type="text" name="name" required 
+              <input
+                type="text" name="name" required
                 className="w-full rounded-lg border-neutral-200 bg-neutral-light p-3 text-neutral-dark focus:ring-2 focus:ring-secondary"
                 onChange={handleChange}
               />
             </div>
             <div>
               <label className="block text-sm font-semibold text-neutral-dark mb-1">Email Address</label>
-              <input 
-                type="email" name="email" required 
+              <input
+                type="email" name="email" required
                 className="w-full rounded-lg border-neutral-200 bg-neutral-light p-3 text-neutral-dark focus:ring-2 focus:ring-secondary"
                 onChange={handleChange}
               />
             </div>
-            
+
             {/* Skills Selection */}
             <div>
-                <label className="block text-sm font-semibold text-neutral-dark mb-2">Your Skills</label>
-                <div className="flex flex-wrap gap-2">
-                    {SKILLS_LIST.map(skill => (
-                        <button
-                            key={skill}
-                            type="button"
-                            onClick={() => handleSkillChange(skill)}
-                            className={`px-3 py-1 text-xs font-bold rounded-full border transition ${
-                                formData.skills.includes(skill)
-                                ? 'bg-secondary text-white border-secondary'
-                                : 'bg-white text-neutral-medium border-neutral-300 hover:border-secondary'
-                            }`}
-                        >
-                            {skill}
-                        </button>
-                    ))}
-                </div>
+              <label className="block text-sm font-semibold text-neutral-dark mb-2">Your Skills</label>
+              <div className="flex flex-wrap gap-2">
+                {SKILLS_LIST.map(skill => (
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => handleSkillChange(skill)}
+                    className={`px-3 py-1 text-xs font-bold rounded-full border transition ${formData.skills.includes(skill)
+                        ? 'bg-secondary text-white border-secondary'
+                        : 'bg-white text-neutral-medium border-neutral-300 hover:border-secondary'
+                      }`}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-neutral-dark mb-1">Password</label>
-                <input 
-                  type="password" name="password" required 
+                <input
+                  type="password" name="password" required
                   className="w-full rounded-lg border-neutral-200 bg-neutral-light p-3 text-neutral-dark focus:ring-2 focus:ring-secondary"
                   onChange={handleChange}
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-neutral-dark mb-1">Confirm</label>
-                <input 
-                  type="password" name="confirmPassword" required 
+                <input
+                  type="password" name="confirmPassword" required
                   className="w-full rounded-lg border-neutral-200 bg-neutral-light p-3 text-neutral-dark focus:ring-2 focus:ring-secondary"
                   onChange={handleChange}
                 />

@@ -9,18 +9,17 @@ class Resource extends Model
 {
     use HasFactory;
 
-    protected $table = 'resources';
-    protected $primaryKey = 'resource_id';
-
-    // Your table has both created_at and updated_at.
-    public $timestamps = true;
-
     protected $fillable = [
-        'name',
+        'title',
+        'type',
         'category',
+        'url',
         'description',
-        'link',
         'uploaded_by',
-        'approved_by',
     ];
+
+    public function uploader()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
 }

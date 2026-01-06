@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import authService from '../services/authService';
+
 const RegisterUser = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -9,27 +11,42 @@ const RegisterUser = () => {
     password: '',
     confirmPassword: ''
   });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-    console.log("Registering User:", formData);
-    // --- DEMO LOGIC ---
-    // In a real app, send to backend here
-    navigate('/dashboard'); // Redirect to User Dashboard
+
+    try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.confirmPassword,
+        role: 'pwd' // PWD Role
+      };
+
+      await authService.register(payload);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error(err);
+      alert('Registration failed: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-neutral-light font-sans">
       <div className="w-full max-w-5xl flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
-        
+
         {/* Left Side: Visuals */}
         <div className="w-full md:w-1/2 bg-primary text-white p-12 hidden md:flex flex-col items-center justify-center text-center relative">
           <div className="relative z-10">
@@ -43,20 +60,20 @@ const RegisterUser = () => {
         {/* Right Side: Form */}
         <div className="w-full md:w-1/2 p-8 md:p-12">
           <h2 className="text-2xl font-bold text-center text-neutral-darkest mb-8">Create User Account</h2>
-          
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-neutral-dark mb-1">Full Name</label>
-              <input 
-                type="text" name="name" required 
+              <input
+                type="text" name="name" required
                 className="w-full rounded-lg border-neutral-200 bg-neutral-light p-3 text-neutral-dark focus:ring-2 focus:ring-primary"
                 onChange={handleChange}
               />
             </div>
             <div>
               <label className="block text-sm font-semibold text-neutral-dark mb-1">Email Address</label>
-              <input 
-                type="email" name="email" required 
+              <input
+                type="email" name="email" required
                 className="w-full rounded-lg border-neutral-200 bg-neutral-light p-3 text-neutral-dark focus:ring-2 focus:ring-primary"
                 onChange={handleChange}
               />
@@ -64,16 +81,16 @@ const RegisterUser = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-neutral-dark mb-1">Password</label>
-                <input 
-                  type="password" name="password" required 
+                <input
+                  type="password" name="password" required
                   className="w-full rounded-lg border-neutral-200 bg-neutral-light p-3 text-neutral-dark focus:ring-2 focus:ring-primary"
                   onChange={handleChange}
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-neutral-dark mb-1">Confirm</label>
-                <input 
-                  type="password" name="confirmPassword" required 
+                <input
+                  type="password" name="confirmPassword" required
                   className="w-full rounded-lg border-neutral-200 bg-neutral-light p-3 text-neutral-dark focus:ring-2 focus:ring-primary"
                   onChange={handleChange}
                 />

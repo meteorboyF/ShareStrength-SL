@@ -15,20 +15,55 @@ const UserDashboard = () => {
     const [tasks, setTasks] = useState([]);
     const [user, setUser] = useState({ name: 'User', profile_photo: 'https://placehold.co/100x100' });
     const [tasksWithApplicants, setTasksWithApplicants] = useState([]);
+    const [showCompleted, setShowCompleted] = useState(false);
 
     useEffect(() => {
-        const currentUser = authService.getCurrentUser();
-        if (currentUser) {
-            setUser(currentUser);
-            fetchTasks();
-            fetchApplications();
-        }
+        const fetchCurrentUser = async () => {
+            try {
+                // Fetch fresh user data from backend to ensure correct user is displayed
+                const response = await api.get('/me');
+                const currentUser = response.data;
+                setUser(currentUser);
+
+                // Update localStorage with fresh data
+                localStorage.setItem('user', JSON.stringify(currentUser));
+
+                fetchTasks();
+                fetchApplications();
+            } catch (error) {
+                console.error('Failed to fetch current user:', error);
+                // Fallback to localStorage if API call fails
+                const cachedUser = authService.getCurrentUser();
+                if (cachedUser) {
+                    setUser(cachedUser);
+                    fetchTasks();
+                    fetchApplications();
+                }
+            }
+        };
+
+        fetchCurrentUser();
+
+        // Listen for storage changes from other tabs
+        const handleStorageChange = (e) => {
+            // If token changed in another tab, reload to get correct user
+            if (e.key === 'token' && e.oldValue !== e.newValue) {
+                console.log('Token changed in another tab, reloading...');
+                window.location.reload();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
     const fetchTasks = async () => {
         try {
             const response = await api.get('/my-tasks');
-            setTasks(response.data.data || response.data);
+            const tasksData = response.data.data || response.data;
+            console.log('Fetched tasks:', tasksData);
+            console.log('In-progress tasks:', tasksData.filter(t => t.status === 'in_progress'));
+            setTasks(tasksData);
         } catch (err) {
             console.error(err);
         }
@@ -40,6 +75,9 @@ const UserDashboard = () => {
             // Group by Task
             const grouped = {};
             res.data.forEach(app => {
+                // Skip rejected applications if user wants them "deleted" from view
+                if (app.status === 'rejected') return;
+
                 const tId = app.task_id;
                 if (!grouped[tId]) {
                     grouped[tId] = {
@@ -63,6 +101,78 @@ const UserDashboard = () => {
         } catch (err) {
             console.error("Failed to fetch applications", err);
         }
+    };
+
+    const handleApplicationAction = async (taskId, applicationId, status) => {
+        try {
+            await api.put(`/applications/${applicationId}`, { status });
+            alert(`Applicant ${status === 'accepted' ? 'hired' : 'rejected'} successfully!`);
+            fetchApplications(); // Refresh list
+        } catch (err) {
+            console.error(`Failed to ${status} applicant`, err);
+            alert(`Failed to ${status} applicant. ` + (err.response?.data?.message || err.message));
+        }
+    };
+
+    const handleDeleteTask = async (taskId) => {
+        if (!window.confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+            return;
+        }
+        try {
+            await api.delete(`/tasks/${taskId}`);
+            alert('Task deleted successfully!');
+            fetchTasks();
+        } catch (err) {
+            console.error('Failed to delete task', err);
+            alert('Failed to delete task. ' + (err.response?.data?.message || ''));
+        }
+    };
+
+    const handleRepostTask = async (taskId) => {
+        try {
+            await api.post(`/tasks/${taskId}/repost`);
+            alert('Task reposted successfully!');
+            fetchTasks();
+        } catch (err) {
+            console.error('Failed to repost task', err);
+            alert('Failed to repost task. ' + (err.response?.data?.message || ''));
+        }
+    };
+
+    // --- Live Timer Component ---
+    const Timer = ({ startTime }) => {
+        const [elapsed, setElapsed] = useState("00:00:00");
+
+        useEffect(() => {
+            // Validate startTime
+            if (!startTime || typeof startTime !== 'number' || startTime <= 0) {
+                setElapsed("00:00:00");
+                return;
+            }
+
+            const interval = setInterval(() => {
+                const now = Date.now();
+                const diff = now - startTime;
+
+                // If diff is negative, show 00:00:00
+                if (diff < 0) {
+                    setElapsed("00:00:00");
+                    return;
+                }
+
+                const totalSeconds = Math.floor(diff / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                setElapsed(
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+                );
+            }, 1000);
+            return () => clearInterval(interval);
+        }, [startTime]);
+
+        return <span className="font-mono text-sm text-blue-700 font-semibold">{elapsed}</span>;
     };
 
     const toggleApplicants = (taskId) => {
@@ -129,23 +239,84 @@ const UserDashboard = () => {
 
                         {/* 1. Open Tasks */}
                         <section className="animate-fade-in-up">
-                            <h2 className="text-lg font-bold text-neutral-darkest mb-4">Your Posted Tasks</h2>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-bold text-neutral-darkest">Your Posted Tasks</h2>
+                                <label className="flex items-center gap-2 text-sm text-neutral-medium cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={showCompleted}
+                                        onChange={(e) => setShowCompleted(e.target.checked)}
+                                        className="rounded"
+                                    />
+                                    Show Completed
+                                </label>
+                            </div>
                             <div className="space-y-4">
                                 {tasks.length === 0 && <p className="text-gray-500">No tasks posted yet.</p>}
-                                {tasks.map(task => (
-                                    <div key={task.id} className="bg-white p-5 rounded-xl border border-blue-200 shadow-sm flex justify-between items-center">
-                                        <div>
-                                            <h3 className="font-bold text-blue-800">{task.title}</h3>
-                                            <p className="text-sm text-neutral-medium">Status: {task.status}</p>
-                                            <p className="text-xs text-neutral-400">{task.description}</p>
+                                {tasks
+                                    .filter(task => showCompleted || !['completed', 'cancelled'].includes(task.status))
+                                    .map(task => (
+                                        <div key={task.id} className="bg-white p-5 rounded-xl border border-blue-200 shadow-sm">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <h3 className="font-bold text-blue-800">{task.title}</h3>
+                                                    <p className="text-sm text-neutral-medium">Status: {task.status}</p>
+                                                    {task.status === 'in_progress' && task.caregiver && (
+                                                        <p className="text-xs text-blue-600 mt-1">Helper: {task.caregiver.name}</p>
+                                                    )}
+                                                    {task.status === 'accepted' && task.caregiver && (
+                                                        <p className="text-xs text-green-600 mt-1">Assigned to: {task.caregiver.name}</p>
+                                                    )}
+                                                    <p className="text-xs text-neutral-400">{task.description}</p>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${task.status === 'open' ? 'bg-green-100 text-green-600' :
+                                                        task.status === 'in_progress' ? 'bg-blue-100 text-blue-600' :
+                                                            task.status === 'completed' ? 'bg-purple-100 text-purple-600' :
+                                                                'bg-gray-100 text-gray-600'
+                                                        }`}>
+                                                        {task.status.toUpperCase()}
+                                                    </span>
+                                                    {console.log('Task:', task.id, 'Status:', task.status, 'started_at:', task.started_at, 'Type:', typeof task.started_at)}
+                                                    {task.status === 'in_progress' && (
+                                                        <>
+                                                            {task.started_at ? (
+                                                                <>
+                                                                    {console.log('Rendering timer for task:', task.id, 'started_at:', task.started_at)}
+                                                                    <div className="bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                                                                        <div className="text-xs text-blue-600 mb-1">Time Elapsed:</div>
+                                                                        <Timer startTime={new Date(task.started_at).getTime()} />
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <div className="bg-red-50 px-3 py-2 rounded-lg border border-red-200">
+                                                                    <div className="text-xs text-red-600">No start time recorded</div>
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                    <div className="flex gap-2">
+                                                        {['completed', 'cancelled'].includes(task.status) && (
+                                                            <button
+                                                                onClick={() => handleRepostTask(task.id)}
+                                                                className="text-xs bg-green-50 text-green-600 px-3 py-1 rounded-full hover:bg-green-100 font-semibold"
+                                                            >
+                                                                🔄 Repost
+                                                            </button>
+                                                        )}
+                                                        {['open', 'in_progress'].includes(task.status) && (
+                                                            <button
+                                                                onClick={() => handleDeleteTask(task.id)}
+                                                                className="text-xs bg-red-50 text-red-600 px-3 py-1 rounded-full hover:bg-red-100 font-semibold"
+                                                            >
+                                                                🗑️ Delete
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <span className={`text-xs font-bold px-2 py-1 rounded-full ${task.status === 'open' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}>
-                                                {task.status.toUpperCase()}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         </section>
 
@@ -183,9 +354,24 @@ const UserDashboard = () => {
                                                                 </div>
                                                             </div>
                                                             <div className="flex gap-2 items-center">
-                                                                <span className="text-xs font-bold uppercase text-gray-400">{app.status}</span>
+                                                                <span className={`text-xs font-bold uppercase ${app.status === 'accepted' ? 'text-green-600' : app.status === 'rejected' ? 'text-red-600' : 'text-gray-400'}`}>
+                                                                    {app.status}
+                                                                </span>
                                                                 {app.status === 'pending' && (
-                                                                    <button className="bg-secondary text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-green-600 transition">Hire</button>
+                                                                    <>
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); handleApplicationAction(task.id, app.application_id, 'rejected'); }}
+                                                                            className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-red-100 transition"
+                                                                        >
+                                                                            Delete
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); handleApplicationAction(task.id, app.application_id, 'accepted'); }}
+                                                                            className="bg-secondary text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-green-600 transition"
+                                                                        >
+                                                                            Hire
+                                                                        </button>
+                                                                    </>
                                                                 )}
                                                             </div>
                                                         </div>

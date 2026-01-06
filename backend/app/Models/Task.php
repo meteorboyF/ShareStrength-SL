@@ -20,11 +20,15 @@ class Task extends Model
         'required_skills',
         'urgency',
         'scheduled_at',
+        'started_at',
+        'completed_at',
     ];
 
     protected $casts = [
         'required_skills' => 'array',
         'scheduled_at' => 'datetime',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function creator()

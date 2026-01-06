@@ -13,6 +13,7 @@ class TrustedContact extends Model
         'user_id',
         'trusted_user_id',
         'contact_name',
+        'relation', // Added field
         'contact_email',
         'contact_phone',
         'status',

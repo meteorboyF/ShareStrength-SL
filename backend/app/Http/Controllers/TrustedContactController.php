@@ -15,18 +15,29 @@ class TrustedContactController extends Controller
 
     public function store(Request $request)
     {
+        // Accept both 'name' (frontend) and 'contact_name' patterns
         $validated = $request->validate([
-            'contact_name' => 'required|string',
-            'contact_email' => 'nullable|email',
+            'name' => 'nullable|string',
+            'contact_name' => 'nullable|string',
+            'relation' => 'nullable|string',
+            'phone' => 'nullable|string',
             'contact_phone' => 'nullable|string',
+            'email' => 'nullable|email',
+            'contact_email' => 'nullable|email',
         ]);
+
+        $contactName = $validated['name'] ?? $validated['contact_name'];
+        if (!$contactName) {
+            return response()->json(['message' => 'Name is required'], 422);
+        }
 
         $contact = TrustedContact::create([
             'user_id' => Auth::id(),
-            'contact_name' => $validated['contact_name'],
-            'contact_email' => $validated['contact_email'] ?? null,
-            'contact_phone' => $validated['contact_phone'] ?? null,
-            'status' => 'pending', // Would send invite logic here
+            'contact_name' => $contactName,
+            'relation' => $validated['relation'] ?? null,
+            'contact_email' => $validated['email'] ?? $validated['contact_email'] ?? null,
+            'contact_phone' => $validated['phone'] ?? $validated['contact_phone'] ?? null,
+            'status' => 'pending',
         ]);
 
         return response()->json($contact, 201);

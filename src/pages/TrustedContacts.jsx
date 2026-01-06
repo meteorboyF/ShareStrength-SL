@@ -14,7 +14,14 @@ const TrustedContacts = () => {
     const fetchContacts = async () => {
         try {
             const response = await api.get('/trusted-contacts');
-            setContacts(response.data);
+            // Normalize backend fields (contact_name) to frontend fields (name)
+            const mapped = response.data.map(c => ({
+                ...c,
+                name: c.contact_name || c.name,
+                phone: c.contact_phone || c.phone,
+                relation: c.relation // Now supported by backend
+            }));
+            setContacts(mapped);
         } catch (err) {
             console.error(err);
         }
@@ -23,13 +30,28 @@ const TrustedContacts = () => {
     const handleAddContact = async (e) => {
         e.preventDefault();
         try {
-            const payload = { ...newContact, is_primary: contacts.length === 0 };
+            const payload = {
+                name: newContact.name,
+                relation: newContact.relation,
+                phone: newContact.phone,
+                is_primary: contacts.length === 0
+            };
             const response = await api.post('/trusted-contacts', payload);
-            setContacts([...contacts, response.data]);
+
+            // Map the single new contact response
+            const newC = {
+                ...response.data,
+                name: response.data.contact_name || response.data.name,
+                phone: response.data.contact_phone || response.data.phone,
+                relation: response.data.relation
+            };
+
+            setContacts([...contacts, newC]);
             setNewContact({ name: '', relation: '', phone: '' });
             setShowForm(false);
         } catch (err) {
-            alert("Failed to add contact");
+            console.error(err);
+            alert("Failed to add contact: " + (err.response?.data?.message || err.message));
         }
     };
 

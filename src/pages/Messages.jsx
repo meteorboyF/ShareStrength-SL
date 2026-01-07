@@ -10,11 +10,17 @@ const Messages = () => {
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [currentUserType, setCurrentUserType] = useState(null);
 
     useEffect(() => {
         // Get current user from localStorage
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        setCurrentUserId(user.id);
+        setCurrentUserId(user.id || user.user_id || user.helper_id); // robust id check
+
+        // Determine type based on role (set in AuthController)
+        // role 'caregiver' -> helper, 'pwd'/'family_member' -> user
+        const type = user.role === 'caregiver' ? 'helper' : 'user';
+        setCurrentUserType(type);
 
         fetchConversations();
     }, []);
@@ -93,6 +99,7 @@ const Messages = () => {
                 <ChatWindow
                     conversationId={conversationId ? parseInt(conversationId) : null}
                     currentUserId={currentUserId}
+                    currentUserType={currentUserType}
                 />
             </div>
 
@@ -115,6 +122,7 @@ const Messages = () => {
                             <ChatWindow
                                 conversationId={parseInt(conversationId)}
                                 currentUserId={currentUserId}
+                                currentUserType={currentUserType}
                             />
                         </div>
                     </div>

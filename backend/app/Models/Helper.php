@@ -7,31 +7,31 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class Helper extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $primaryKey = 'user_id';
-    
+    protected $table = 'helpers';
+    protected $primaryKey = 'helper_id';
+
     protected $fillable = [
         'name',
         'email',
         'password_hash',
-        'user_type', // disabled_individual, family_member, caretaker
         'phone_number',
         'address',
+        'skills',
+        'rating',
         'profile_photo',
+        'verification_status',
+        'status',
+        'verified_by',
     ];
 
     protected $hidden = [
         'password_hash',
-        'remember_token',
     ];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
-    
     // Password accessor for Laravel Auth
     public function getAuthPassword()
     {
@@ -39,18 +39,22 @@ class User extends Authenticatable
     }
 
     // Relationships
-    public function tasks()
+    
+    // Applications made by this helper
+    public function applications()
     {
-        return $this->hasMany(Task::class, 'created_by');
+        return $this->hasMany(Application::class, 'helper_id');
     }
 
-    public function assignedTasks()
+    // Hiring records for this helper
+    public function hiringRecords()
     {
-        return $this->hasMany(Task::class, 'caregiver_id');
+        return $this->hasMany(HiringRecord::class, 'helper_id');
     }
 
-    public function trustedContacts()
+    // Reviews received by this helper
+    public function reviews()
     {
-        return $this->hasMany(TrustedContact::class, 'user_id');
+        return $this->hasMany(Review::class, 'helper_id');
     }
 }

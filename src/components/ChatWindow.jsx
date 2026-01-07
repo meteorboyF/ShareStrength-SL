@@ -3,7 +3,7 @@ import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import { getConversation, sendMessage, markConversationAsRead } from '../services/api';
 
-const ChatWindow = ({ conversationId, currentUserId }) => {
+const ChatWindow = ({ conversationId, currentUserId, currentUserType }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
@@ -38,6 +38,7 @@ const ChatWindow = ({ conversationId, currentUserId }) => {
         try {
             const response = await sendMessage({
                 receiver_id: conversation.other_user.id,
+                receiver_type: conversation.other_user.type, // Pass helper/user type
                 task_id: conversation.task?.id || null,
                 content,
             });
@@ -148,7 +149,7 @@ const ChatWindow = ({ conversationId, currentUserId }) => {
                             <MessageBubble
                                 key={message.id}
                                 message={message}
-                                isOwnMessage={message.sender_id === currentUserId}
+                                isOwnMessage={message.sender_id === currentUserId && message.sender_type === currentUserType}
                             />
                         ))}
                         <div ref={messagesEndRef} />

@@ -9,19 +9,41 @@ return new class extends Migration {
     {
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_one_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('user_two_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('task_id')->nullable()->constrained('tasks')->onDelete('cascade');
+            // User One
+            $table->unsignedBigInteger('user_one_id');
+            $table->string('user_one_type')->default('user'); // 'user' or 'helper'
+            
+            // User Two
+            $table->unsignedBigInteger('user_two_id');
+            $table->string('user_two_type')->default('user'); // 'user' or 'helper'
+
+            // Task FK
+            $table->integer('task_id')->nullable();
+            $table->foreign('task_id')->references('task_id')->on('tasks')->onDelete('cascade');
+            
             $table->timestamp('last_message_at')->nullable();
             $table->timestamps();
 
             // Ensure unique conversations between two users for the same task context
-            $table->unique(['user_one_id', 'user_two_id', 'task_id'], 'unique_conversation');
+            $table->unique(['user_one_id', 'user_one_type', 'user_two_id', 'user_two_type', 'task_id'], 'unique_conversation');
         });
 
-        // Add conversation_id to messages table
-        Schema::table('messages', function (Blueprint $table) {
-            $table->foreignId('conversation_id')->nullable()->after('id')->constrained('conversations')->onDelete('cascade');
+        // Create messages table
+        Schema::create('messages', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('conversation_id')->constrained('conversations')->onDelete('cascade');
+            
+            // Sender
+            $table->unsignedBigInteger('sender_id');
+            $table->string('sender_type')->default('user');
+            
+            // Receiver
+            $table->unsignedBigInteger('receiver_id');
+            $table->string('receiver_type')->default('user');
+            
+            $table->text('content');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
         });
     }
 

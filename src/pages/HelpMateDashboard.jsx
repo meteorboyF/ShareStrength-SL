@@ -77,28 +77,32 @@ const HelpMateDashboard = () => {
 
             // 2. Filter Available Tasks
             const appliedTaskIds = new Set(myApps.map(app => app.task_id));
-            const currentUserId = authService.getCurrentUser()?.id;
+            const currentUser = authService.getCurrentUser();
+            const currentUserId = currentUser?.helper_id || currentUser?.user_id;
 
             const filteredTasks = allTasks.filter(t =>
                 t.status === 'open' && // ONLY show open tasks in available
-                !appliedTaskIds.has(t.id) &&
-                t.created_by !== currentUserId
-            );
+                !appliedTaskIds.has(t.task_id || t.id) &&
+                (currentUser.role === 'caregiver' ? true : t.user_id !== currentUserId)
+            ).map(t => ({
+                ...t,
+                id: t.task_id || t.id, // Ensure id is mapped for consistent usage
+                user_name: t.creator?.name || 'Unknown User',
+                user_photo: t.creator?.profile_photo || 'https://placehold.co/150',
+                skill: t.skill_required, // Map skill_required to skill
+            }));
             setAvailableTasks(filteredTasks);
 
             // 3. Set Active Jobs (Assigned to me)
-            // Filter all tasks -> status is assigned/in_progress AND caregiver_id is me
-            // Since backend "my-tasks" only returns created_by me, we assume '/tasks' returns ALL tasks or we need a new way.
-            // Actually /tasks (TaskController@index) returns ALL tasks. So we can filter here.
-            // Ideally backend should provide /my-jobs-as-helper, but for now filtering is fine.
             const myActiveJobs = allTasks.filter(t =>
-                (t.status === 'assigned' || t.status === 'in_progress') &&
-                t.caregiver_id === currentUserId
+                (t.status === 'accepted' || t.status === 'in_progress') && // Accepted means hired but not started
+                // Check if I am the assigned helper via hiringDecision OR legacy caregiver_id
+                (t.hiring_decision?.selected_helper_id == currentUserId || t.caregiver_id == currentUserId)
             );
 
             // Map to UI format
             setActiveJobs(myActiveJobs.map(t => ({
-                id: t.id,
+                id: t.task_id || t.id,
                 title: t.title,
                 user_name: t.creator?.name || 'User',
                 start_time: t.started_at ? new Date(t.started_at).getTime() : null,

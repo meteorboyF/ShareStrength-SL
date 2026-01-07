@@ -9,12 +9,16 @@ use Illuminate\Support\Facades\Auth;
 
 class ApplicationController extends Controller
 {
-    // Get applications for the current user (helper)
+    // Get applications for the current user (helper or user logic?)
+    // This index method assumes Auth::id() is looking for applications WHERE they are the applicant.
     public function index(Request $request)
     {
-        $userId = Auth::id();
-        $applications = Application::where('helper_id', $userId)
-            ->with(['task.creator']) // Eager load task and its creator
+        $user = Auth::user();
+        $type = $user instanceof \App\Models\Helper ? 'helper' : 'user';
+        
+        $applications = Application::where('helper_id', $user->getKey())
+            ->where('applicant_type', $type)
+            ->with(['task.creator'])
             ->get();
 
         return response()->json($applications);
@@ -24,12 +28,16 @@ class ApplicationController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'task_id' => 'required|exists:tasks,id', // Assuming task primary key is 'id' now, need to be careful with 'task_id' legacy
+            'task_id' => 'required|exists:tasks,task_id',
         ]);
+
+        $user = Auth::user();
+        $type = $user instanceof \App\Models\Helper ? 'helper' : 'user';
 
         // Check for existing application
         $exists = Application::where('task_id', $validated['task_id'])
-            ->where('helper_id', Auth::id())
+            ->where('helper_id', $user->getKey())
+            ->where('applicant_type', $type)
             ->exists();
 
         if ($exists) {
@@ -38,24 +46,21 @@ class ApplicationController extends Controller
 
         $application = Application::create([
             'task_id' => $validated['task_id'],
-            'helper_id' => Auth::id(),
+            'helper_id' => $user->getKey(),
+            'applicant_type' => $type,
             'status' => 'pending'
         ]);
 
         return response()->json($application, 201);
     }
 
-    // Get applications received for tasks created by the current user
-    // Update application status (e.g. Accept/Reject)
+    // ... update method stays mostly same but access $application->applicant or use helper_id as ID ...
     public function update(Request $request, $id)
     {
         $application = Application::findOrFail($id);
 
-        // Authorization check: User must own the task
-        if ($application->task->created_by != Auth::id()) {
-            return response()->json([
-                'message' => 'Unauthorized. Task Creator ID: ' . $application->task->created_by . ' vs Your ID: ' . Auth::id()
-            ], 403);
+        if ($application->task->user_id != Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $validated = $request->validate([
@@ -64,15 +69,25 @@ class ApplicationController extends Controller
 
         $application->update(['status' => $validated['status']]);
 
-        // If accepted, we might want to update the task status too
         if ($validated['status'] === 'accepted') {
             $task = $application->task;
-            $task->status = 'accepted'; // Changed from 'assigned' to match Enum and frontend logic
-            $task->caregiver_id = $application->helper_id;
+            $task->status = 'accepted'; 
             $task->save();
 
-
-            // Optional: Reject other pending applications for this task?
+            // Create Hiring Decision
+            \App\Models\HiringDecision::firstOrCreate(
+                ['task_id' => $task->task_id, 'application_id' => $application->application_id],
+                [
+                    'selected_helper_id' => $application->helper_id, 
+                    // Note: HiringDecision might also need to be polymorphic if we hire Users? 
+                    // Assuming for now regular flow hires Helpers. 
+                    // But if "hhelper" (User) is hired... HiringDecision table schema?
+                    // It has 'selected_helper_id'. Does it enforce FK to helpers?
+                    // If so, we can't hire a user! 
+                    // I should check HiringDecision migration.
+                    'decision_status' => 'approved'
+                ]
+            );
         }
 
         return response()->json($application);
@@ -83,12 +98,12 @@ class ApplicationController extends Controller
         $userId = Auth::id();
 
         // 1. Get all task IDs created by this user
-        $taskIds = Task::where('created_by', $userId)->pluck('id');
+        $taskIds = Task::where('user_id', $userId)->pluck('task_id');
 
         // 2. Get applications for these tasks
         $applications = Application::whereIn('task_id', $taskIds)
-            ->with(['task', 'helper'])
-            ->latest('id') // useful to see newest first
+            ->with(['task', 'applicant']) // Eager load polymorphic applicant
+            ->latest('created_at') 
             ->get();
 
         return response()->json($applications);

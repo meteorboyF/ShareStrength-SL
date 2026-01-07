@@ -11,7 +11,9 @@ class Conversation extends Model
 
     protected $fillable = [
         'user_one_id',
+        'user_one_type',
         'user_two_id',
+        'user_two_type',
         'task_id',
         'last_message_at',
     ];
@@ -21,14 +23,15 @@ class Conversation extends Model
     ];
 
     // Relationships
+    // Relationships
     public function userOne()
     {
-        return $this->belongsTo(User::class, 'user_one_id');
+        return $this->morphTo(__FUNCTION__, 'user_one_type', 'user_one_id');
     }
 
     public function userTwo()
     {
-        return $this->belongsTo(User::class, 'user_two_id');
+        return $this->morphTo(__FUNCTION__, 'user_two_type', 'user_two_id');
     }
 
     public function task()
@@ -42,10 +45,10 @@ class Conversation extends Model
     }
 
     // Helper method to get the other user in the conversation
-    public function getOtherUser($currentUserId)
+    public function getOtherUser($currentUserId, $currentUserType)
     {
-        if ($this->user_one_id == $currentUserId) {
-            return $this->userTwo;
+        if ($this->user_one_id == $currentUserId && $this->user_one_type == $currentUserType) {
+            return $this->userTwo; // MorphTo automatic resolution
         }
         return $this->userOne;
     }
@@ -60,17 +63,25 @@ class Conversation extends Model
     }
 
     // Static method to find or create a conversation between two users
-    public static function findOrCreate($userOneId, $userTwoId, $taskId = null)
+    public static function findOrCreate($userOneId, $userOneType, $userTwoId, $userTwoType, $taskId = null)
     {
-        // Ensure user_one_id is always the smaller ID for consistency
-        [$userOneId, $userTwoId] = $userOneId < $userTwoId 
-            ? [$userOneId, $userTwoId] 
-            : [$userTwoId, $userOneId];
+        // Sort users to ensure consistent order (prevent duplicates)
+        // Sort by Type then ID
+        $u1Key = $userOneType . ':' . $userOneId;
+        $u2Key = $userTwoType . ':' . $userTwoId;
+
+        if ($u1Key > $u2Key) {
+            // Swap
+            [$userOneId, $userTwoId] = [$userTwoId, $userOneId];
+            [$userOneType, $userTwoType] = [$userTwoType, $userOneType];
+        }
 
         return self::firstOrCreate(
             [
                 'user_one_id' => $userOneId,
+                'user_one_type' => $userOneType,
                 'user_two_id' => $userTwoId,
+                'user_two_type' => $userTwoType,
                 'task_id' => $taskId,
             ]
         );

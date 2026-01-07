@@ -9,19 +9,16 @@ class Task extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'task_id';
+    
     protected $fillable = [
-        'created_by',
-        'caregiver_id',
+        'user_id',
         'title',
         'description',
-        'location',
-        'budget',
-        'status',
-        'required_skills',
+        'skill_required',
+        'hourly_rate',
         'urgency',
-        'scheduled_at',
-        'started_at',
-        'completed_at',
+        'status',
     ];
 
     protected $casts = [
@@ -33,12 +30,25 @@ class Task extends Model
 
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function caregiver()
     {
         return $this->belongsTo(User::class, 'caregiver_id');
+    }
+
+    public function hiring_decision()
+    {
+        return $this->hasOne(HiringDecision::class, 'task_id');
+    }
+    
+    // Virtual attribute for caregiver via hiring decision
+    public function getCaregiverAttribute()
+    {
+        return $this->hiring_decision && $this->hiring_decision->decision_status === 'approved' 
+            ? $this->hiring_decision->helper 
+            : null;
     }
 
     public function messages()

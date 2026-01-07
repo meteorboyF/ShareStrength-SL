@@ -34,11 +34,11 @@ class Message extends Model
 
     public function sender()
     {
-        return $this->belongsTo(User::class, 'sender_id');
+        return $this->morphTo(__FUNCTION__, 'sender_type', 'sender_id');
     }
 
     public function receiver()
     {
-        return $this->belongsTo(User::class, 'receiver_id');
+        return $this->morphTo(__FUNCTION__, 'receiver_type', 'receiver_id');
     }
 }

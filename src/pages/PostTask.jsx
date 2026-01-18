@@ -45,9 +45,9 @@ const PostTask = () => {
                 title: formData.title,
                 description: formData.description,
                 location: 'Remote', // Default or add field
-                budget: formData.hourly_rate,
+                hourly_rate: formData.hourly_rate,
                 urgency: formData.urgency,
-                required_skills: [formData.skill_required], // Backend expects array
+                skill_required: formData.skill_required,
                 scheduled_at: new Date().toISOString() // Default to now
             };
 

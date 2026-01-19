@@ -7,17 +7,28 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const handlePayment = (e) => {
+  const handlePayment = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const orderData = {
+        items: cart,
+        payment_details: { method: 'card', name: 'Demo User' }, // Mock payment details
+        shipping_address: { address: '123 Demo St' }, // Mock address
+      };
+
+      await api.post('/orders', orderData);
+
       clearCart();
-      alert("Payment Successful! Thank you for your order.");
+      alert("Payment Successful! Order placed.");
       navigate('/dashboard');
-    }, 2000);
+    } catch (error) {
+      console.error("Payment failed", error);
+      alert("Payment failed: " + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (cart.length === 0) {
@@ -28,7 +39,7 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-neutral-light p-4 sm:p-8 font-sans">
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        
+
         {/* Left: Order Details */}
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-neutral-darkest">Order Details</h2>
@@ -75,8 +86,8 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={loading}
                 className={`w-full py-4 rounded-xl text-white font-bold shadow-md transition ${loading ? 'bg-gray-400' : 'bg-primary hover:bg-primary-dark'}`}
               >

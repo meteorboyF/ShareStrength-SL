@@ -21,6 +21,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 
+    // Shop Routes (Public)
+    Route::apiResource('products', \App\Http\Controllers\ProductController::class)->only(['index', 'show']);
+
     // Protected Routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -43,6 +46,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/applications/received', [\App\Http\Controllers\ApplicationController::class, 'received']);
         Route::apiResource('applications', \App\Http\Controllers\ApplicationController::class)->only(['index', 'store', 'update']);
 
+        Route::post('orders', [\App\Http\Controllers\OrderController::class, 'store']);
+
         // Matching
         Route::put('/tasks/{id}/start', [TaskController::class, 'start']);
         Route::put('/tasks/{id}/complete', [TaskController::class, 'complete']);
@@ -53,6 +58,34 @@ Route::prefix('v1')->group(function () {
     // Public Test Route
     Route::get('/test', function () {
         return response()->json(['status' => 'API is working']);
+    });
+
+    Route::get('/debug/schema', function () {
+        try {
+            $products = \Illuminate\Support\Facades\DB::select('DESCRIBE products');
+            $orders = \Illuminate\Support\Facades\DB::select('DESCRIBE orders');
+            return [
+                'products' => $products,
+                'orders' => $orders,
+            ];
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    });
+
+    Route::get('/debug/seed', function () {
+        try {
+            $seeder = new \Database\Seeders\ProductSeeder();
+            $seeder->run();
+            return ['status' => 'Seeding successful', 'products' => \App\Models\Product::all()];
+        } catch (\Exception $e) {
+            return [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ];
+        }
     });
 
     Route::get('/fix-db', function () {

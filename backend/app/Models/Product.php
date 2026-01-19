@@ -12,9 +12,6 @@ class Product extends Model
     protected $table = 'products';
     protected $primaryKey = 'product_id';
 
-    // Your table has both created_at and updated_at.
-    public $timestamps = true;
-
     protected $fillable = [
         'name',
         'description',

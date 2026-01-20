@@ -75,6 +75,82 @@ Route::prefix('v1')->group(function () {
         return response()->json(['status' => 'API is working']);
     });
 
+    Route::get('/debug/schema', function () {
+        try {
+            return [
+                'users_count' => \App\Models\User::count(),
+                'helpers_count' => \App\Models\Helper::count(),
+                'conversations_count' => \Illuminate\Support\Facades\DB::table('conversations')->count(),
+                'messages_count' => \App\Models\Message::count(),
+                'conversations_table_exists' => Schema::hasTable('conversations'),
+                'messages_columns' => \Illuminate\Support\Facades\DB::select('DESCRIBE messages'),
+            ];
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    });
+
+    Route::get('/debug/seed', function () {
+        try {
+            $seeder = new \Database\Seeders\ProductSeeder();
+            $seeder->run();
+            return ['status' => 'Seeding successful', 'products' => \App\Models\Product::all()];
+        } catch (\Exception $e) {
+            return [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ];
+        }
+    });
+
+    Route::get('/fix-messaging', function () {
+        $results = [];
+        try {
+            DB::statement("
+                CREATE TABLE IF NOT EXISTS conversations (
+                    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    user_one_id BIGINT UNSIGNED NOT NULL,
+                    user_one_type VARCHAR(255) NOT NULL,
+                    user_two_id BIGINT UNSIGNED NOT NULL,
+                    user_two_type VARCHAR(255) NOT NULL,
+                    task_id BIGINT UNSIGNED NULL,
+                    last_message_at TIMESTAMP NULL,
+                    created_at TIMESTAMP NULL,
+                    updated_at TIMESTAMP NULL,
+                    INDEX idx_user_one (user_one_id, user_one_type),
+                    INDEX idx_user_two (user_two_id, user_two_type)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+            $results[] = 'Conversations table created';
+        } catch (\Exception $e) {
+            $results[] = 'Conversations: ' . $e->getMessage();
+        }
+
+        try {
+            DB::statement("ALTER TABLE messages ADD COLUMN conversation_id BIGINT UNSIGNED NULL AFTER id");
+            $results[] = 'Added conversation_id';
+        } catch (\Exception $e) {
+            $results[] = 'conversation_id: ' . $e->getMessage();
+        }
+
+        try {
+            DB::statement("ALTER TABLE messages ADD COLUMN sender_type VARCHAR(255) NOT NULL DEFAULT 'user' AFTER sender_id");
+            $results[] = 'Added sender_type';
+        } catch (\Exception $e) {
+            $results[] = 'sender_type: ' . $e->getMessage();
+        }
+
+        try {
+            DB::statement("ALTER TABLE messages ADD COLUMN receiver_type VARCHAR(255) NOT NULL DEFAULT 'user' AFTER receiver_id");
+            $results[] = 'Added receiver_type';
+        } catch (\Exception $e) {
+            $results[] = 'receiver_type: ' . $e->getMessage();
+        }
+
+        return response()->json(['results' => $results]);
+    });
     Route::get('/fix-db', function () {
         $results = [];
         try {
@@ -102,5 +178,17 @@ Route::prefix('v1')->group(function () {
         }
 
         return response()->json(['results' => $results]);
+    });
+
+
+    Route::get('/debug/fk', function () {
+        $keys = \Illuminate\Support\Facades\DB::select("
+            SELECT CONSTRAINT_NAME, COLUMN_NAME 
+            FROM information_schema.KEY_COLUMN_USAGE 
+            WHERE TABLE_NAME = 'messages' 
+            AND TABLE_SCHEMA = DATABASE()
+            AND REFERENCED_TABLE_NAME IS NOT NULL
+        ");
+        return $keys;
     });
 });

@@ -33,6 +33,8 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('communities', CommunityController::class);
         Route::apiResource('resources', \App\Http\Controllers\ResourceController::class);
         Route::apiResource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store']);
+        Route::get('/payments/summary', [\App\Http\Controllers\PaymentController::class, 'summary']);
+        Route::get('/payments/insights', [\App\Http\Controllers\PaymentController::class, 'insights']);
         Route::get('/applications/received', [\App\Http\Controllers\ApplicationController::class, 'received']);
         Route::apiResource('applications', \App\Http\Controllers\ApplicationController::class)->only(['index', 'store', 'update']);
 
@@ -40,6 +42,26 @@ Route::prefix('v1')->group(function () {
         Route::get('/users/{id}', [\App\Http\Controllers\UserController::class, 'show']);
         Route::put('/profile', [\App\Http\Controllers\UserController::class, 'update']);
         Route::post('/profile/photo', [\App\Http\Controllers\UserController::class, 'uploadPhoto']);
+
+        // Resource Routes (Public)
+        Route::get('/resources', [\App\Http\Controllers\ResourceController::class, 'index']);
+        Route::get('/resources/featured', [\App\Http\Controllers\ResourceController::class, 'featured']);
+        Route::get('/resources/search', [\App\Http\Controllers\ResourceController::class, 'search']);
+        Route::get('/resources/categories', [\App\Http\Controllers\ResourceCategoryController::class, 'index']);
+        Route::get('/resources/{id}', [\App\Http\Controllers\ResourceController::class, 'show']);
+        Route::get('/resources/{id}/download', [\App\Http\Controllers\ResourceController::class, 'download']);
+
+        // Admin-only resource management
+        Route::middleware(\App\Http\Middleware\AdminMiddleware::class)->group(function () {
+            Route::post('/resources', [\App\Http\Controllers\ResourceController::class, 'store']);
+            Route::put('/resources/{id}', [\App\Http\Controllers\ResourceController::class, 'update']);
+            Route::delete('/resources/{id}', [\App\Http\Controllers\ResourceController::class, 'destroy']);
+
+            // Category management
+            Route::post('/categories', [\App\Http\Controllers\ResourceCategoryController::class, 'store']);
+            Route::put('/categories/{id}', [\App\Http\Controllers\ResourceCategoryController::class, 'update']);
+            Route::delete('/categories/{id}', [\App\Http\Controllers\ResourceCategoryController::class, 'destroy']);
+        });
 
         // Matching
         Route::put('/tasks/{id}/start', [TaskController::class, 'start']);

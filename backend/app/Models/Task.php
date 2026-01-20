@@ -45,4 +45,14 @@ class Task extends Model
     {
         return $this->hasMany(Message::class);
     }
+
+    public function resource()
+    {
+        return $this->hasOne(Resource::class);
+    }
+
+    public function applications()
+    {
+        return $this->hasMany(Application::class);
+    }
 }

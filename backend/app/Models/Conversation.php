@@ -47,10 +47,23 @@ class Conversation extends Model
     // Helper method to get the other user in the conversation
     public function getOtherUser($currentUserId, $currentUserType)
     {
+        // Determine which user is the "other" user
         if ($this->user_one_id == $currentUserId && $this->user_one_type == $currentUserType) {
-            return $this->userTwo; // MorphTo automatic resolution
+            // Current user is user_one, so return user_two
+            $otherUserId = $this->user_two_id;
+            $otherUserType = $this->user_two_type;
+        } else {
+            // Current user is user_two, so return user_one
+            $otherUserId = $this->user_one_id;
+            $otherUserType = $this->user_one_type;
         }
-        return $this->userOne;
+
+        // Manually fetch the user based on type
+        if ($otherUserType === 'helper') {
+            return \App\Models\Helper::find($otherUserId);
+        } else {
+            return \App\Models\User::find($otherUserId);
+        }
     }
 
     // Helper method to get unread message count for a specific user

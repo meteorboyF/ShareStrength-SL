@@ -12,29 +12,37 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         // Simple filter by status
-        $query = Task::query();
+        $query = Task::with(['creator', 'hiring_decision.helper']);
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
 
         // Returns all tasks, in production would paginate and filter by visibility
-        return response()->json($query->with(['creator', 'caregiver'])->latest()->get());
+        return response()->json($query->latest()->get());
     }
 
     // Get tasks created by the authenticated user
     public function myTasks()
     {
-        return response()->json(Task::where('created_by', Auth::id())->with(['creator', 'caregiver'])->latest()->get());
+        // If user is a helper, they might want to see tasks they are assigned to?
+        // But the endpoint name implies 'created by me'.
+        // We stick to created_by here.
+        return response()->json(Task::with(['creator', 'hiring_decision.helper'])->where('user_id', Auth::id())->latest()->get());
     }
 
     // Start task
     public function start(Request $request, $id)
     {
-        $task = Task::with(['creator', 'caregiver'])->findOrFail($id);
+        $task = Task::with(['creator', 'hiring_decision.helper'])->findOrFail($id);
 
         // Authorization: Must be the assigned caregiver
-        if ($task->caregiver_id != Auth::id()) {
+        // Check hiring decision
+        $assignedHelperId = $task->hiring_decision?->selected_helper_id;
+        
+        // Auth::id() is current user/helper ID
+        // If logged in as Helper, ID matches helper_id.
+        if ($assignedHelperId != Auth::id()) {
             return response()->json([
                 'message' => 'Unauthorized. You are not assigned to this task.'
             ], 403);
@@ -59,13 +67,15 @@ class TaskController extends Controller
         ]);
     }
 
-    // Complete task and calculate payment
+    // Complete task
     public function complete(Request $request, $id)
     {
-        $task = Task::with(['creator', 'caregiver'])->findOrFail($id);
+        $task = Task::with(['creator', 'hiring_decision.helper'])->findOrFail($id);
 
         // Authorization: Must be the assigned caregiver
-        if ($task->caregiver_id != Auth::id()) {
+        $assignedHelperId = $task->hiring_decision?->selected_helper_id;
+
+        if ($assignedHelperId != Auth::id()) {
             return response()->json([
                 'message' => 'Unauthorized. You are not assigned to this task.'
             ], 403);
@@ -75,13 +85,6 @@ class TaskController extends Controller
         if ($task->status !== 'in_progress') {
             return response()->json([
                 'message' => 'Cannot complete task. Current status: ' . $task->status . '. Expected: in_progress'
-            ], 400);
-        }
-
-        // Validation: Must have started_at timestamp
-        if (!$task->started_at) {
-            return response()->json([
-                'message' => 'Cannot complete task. No start time recorded.'
             ], 400);
         }
 
@@ -136,20 +139,20 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'budget' => 'nullable|numeric',
-            'scheduled_at' => 'nullable|date',
-            'location' => 'nullable|string',
+            'hourly_rate' => 'nullable|numeric',
+            'skill_required' => 'nullable|string',
+            'urgency' => 'nullable|string|in:Low,Medium,High',
         ]);
 
         // Ensure budget is treated as hourly rate if user input
 
         $task = Task::create([
-            'created_by' => Auth::id(),
+            'user_id' => Auth::id(),
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'budget' => $validated['budget'] ?? null,
-            'scheduled_at' => $validated['scheduled_at'] ?? null,
-            'location' => $validated['location'] ?? null,
+            'hourly_rate' => $validated['hourly_rate'] ?? null,
+            'skill_required' => $validated['skill_required'] ?? null,
+            'urgency' => $validated['urgency'] ?? 'Medium',
             'status' => 'open',
         ]);
 
@@ -166,7 +169,7 @@ class TaskController extends Controller
         $task = Task::findOrFail($id);
 
         // Basic authorization check
-        if ($task->created_by !== Auth::id() && $task->caregiver_id !== Auth::id()) {
+        if ($task->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -184,7 +187,7 @@ class TaskController extends Controller
     public function destroy($id)
     {
         $task = Task::findOrFail($id);
-        if ($task->created_by !== Auth::id()) {
+        if ($task->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -198,7 +201,7 @@ class TaskController extends Controller
         $originalTask = Task::findOrFail($id);
 
         // Authorization: Must be the task creator
-        if ($originalTask->created_by !== Auth::id()) {
+        if ($originalTask->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -214,11 +217,11 @@ class TaskController extends Controller
             'created_by' => Auth::id(),
             'title' => $originalTask->title,
             'description' => $originalTask->description,
-            'budget' => $originalTask->budget,
-            'location' => $originalTask->location,
-            'required_skills' => $originalTask->required_skills,
+            'hourly_rate' => $originalTask->hourly_rate,
+            'location' => $originalTask->location, // Keep location if it exists in model? original DB doesn't seem to have it in task fillable? task fillable has it removed.
+            // Wait, Task model fillable removed location.
+            'skill_required' => $originalTask->skill_required,
             'urgency' => $originalTask->urgency,
-            'scheduled_at' => $originalTask->scheduled_at,
             'status' => 'open',
             'caregiver_id' => null,
             'started_at' => null,

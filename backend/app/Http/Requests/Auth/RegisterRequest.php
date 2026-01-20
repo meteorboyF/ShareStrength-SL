@@ -14,15 +14,22 @@ class RegisterRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:pwd,caregiver'],
             'phone' => ['nullable', 'string', 'max:20'],
-            // Optional fields logic handled in controller or can be validated here
             'skills' => ['nullable', 'string'],
             'disability_type' => ['nullable', 'string'],
         ];
+
+        if ($this->input('role') === 'caregiver') {
+            $rules['email'][] = 'unique:helpers,email';
+        } else {
+            $rules['email'][] = 'unique:users,email';
+        }
+
+        return $rules;
     }
 }

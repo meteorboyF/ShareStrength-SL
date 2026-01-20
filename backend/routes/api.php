@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MatchingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\TaskController;
@@ -20,6 +21,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 
+    // Shop Routes (Public)
+    Route::apiResource('products', \App\Http\Controllers\ProductController::class)->only(['index', 'show']);
+
     // Protected Routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -30,6 +34,12 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('tasks', TaskController::class);
         Route::apiResource('trusted-contacts', TrustedContactController::class)->only(['index', 'store']);
         Route::apiResource('messages', MessageController::class)->except(['update']);
+        Route::patch('messages/{id}/read', [MessageController::class, 'markAsRead']);
+
+        Route::apiResource('conversations', ConversationController::class)->only(['index', 'show']);
+        Route::post('conversations/get-or-create', [ConversationController::class, 'getOrCreate']);
+        Route::patch('conversations/{id}/read', [MessageController::class, 'markConversationAsRead']);
+
         Route::apiResource('communities', CommunityController::class);
         Route::apiResource('resources', \App\Http\Controllers\ResourceController::class);
         Route::apiResource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store']);
@@ -62,6 +72,8 @@ Route::prefix('v1')->group(function () {
             Route::put('/categories/{id}', [\App\Http\Controllers\ResourceCategoryController::class, 'update']);
             Route::delete('/categories/{id}', [\App\Http\Controllers\ResourceCategoryController::class, 'destroy']);
         });
+
+        Route::post('orders', [\App\Http\Controllers\OrderController::class, 'store']);
 
         // Matching
         Route::put('/tasks/{id}/start', [TaskController::class, 'start']);
@@ -151,6 +163,7 @@ Route::prefix('v1')->group(function () {
 
         return response()->json(['results' => $results]);
     });
+
     Route::get('/fix-db', function () {
         $results = [];
         try {

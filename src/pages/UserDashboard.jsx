@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Chatbot from '../components/Chatbot';
 import { useCart } from '../context/CartContext';
 import authService from '../services/authService';
@@ -88,11 +88,12 @@ const UserDashboard = () => {
                     };
                 }
                 grouped[tId].applicants.push({
-                    id: app.helper?.id,
-                    application_id: app.id,
-                    name: app.helper?.name || 'Helper',
-                    photo: app.helper?.profile_photo_url || 'https://placehold.co/150',
-                    rating: 'New', // mock unless helper has rating
+                    id: app.applicant?.helper_id || app.applicant?.id, // Access polymorphic applicant
+                    type: app.applicant_type, // Use the stored applicant type
+                    application_id: app.application_id || app.id,
+                    name: app.applicant?.name || 'Applicant',
+                    photo: app.applicant?.profile_photo || 'https://placehold.co/150',
+                    rating: app.applicant?.rating || 'New',
                     status: app.status
                 });
                 grouped[tId].applicant_count++;
@@ -175,8 +176,24 @@ const UserDashboard = () => {
         return <span className="font-mono text-sm text-blue-700 font-semibold">{elapsed}</span>;
     };
 
+    const navigate = useNavigate();
+
     const toggleApplicants = (taskId) => {
         setOpenApplicantTask(openApplicantTask === taskId ? null : taskId);
+    };
+
+    const handleMessage = async (otherUserId, otherUserType, taskId) => {
+        try {
+            const response = await api.post('/conversations/get-or-create', {
+                other_user_id: otherUserId,
+                other_user_type: otherUserType,
+                task_id: taskId
+            });
+            navigate(`/messages/${response.data.id}`);
+        } catch (error) {
+            console.error("Failed to start conversation:", error);
+            alert("Could not start chat. Please try again.");
+        }
     };
 
     return (
@@ -371,6 +388,12 @@ const UserDashboard = () => {
                                                                         >
                                                                             Hire
                                                                         </button>
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); handleMessage(app.id, app.type, task.id); }}
+                                                                            className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-100 transition"
+                                                                        >
+                                                                            Message
+                                                                        </button>
                                                                     </>
                                                                 )}
                                                             </div>
@@ -431,6 +454,9 @@ const UserDashboard = () => {
                                 </Link>
                                 <Link to="/marketplace" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
                                     Find Help
+                                </Link>
+                                <Link to="/messages" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
+                                    Messages
                                 </Link>
                             </div>
                         </section>

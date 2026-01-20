@@ -11,27 +11,32 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $primaryKey = 'user_id';
+    
     protected $fillable = [
         'name',
         'email',
-        'password',
-        'role', // pwd, caregiver, admin
-        'phone',
+        'password_hash',
+        'user_type', // disabled_individual, family_member, caretaker
+        'phone_number',
         'address',
-        'skills',
-        'disability_type',
         'profile_photo',
     ];
 
     protected $hidden = [
-        'password',
+        'password_hash',
         'remember_token',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
     ];
+    
+    // Password accessor for Laravel Auth
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
+    }
 
     // Relationships
     public function tasks()

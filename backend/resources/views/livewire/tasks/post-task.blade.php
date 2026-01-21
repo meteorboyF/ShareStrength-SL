@@ -134,9 +134,10 @@
 
                     <div class="pt-2">
                         <button type="submit"
-                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-base font-semibold text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600 transition-all transform hover:scale-105">
-                            <span wire:loading.remove>Post Your Task</span>
-                            <span wire:loading>Posting...</span>
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-base font-semibold text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            wire:loading.attr="disabled" wire:target="postTask">
+                            <span wire:loading.remove wire:target="postTask">Post Your Task</span>
+                            <span wire:loading wire:target="postTask">Posting...</span>
                         </button>
                     </div>
                 </form>

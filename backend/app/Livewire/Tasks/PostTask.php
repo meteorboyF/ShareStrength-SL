@@ -60,6 +60,6 @@ class PostTask extends Component
 
         session()->flash('success', 'Task posted successfully!');
 
-        return $this->redirect(route('dashboard'), navigate: true);
+        return redirect()->to(route('dashboard'));
     }
 }

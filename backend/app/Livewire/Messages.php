@@ -17,6 +17,7 @@ class Messages extends Component
     public $messages = [];
     public $newMessage = '';
     public $currentUserId = null;
+    public $currentUserType = null;
     public $isHelpmate = false;
 
     public function mount($conversationId = null)
@@ -24,6 +25,7 @@ class Messages extends Component
         $this->selectedConversationId = $conversationId;
         $this->isHelpmate = Auth::guard('helpmate')->check();
         $this->currentUserId = $this->currentUser()->getKey();
+        $this->currentUserType = $this->getCurrentUserType();
         $this->loadConversations();
 
         if ($conversationId) {
@@ -34,6 +36,10 @@ class Messages extends Component
     #[Layout('components.layouts.app', ['title' => 'Messages - ShareStrength'])]
     public function render()
     {
+        // Ensure current user info is always fresh
+        $this->currentUserId = $this->currentUser()?->getKey();
+        $this->currentUserType = $this->getCurrentUserType();
+
         return view('livewire.messages');
     }
 
@@ -42,7 +48,7 @@ class Messages extends Component
         return Auth::guard('helpmate')->user() ?: Auth::guard('pwd')->user();
     }
 
-    private function currentUserType(): string
+    private function getCurrentUserType(): string
     {
         return Auth::guard('helpmate')->check() ? 'helper' : 'user';
     }
@@ -51,7 +57,7 @@ class Messages extends Component
     {
         $user = $this->currentUser();
         $userId = $user->getKey();
-        $userType = $this->currentUserType();
+        $userType = $this->getCurrentUserType();
 
         $this->conversations = Conversation::where(function ($query) use ($userId, $userType) {
             $query->where('user_one_id', $userId)
@@ -92,7 +98,7 @@ class Messages extends Component
 
         $user = $this->currentUser();
         $userId = $user->getKey();
-        $userType = $this->currentUserType();
+        $userType = $this->getCurrentUserType();
         $otherUser = $conversation->getOtherUser($userId, $userType);
         $otherUserType = $otherUser instanceof Helper ? 'helper' : 'user';
 
@@ -127,14 +133,18 @@ class Messages extends Component
 
         Message::where('conversation_id', $this->selectedConversationId)
             ->where('receiver_id', $this->currentUser()->getKey())
-            ->where('receiver_type', $this->currentUserType())
+            ->where('receiver_type', $this->getCurrentUserType())
             ->where('is_read', false)
             ->update(['is_read' => true]);
     }
 
     public function sendMessage()
     {
-        if (empty(trim($this->newMessage)) || !$this->selectedConversation) {
+        if (empty(trim($this->newMessage))) {
+            return;
+        }
+
+        if (!$this->selectedConversation) {
             return;
         }
 
@@ -146,10 +156,10 @@ class Messages extends Component
             return;
         }
 
-        $message = Message::create([
+        Message::create([
             'conversation_id' => $this->selectedConversationId,
             'sender_id' => $this->currentUser()->getKey(),
-            'sender_type' => $this->currentUserType(),
+            'sender_type' => $this->getCurrentUserType(),
             'receiver_id' => $receiverId,
             'receiver_type' => $receiverType,
             'task_id' => $conversation->task_id,
@@ -159,8 +169,9 @@ class Messages extends Component
 
         $conversation->update(['last_message_at' => now()]);
 
-        $this->newMessage = '';
+        $this->reset('newMessage');
         $this->loadMessages();
+        $this->dispatch('message-sent');
         $this->dispatch('scroll-to-bottom');
     }
 

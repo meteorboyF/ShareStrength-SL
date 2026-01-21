@@ -54,23 +54,22 @@ class Login extends Component
 
             $user = Auth::guard($guard)->user();
 
-            if (property_exists($user, 'is_active') && !$user->is_active) {
+            // Check if account is explicitly deactivated by admin
+            if ($user->is_active === false) {
                 Auth::guard($guard)->logout();
+                session()->invalidate();
+                session()->regenerateToken();
                 $this->addError('email', 'This account is inactive.');
                 return;
             }
 
+            // Redirect based on guard type
             if ($guard === 'admin') {
-                return redirect()->intended(route('admin.dashboard'));
+                return redirect()->to(route('admin.dashboard'));
             } elseif ($guard === 'helpmate') {
-                if (property_exists($user, 'is_verified') && !$user->is_verified) {
-                    Auth::guard($guard)->logout();
-                    $this->addError('email', 'HelpMate account pending verification.');
-                    return;
-                }
-                return redirect()->intended(route('helpmate.dashboard'));
+                return redirect()->to(route('helpmate.dashboard'));
             } else {
-                return redirect()->intended(route('dashboard'));
+                return redirect()->to(route('dashboard'));
             }
         }
 

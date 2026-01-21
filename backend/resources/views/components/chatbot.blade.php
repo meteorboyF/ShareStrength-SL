@@ -35,7 +35,7 @@
             }, 800);
         }
     }"
-    class="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none"
+    class="fixed bottom-6 right-24 z-50 flex flex-col items-end pointer-events-none"
 >
     <template x-if="isOpen">
         <div class="bg-white w-80 h-96 rounded-2xl shadow-2xl border border-gray-200 mb-4 flex flex-col overflow-hidden pointer-events-auto">

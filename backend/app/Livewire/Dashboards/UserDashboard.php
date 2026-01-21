@@ -123,7 +123,7 @@ class UserDashboard extends Component
             $taskId
         );
 
-        return $this->redirect(route('messages', ['conversationId' => $conversation->id]), navigate: true);
+        return redirect()->to(route('messages', ['conversationId' => $conversation->id]));
     }
 
     public function logout()
@@ -132,6 +132,6 @@ class UserDashboard extends Component
         session()->invalidate();
         session()->regenerateToken();
 
-        return $this->redirect(route('home'), navigate: true);
+        return redirect()->to(route('home'));
     }
 }

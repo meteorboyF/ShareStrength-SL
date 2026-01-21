@@ -1,11 +1,18 @@
-{{-- Accessibility Widget - Font Size & High Contrast --}}
+{{-- Accessibility Widget - Font Size & Display Modes --}}
 <div
     x-data="{
         isOpen: false,
         fontSize: localStorage.getItem('accessibility-font-size') || 'medium',
-        highContrast: localStorage.getItem('accessibility-high-contrast') === 'true',
+        displayMode: localStorage.getItem('accessibility-display-mode') || 'normal',
         eyeTrackingEnabled: localStorage.getItem('accessibility-eye-tracking') === 'true',
         eyeTrackingLoading: false,
+
+        modes: [
+            { id: 'normal', label: 'Normal', icon: 'sun', desc: 'Default light theme' },
+            { id: 'dark-mode', label: 'Dark', icon: 'moon', desc: 'Soft dark theme, easy on eyes' },
+            { id: 'high-contrast', label: 'High Contrast', icon: 'contrast', desc: 'Maximum contrast for low vision' },
+            { id: 'comfort-mode', label: 'Comfort', icon: 'eye', desc: 'Warm tones, larger text, more spacing' }
+        ],
 
         init() {
             this.applySettings();
@@ -22,14 +29,17 @@
                 root.classList.remove(cls);
             });
 
+            // Remove all display mode classes
+            ['dark-mode', 'high-contrast', 'comfort-mode'].forEach(cls => {
+                root.classList.remove(cls);
+            });
+
             // Add current font size class
             root.classList.add('font-' + this.fontSize);
 
-            // Toggle high contrast
-            if (this.highContrast) {
-                root.classList.add('high-contrast');
-            } else {
-                root.classList.remove('high-contrast');
+            // Add current display mode class (if not normal)
+            if (this.displayMode !== 'normal') {
+                root.classList.add(this.displayMode);
             }
         },
 
@@ -39,9 +49,9 @@
             this.applySettings();
         },
 
-        toggleContrast() {
-            this.highContrast = !this.highContrast;
-            localStorage.setItem('accessibility-high-contrast', this.highContrast.toString());
+        setDisplayMode(mode) {
+            this.displayMode = mode;
+            localStorage.setItem('accessibility-display-mode', mode);
             this.applySettings();
         },
 
@@ -79,6 +89,10 @@
             } else if (window.EyeTracking && window.EyeTracking.isTracking()) {
                 window.EyeTracking.stop();
             }
+        },
+
+        isDark() {
+            return this.displayMode === 'dark-mode' || this.displayMode === 'high-contrast';
         }
     }"
     class="fixed bottom-4 right-4 z-50"
@@ -92,15 +106,69 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="mb-2 p-4 rounded-lg shadow-lg border"
-        :class="highContrast ? 'bg-black border-white' : 'bg-white border-gray-200'"
-        style="min-width: 200px"
+        class="mb-2 p-4 rounded-xl shadow-xl border"
+        :class="isDark() ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
+        style="min-width: 260px"
     >
+        <h3
+            class="text-sm font-bold mb-4 pb-2 border-b"
+            :class="isDark() ? 'text-white border-gray-700' : 'text-gray-800 border-gray-200'"
+        >
+            Accessibility Settings
+        </h3>
+
+        {{-- Display Mode --}}
+        <div class="mb-4">
+            <label
+                class="block text-xs font-semibold mb-2 uppercase tracking-wide"
+                :class="isDark() ? 'text-gray-400' : 'text-gray-500'"
+            >
+                Display Mode
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+                <template x-for="mode in modes" :key="mode.id">
+                    <button
+                        @click="setDisplayMode(mode.id)"
+                        :title="mode.desc"
+                        class="py-2 px-3 rounded-lg border text-xs font-medium transition-all flex flex-col items-center gap-1"
+                        :class="displayMode === mode.id
+                            ? (isDark() ? 'bg-purple-600 text-white border-purple-500' : 'bg-purple-600 text-white border-purple-600')
+                            : (isDark() ? 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100')"
+                    >
+                        {{-- Icons --}}
+                        <template x-if="mode.icon === 'sun'">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </template>
+                        <template x-if="mode.icon === 'moon'">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        </template>
+                        <template x-if="mode.icon === 'contrast'">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18m0 0a9 9 0 100-18 9 9 0 000 18z" />
+                                <path fill="currentColor" d="M12 3a9 9 0 000 18V3z" />
+                            </svg>
+                        </template>
+                        <template x-if="mode.icon === 'eye'">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </template>
+                        <span x-text="mode.label"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+
         {{-- Font Size --}}
         <div class="mb-4">
             <label
-                class="block text-sm font-medium mb-2"
-                :class="highContrast ? 'text-white' : 'text-gray-700'"
+                class="block text-xs font-semibold mb-2 uppercase tracking-wide"
+                :class="isDark() ? 'text-gray-400' : 'text-gray-500'"
             >
                 Text Size
             </label>
@@ -108,12 +176,12 @@
                 <template x-for="(size, index) in ['small', 'medium', 'large', 'x-large']" :key="size">
                     <button
                         @click="setFontSize(size)"
-                        :title="size.charAt(0).toUpperCase() + size.slice(1)"
-                        class="flex-1 py-2 px-2 rounded border transition-all"
+                        :title="size.charAt(0).toUpperCase() + size.slice(1).replace('-', ' ')"
+                        class="flex-1 py-2 px-2 rounded-lg border transition-all font-medium"
                         :class="fontSize === size
-                            ? (highContrast ? 'bg-white text-black border-white' : 'bg-purple-600 text-white border-purple-600')
-                            : (highContrast ? 'bg-black text-white border-white hover:bg-gray-800' : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200')"
-                        :style="'font-size: ' + (12 + index * 3) + 'px'"
+                            ? (isDark() ? 'bg-purple-600 text-white border-purple-500' : 'bg-purple-600 text-white border-purple-600')
+                            : (isDark() ? 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100')"
+                        :style="'font-size: ' + (11 + index * 3) + 'px'"
                     >
                         A
                     </button>
@@ -121,54 +189,26 @@
             </div>
         </div>
 
-        {{-- High Contrast Toggle --}}
+        {{-- Eye Tracking Toggle --}}
         <div>
             <label
-                class="block text-sm font-medium mb-2"
-                :class="highContrast ? 'text-white' : 'text-gray-700'"
-            >
-                High Contrast
-            </label>
-            <button
-                @click="toggleContrast()"
-                class="w-full py-2 px-4 rounded border transition-all flex items-center justify-between"
-                :class="highContrast
-                    ? 'bg-white text-black border-white'
-                    : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'"
-            >
-                <span x-text="highContrast ? 'On' : 'Off'"></span>
-                <div
-                    class="w-10 h-5 rounded-full relative transition-colors"
-                    :class="highContrast ? 'bg-green-500' : 'bg-gray-300'"
-                >
-                    <div
-                        class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform"
-                        :class="highContrast ? 'translate-x-5' : 'translate-x-0.5'"
-                    ></div>
-                </div>
-            </button>
-        </div>
-
-        {{-- Eye Tracking Toggle --}}
-        <div class="mt-4">
-            <label
-                class="block text-sm font-medium mb-2"
-                :class="highContrast ? 'text-white' : 'text-gray-700'"
+                class="block text-xs font-semibold mb-2 uppercase tracking-wide"
+                :class="isDark() ? 'text-gray-400' : 'text-gray-500'"
             >
                 Eye Tracking
             </label>
             <button
                 @click="toggleEyeTracking()"
-                class="w-full py-2 px-4 rounded border transition-all flex items-center justify-between"
-                :class="highContrast
-                    ? 'bg-white text-black border-white'
-                    : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'"
+                class="w-full py-2 px-3 rounded-lg border transition-all flex items-center justify-between text-sm"
+                :class="isDark()
+                    ? 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'"
                 :disabled="eyeTrackingLoading"
             >
-                <span x-text="eyeTrackingLoading ? 'Loading...' : (eyeTrackingEnabled ? 'On' : 'Off')"></span>
+                <span x-text="eyeTrackingLoading ? 'Loading...' : (eyeTrackingEnabled ? 'Enabled' : 'Disabled')"></span>
                 <div
                     class="w-10 h-5 rounded-full relative transition-colors"
-                    :class="eyeTrackingEnabled ? 'bg-green-500' : 'bg-gray-300'"
+                    :class="eyeTrackingEnabled ? 'bg-green-500' : (isDark() ? 'bg-gray-600' : 'bg-gray-300')"
                 >
                     <div
                         class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform"
@@ -183,9 +223,9 @@
     <button
         @click="isOpen = !isOpen"
         class="w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
-        :class="highContrast
-            ? 'bg-white text-black border-2 border-white'
-            : 'bg-purple-600 text-white'"
+        :class="isDark()
+            ? 'bg-gray-800 text-white border-2 border-gray-600 hover:bg-gray-700'
+            : 'bg-purple-600 text-white hover:bg-purple-700'"
         title="Accessibility Settings"
         aria-label="Accessibility Settings"
     >
@@ -200,13 +240,13 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M12 4.5c-4.5 0-7.5 3-8.5 5.5 1 2.5 4 5.5 8.5 5.5s7.5-3 8.5-5.5c-1-2.5-4-5.5-8.5-5.5z"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
             />
-            <circle cx="12" cy="10" r="3" stroke-width="2" />
             <path
                 stroke-linecap="round"
+                stroke-linejoin="round"
                 stroke-width="2"
-                d="M12 15v5M9 18h6"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
             />
         </svg>
     </button>

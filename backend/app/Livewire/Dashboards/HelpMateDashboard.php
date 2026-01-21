@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Task;
 use App\Models\Application;
 use App\Models\Payment;
+use App\Models\Conversation;
 
 class HelpMateDashboard extends Component
 {
@@ -39,10 +40,9 @@ class HelpMateDashboard extends Component
             ];
         });
 
-        // Available Tasks (open, not applied to, not my own)
+        // Available Tasks (open, not already applied to)
         $availableTasks = Task::where('status', 'open')
             ->whereNotIn('id', $appliedTaskIds)
-            ->where('created_by', '!=', $userId)
             ->with('creator')
             ->get()
             ->map(function ($task) {
@@ -68,6 +68,7 @@ class HelpMateDashboard extends Component
                 return [
                     'id' => $task->id,
                     'title' => $task->title,
+                    'user_id' => $task->creator->id ?? null,
                     'user_name' => $task->creator->name ?? 'Unknown',
                     'status' => $task->status,
                     'started_at' => $task->started_at,
@@ -180,11 +181,25 @@ class HelpMateDashboard extends Component
         }
     }
 
+    public function messageUser($userId, $taskId = null)
+    {
+        $helper = Auth::guard('helpmate')->user();
+        $conversation = Conversation::findOrCreate(
+            $helper->id,
+            'helper',
+            $userId,
+            'user',
+            $taskId
+        );
+
+        return redirect()->to(route('messages', ['conversationId' => $conversation->id]));
+    }
+
     public function logout()
     {
         Auth::guard('helpmate')->logout();
         session()->invalidate();
         session()->regenerateToken();
-        return redirect('/');
+        return redirect()->to(route('home'));
     }
 }

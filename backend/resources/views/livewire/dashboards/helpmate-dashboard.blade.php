@@ -133,6 +133,15 @@
                                                 <p class="text-xs text-blue-600">for {{ $job['user_name'] }} ({{ $job['status'] }})</p>
                                             </div>
                                             <div class="flex items-center gap-3">
+                                                @if($job['user_id'])
+                                                    <button
+                                                        wire:click="messageUser({{ $job['user_id'] }}, {{ $job['id'] }})"
+                                                        class="text-xs font-bold bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition"
+                                                    >
+                                                        Message
+                                                    </button>
+                                                @endif
+
                                                 @if($job['status'] === 'accepted')
                                                     <button
                                                         wire:click="startTask({{ $job['id'] }})"

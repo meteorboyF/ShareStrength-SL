@@ -107,7 +107,7 @@
                 @else
                     @foreach($messages as $message)
                         @php
-                            $isOwn = $message['sender_id'] == $currentUserId;
+                            $isOwn = $message['sender_id'] == $currentUserId && $message['sender_type'] == $currentUserType;
                         @endphp
                         <div class="flex {{ $isOwn ? 'justify-end' : 'justify-start' }}">
                             <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-2xl {{ $isOwn ? 'bg-purple-600 text-white' : 'bg-white border border-gray-200 text-gray-900' }}">
@@ -123,17 +123,23 @@
 
             <!-- Message Input -->
             <div class="border-t border-gray-200 bg-white px-6 py-4">
-                <form wire:submit="sendMessage" class="flex gap-3">
+                <form
+                    wire:submit="sendMessage"
+                    class="flex gap-3"
+                    x-data
+                    x-on:message-sent.window="$refs.msgInput.value = ''"
+                >
                     <input
                         type="text"
                         wire:model="newMessage"
+                        x-ref="msgInput"
                         placeholder="Type a message..."
                         class="flex-1 px-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        autocomplete="off"
                     />
                     <button
                         type="submit"
-                        class="bg-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-purple-700 transition disabled:bg-gray-400"
-                        {{ empty($newMessage) ? 'disabled' : '' }}
+                        class="bg-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-purple-700 transition"
                     >
                         Send
                     </button>

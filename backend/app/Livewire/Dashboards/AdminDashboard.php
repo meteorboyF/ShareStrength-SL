@@ -82,6 +82,6 @@ class AdminDashboard extends Component
         session()->invalidate();
         session()->regenerateToken();
 
-        return redirect()->route('home');
+        return redirect()->to(route('home'));
     }
 }

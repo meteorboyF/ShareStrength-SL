@@ -40,6 +40,7 @@
 
 :root {
     --font-scale: 1;
+    --font-scale-multiplier: 1;
 }
 
 /* Font Size Scales */
@@ -50,73 +51,729 @@
 
 /* Apply font scaling globally */
 html {
-    font-size: calc(16px * var(--font-scale));
+    font-size: calc(16px * var(--font-scale) * var(--font-scale-multiplier));
 }
 
-/* High Contrast Mode */
+/* ========================================
+   DARK MODE - Soft, easy on eyes
+   ======================================== */
+/* Theme tokens (used by the shared mapping rules below) */
+:root.dark-mode {
+    color-scheme: dark;
+
+    /* Core */
+    --a11y-bg: #0b1020;
+    --a11y-surface: #101a2b;
+    --a11y-surface-2: #15223a;
+    --a11y-surface-3: #1b2b49;
+    --a11y-text: #e7ecf5;
+    --a11y-muted: #a6b0c4;
+    --a11y-border: #2a3a5e;
+    --a11y-link: #93c5fd;
+    --a11y-focus: #c4b5fd;
+
+    /* Brand */
+    --a11y-primary: #c4b5fd;
+    --a11y-primary-strong: #8b5cf6;
+    --a11y-on-primary: #0b1020;
+
+    /* Status tints */
+    --a11y-success-bg: #062a1a;
+    --a11y-success-border: #14532d;
+    --a11y-success-text: #86efac;
+    --a11y-success-strong: #22c55e;
+    --a11y-on-success: #06130b;
+
+    --a11y-danger-bg: #2a1010;
+    --a11y-danger-border: #7f1d1d;
+    --a11y-danger-text: #fca5a5;
+    --a11y-danger-strong: #ef4444;
+    --a11y-on-danger: #130606;
+
+    --a11y-warning-bg: #2a1f03;
+    --a11y-warning-border: #854d0e;
+    --a11y-warning-text: #fde68a;
+    --a11y-warning-strong: #eab308;
+    --a11y-on-warning: #130f02;
+
+    --a11y-info-bg: #0b1d2b;
+    --a11y-info-border: #1d4ed8;
+    --a11y-info-text: #93c5fd;
+    --a11y-info-strong: #3b82f6;
+    --a11y-on-info: #07111a;
+
+    --a11y-teal-bg: #042f2e;
+    --a11y-teal-border: #0f766e;
+    --a11y-teal-text: #5eead4;
+    --a11y-teal-strong: #14b8a6;
+    --a11y-on-teal: #041312;
+}
+
+/* ========================================
+   HIGH CONTRAST MODE - Maximum contrast
+   ======================================== */
+/* Theme tokens (used by the shared mapping rules below) */
 :root.high-contrast {
-    --hc-bg: #000000;
-    --hc-bg-secondary: #1a1a1a;
-    --hc-text: #ffffff;
-    --hc-text-muted: #d0d0d0;
-    --hc-border: #ffffff;
-    --hc-primary: #a78bfa;
-    --hc-secondary: #34d399;
+    color-scheme: dark;
+
+    /* Core */
+    --a11y-bg: #000000;
+    --a11y-surface: #000000;
+    --a11y-surface-2: #0a0a0a;
+    --a11y-surface-3: #121212;
+    --a11y-text: #ffffff;
+    --a11y-muted: #e5e5e5;
+    --a11y-border: #ffffff;
+    --a11y-link: #00ffff;
+    --a11y-focus: #00ffff;
+
+    /* Brand */
+    --a11y-primary: #ffff00;
+    --a11y-primary-strong: #ffff00;
+    --a11y-on-primary: #000000;
+
+    /* Status tints (keep meaning, maximize contrast) */
+    --a11y-success-bg: #000000;
+    --a11y-success-border: #00ff00;
+    --a11y-success-text: #00ff00;
+    --a11y-success-strong: #00ff00;
+    --a11y-on-success: #000000;
+
+    --a11y-danger-bg: #000000;
+    --a11y-danger-border: #ff3333;
+    --a11y-danger-text: #ff3333;
+    --a11y-danger-strong: #ff3333;
+    --a11y-on-danger: #000000;
+
+    --a11y-warning-bg: #000000;
+    --a11y-warning-border: #ffff00;
+    --a11y-warning-text: #ffff00;
+    --a11y-warning-strong: #ffff00;
+    --a11y-on-warning: #000000;
+
+    --a11y-info-bg: #000000;
+    --a11y-info-border: #00ffff;
+    --a11y-info-text: #00ffff;
+    --a11y-info-strong: #00ffff;
+    --a11y-on-info: #000000;
+
+    --a11y-teal-bg: #000000;
+    --a11y-teal-border: #00ffff;
+    --a11y-teal-text: #00ffff;
+    --a11y-teal-strong: #00ffff;
+    --a11y-on-teal: #000000;
 }
 
+/* ========================================
+   Shared mapping for DARK + HIGH CONTRAST
+   ======================================== */
+:root.dark-mode body,
 :root.high-contrast body {
-    background-color: var(--hc-bg) !important;
-    color: var(--hc-text) !important;
+    background-color: var(--a11y-bg) !important;
+    color: var(--a11y-text) !important;
 }
 
-:root.high-contrast .bg-white,
-:root.high-contrast .bg-gray-50,
-:root.high-contrast .bg-gray-100 {
-    background-color: var(--hc-bg) !important;
+:root.dark-mode :focus-visible {
+    outline: 2px solid var(--a11y-focus) !important;
+    outline-offset: 3px;
 }
 
-:root.high-contrast .bg-gray-200,
-:root.high-contrast .bg-gray-300 {
-    background-color: var(--hc-bg-secondary) !important;
+:root.high-contrast :focus-visible {
+    outline: 3px solid var(--a11y-focus) !important;
+    outline-offset: 4px;
 }
 
-:root.high-contrast .text-gray-500,
-:root.high-contrast .text-gray-600 {
-    color: var(--hc-text-muted) !important;
+:root.high-contrast a:not([class*="bg-"]) {
+    color: var(--a11y-link) !important;
 }
 
-:root.high-contrast .text-gray-700,
-:root.high-contrast .text-gray-800,
-:root.high-contrast .text-gray-900 {
-    color: var(--hc-text) !important;
-}
-
-:root.high-contrast .border-gray-200,
-:root.high-contrast .border-gray-300 {
-    border-color: var(--hc-border) !important;
-}
-
-:root.high-contrast .bg-purple-600,
-:root.high-contrast .bg-purple-700 {
-    background-color: var(--hc-primary) !important;
-}
-
-:root.high-contrast .text-purple-600,
-:root.high-contrast .text-purple-700 {
-    color: var(--hc-primary) !important;
-}
-
+:root.dark-mode input,
+:root.dark-mode textarea,
+:root.dark-mode select,
 :root.high-contrast input,
 :root.high-contrast textarea,
 :root.high-contrast select {
-    background-color: var(--hc-bg-secondary) !important;
-    color: var(--hc-text) !important;
-    border-color: var(--hc-border) !important;
+    background-color: var(--a11y-surface) !important;
+    color: var(--a11y-text) !important;
+    border-color: var(--a11y-border) !important;
+}
+
+:root.dark-mode input::placeholder,
+:root.dark-mode textarea::placeholder,
+:root.high-contrast input::placeholder,
+:root.high-contrast textarea::placeholder {
+    color: var(--a11y-muted) !important;
+}
+
+/* Page / surface backgrounds */
+:root.dark-mode .bg-gray-50,
+:root.dark-mode .bg-slate-50,
+:root.high-contrast .bg-gray-50,
+:root.high-contrast .bg-slate-50 {
+    background-color: var(--a11y-bg) !important;
+}
+
+:root.dark-mode .bg-gray-800,
+:root.dark-mode .bg-gray-900,
+:root.high-contrast .bg-gray-800,
+:root.high-contrast .bg-gray-900 {
+    background-color: var(--a11y-surface-3) !important;
+}
+
+:root.dark-mode .bg-gray-400,
+:root.high-contrast .bg-gray-400 {
+    background-color: var(--a11y-surface-3) !important;
+}
+
+:root.dark-mode .bg-white,
+:root.dark-mode .bg-gray-100,
+:root.dark-mode .bg-slate-100,
+:root.high-contrast .bg-white,
+:root.high-contrast .bg-gray-100,
+:root.high-contrast .bg-slate-100 {
+    background-color: var(--a11y-surface) !important;
+}
+
+:root.dark-mode .bg-gray-200,
+:root.dark-mode .bg-gray-300,
+:root.dark-mode .bg-slate-200,
+:root.dark-mode .bg-slate-300,
+:root.high-contrast .bg-gray-200,
+:root.high-contrast .bg-gray-300,
+:root.high-contrast .bg-slate-200,
+:root.high-contrast .bg-slate-300 {
+    background-color: var(--a11y-surface-2) !important;
+}
+
+/* Status / accent tints (common “badge / alert” backgrounds) */
+:root.dark-mode .bg-green-50,
+:root.dark-mode .bg-green-100,
+:root.high-contrast .bg-green-50,
+:root.high-contrast .bg-green-100 {
+    background-color: var(--a11y-success-bg) !important;
+}
+
+:root.dark-mode .bg-red-50,
+:root.dark-mode .bg-red-100,
+:root.high-contrast .bg-red-50,
+:root.high-contrast .bg-red-100 {
+    background-color: var(--a11y-danger-bg) !important;
+}
+
+:root.dark-mode .bg-yellow-50,
+:root.dark-mode .bg-yellow-100,
+:root.high-contrast .bg-yellow-50,
+:root.high-contrast .bg-yellow-100 {
+    background-color: var(--a11y-warning-bg) !important;
+}
+
+:root.dark-mode .bg-blue-50,
+:root.dark-mode .bg-blue-100,
+:root.high-contrast .bg-blue-50,
+:root.high-contrast .bg-blue-100 {
+    background-color: var(--a11y-info-bg) !important;
+}
+
+:root.dark-mode .bg-teal-50,
+:root.high-contrast .bg-teal-50 {
+    background-color: var(--a11y-teal-bg) !important;
+}
+
+:root.dark-mode .bg-purple-50,
+:root.dark-mode .bg-purple-100,
+:root.high-contrast .bg-purple-50,
+:root.high-contrast .bg-purple-100 {
+    background-color: var(--a11y-surface-2) !important;
+}
+
+:root.dark-mode .bg-indigo-100,
+:root.dark-mode .bg-pink-100,
+:root.high-contrast .bg-indigo-100,
+:root.high-contrast .bg-pink-100 {
+    background-color: var(--a11y-surface-2) !important;
+}
+
+/* Landing page palette classes */
+:root.dark-mode .bg-neutral-light,
+:root.high-contrast .bg-neutral-light {
+    background-color: var(--a11y-bg) !important;
+}
+
+:root.dark-mode .bg-neutral-darkest,
+:root.high-contrast .bg-neutral-darkest {
+    background-color: var(--a11y-surface-3) !important;
+}
+
+:root.dark-mode .text-neutral-light,
+:root.high-contrast .text-neutral-light {
+    color: var(--a11y-muted) !important;
+}
+
+:root.dark-mode .text-neutral-medium,
+:root.high-contrast .text-neutral-medium {
+    color: var(--a11y-muted) !important;
+}
+
+:root.dark-mode .text-neutral-dark,
+:root.dark-mode .text-neutral-darkest,
+:root.high-contrast .text-neutral-dark,
+:root.high-contrast .text-neutral-darkest {
+    color: var(--a11y-text) !important;
+}
+
+:root.dark-mode .border-neutral-dark,
+:root.high-contrast .border-neutral-dark {
+    border-color: var(--a11y-border) !important;
+}
+
+:root.dark-mode .bg-primary,
+:root.dark-mode .bg-primary-dark,
+:root.high-contrast .bg-primary,
+:root.high-contrast .bg-primary-dark {
+    background-color: var(--a11y-primary-strong) !important;
+    color: var(--a11y-on-primary) !important;
+}
+
+:root.dark-mode [class~="bg-primary/10"],
+:root.high-contrast [class~="bg-primary/10"] {
+    background-color: var(--a11y-surface-2) !important;
+}
+
+:root.high-contrast [class~="border-primary/20"],
+:root.high-contrast [class~="border-primary/50"] {
+    border-color: var(--a11y-border) !important;
+}
+
+:root.dark-mode .text-primary,
+:root.dark-mode .text-primary-light,
+:root.dark-mode .text-primary-dark,
+:root.high-contrast .text-primary,
+:root.high-contrast .text-primary-light,
+:root.high-contrast .text-primary-dark {
+    color: var(--a11y-primary) !important;
+}
+
+/* Tailwind neutral palette (used in landing footer) */
+:root.dark-mode .text-neutral-200,
+:root.dark-mode .text-neutral-300,
+:root.dark-mode .text-neutral-400,
+:root.dark-mode .text-neutral-500,
+:root.high-contrast .text-neutral-200,
+:root.high-contrast .text-neutral-300,
+:root.high-contrast .text-neutral-400,
+:root.high-contrast .text-neutral-500 {
+    color: var(--a11y-muted) !important;
+}
+
+/* Text colors */
+:root.dark-mode .text-gray-400,
+:root.dark-mode .text-gray-500,
+:root.dark-mode .text-gray-600,
+:root.dark-mode .text-slate-400,
+:root.dark-mode .text-slate-500,
+:root.dark-mode .text-slate-600,
+:root.dark-mode .text-neutral-300,
+:root.dark-mode .text-neutral-400,
+:root.dark-mode .text-neutral-500,
+:root.high-contrast .text-gray-400,
+:root.high-contrast .text-gray-500,
+:root.high-contrast .text-gray-600,
+:root.high-contrast .text-slate-400,
+:root.high-contrast .text-slate-500,
+:root.high-contrast .text-slate-600,
+:root.high-contrast .text-neutral-300,
+:root.high-contrast .text-neutral-400,
+:root.high-contrast .text-neutral-500 {
+    color: var(--a11y-muted) !important;
+}
+
+:root.dark-mode .text-gray-700,
+:root.dark-mode .text-gray-800,
+:root.dark-mode .text-gray-900,
+:root.dark-mode .text-slate-700,
+:root.dark-mode .text-slate-800,
+:root.dark-mode .text-slate-900,
+:root.dark-mode .text-black,
+:root.high-contrast .text-gray-700,
+:root.high-contrast .text-gray-800,
+:root.high-contrast .text-gray-900,
+:root.high-contrast .text-slate-700,
+:root.high-contrast .text-slate-800,
+:root.high-contrast .text-slate-900,
+:root.high-contrast .text-black {
+    color: var(--a11y-text) !important;
+}
+
+:root.dark-mode .text-purple-500,
+:root.dark-mode .text-purple-600,
+:root.dark-mode .text-purple-700,
+:root.dark-mode .text-purple-900,
+:root.high-contrast .text-purple-500,
+:root.high-contrast .text-purple-600,
+:root.high-contrast .text-purple-700,
+:root.high-contrast .text-purple-900 {
+    color: var(--a11y-primary) !important;
+}
+
+:root.dark-mode .text-indigo-600,
+:root.dark-mode .text-indigo-700,
+:root.high-contrast .text-indigo-600,
+:root.high-contrast .text-indigo-700,
+:root.dark-mode .text-pink-600,
+:root.dark-mode .text-pink-700,
+:root.high-contrast .text-pink-600,
+:root.high-contrast .text-pink-700 {
+    color: var(--a11y-primary) !important;
+}
+
+:root.dark-mode .text-green-600,
+:root.dark-mode .text-green-700,
+:root.dark-mode .text-green-800,
+:root.high-contrast .text-green-600,
+:root.high-contrast .text-green-700,
+:root.high-contrast .text-green-800 {
+    color: var(--a11y-success-text) !important;
+}
+
+:root.dark-mode .text-red-500,
+:root.dark-mode .text-red-600,
+:root.dark-mode .text-red-700,
+:root.dark-mode .text-red-800,
+:root.dark-mode .text-red-900,
+:root.high-contrast .text-red-500,
+:root.high-contrast .text-red-600,
+:root.high-contrast .text-red-700,
+:root.high-contrast .text-red-800,
+:root.high-contrast .text-red-900 {
+    color: var(--a11y-danger-text) !important;
+}
+
+:root.dark-mode .text-yellow-500,
+:root.dark-mode .text-yellow-700,
+:root.high-contrast .text-yellow-500,
+:root.high-contrast .text-yellow-700 {
+    color: var(--a11y-warning-text) !important;
+}
+
+:root.dark-mode .text-blue-500,
+:root.dark-mode .text-blue-600,
+:root.dark-mode .text-blue-700,
+:root.dark-mode .text-blue-800,
+:root.high-contrast .text-blue-500,
+:root.high-contrast .text-blue-600,
+:root.high-contrast .text-blue-700,
+:root.high-contrast .text-blue-800 {
+    color: var(--a11y-info-text) !important;
+}
+
+:root.dark-mode .text-teal-600,
+:root.dark-mode .text-teal-700,
+:root.high-contrast .text-teal-600,
+:root.high-contrast .text-teal-700 {
+    color: var(--a11y-teal-text) !important;
+}
+
+/* Borders */
+:root.dark-mode .border-gray-100,
+:root.dark-mode .border-gray-200,
+:root.dark-mode .border-gray-300,
+:root.dark-mode .border-gray-600,
+:root.dark-mode .border-gray-700,
+:root.dark-mode .border-slate-100,
+:root.dark-mode .border-slate-200,
+:root.dark-mode .border-slate-300,
+:root.dark-mode .border-neutral-800,
+:root.high-contrast .border-gray-100,
+:root.high-contrast .border-gray-200,
+:root.high-contrast .border-gray-300,
+:root.high-contrast .border-gray-600,
+:root.high-contrast .border-gray-700,
+:root.high-contrast .border-slate-100,
+:root.high-contrast .border-slate-200,
+:root.high-contrast .border-slate-300,
+:root.high-contrast .border-neutral-800 {
+    border-color: var(--a11y-border) !important;
+}
+
+:root.dark-mode .border-green-100,
+:root.dark-mode .border-green-200,
+:root.dark-mode .border-green-400,
+:root.dark-mode .border-green-500,
+:root.dark-mode .border-green-600,
+:root.high-contrast .border-green-100,
+:root.high-contrast .border-green-200,
+:root.high-contrast .border-green-400,
+:root.high-contrast .border-green-500,
+:root.high-contrast .border-green-600 {
+    border-color: var(--a11y-success-border) !important;
+}
+
+:root.dark-mode .border-red-200,
+:root.dark-mode .border-red-400,
+:root.high-contrast .border-red-200,
+:root.high-contrast .border-red-400 {
+    border-color: var(--a11y-danger-border) !important;
+}
+
+:root.dark-mode .border-blue-100,
+:root.dark-mode .border-blue-200,
+:root.high-contrast .border-blue-100,
+:root.high-contrast .border-blue-200 {
+    border-color: var(--a11y-info-border) !important;
+}
+
+:root.dark-mode .border-purple-100,
+:root.dark-mode .border-purple-200,
+:root.dark-mode .border-purple-500,
+:root.dark-mode .border-purple-600,
+:root.high-contrast .border-purple-100,
+:root.high-contrast .border-purple-200,
+:root.high-contrast .border-purple-500,
+:root.high-contrast .border-purple-600 {
+    border-color: var(--a11y-primary) !important;
+}
+
+:root.dark-mode .border-indigo-100,
+:root.dark-mode .border-pink-100,
+:root.high-contrast .border-indigo-100,
+:root.high-contrast .border-pink-100 {
+    border-color: var(--a11y-border) !important;
+}
+
+:root.dark-mode .border-indigo-600,
+:root.high-contrast .border-indigo-600 {
+    border-color: var(--a11y-primary) !important;
+}
+
+:root.dark-mode .border-teal-100,
+:root.high-contrast .border-teal-100 {
+    border-color: var(--a11y-teal-border) !important;
+}
+
+/* Primary buttons */
+:root.dark-mode .bg-purple-600,
+:root.dark-mode .bg-purple-700,
+:root.dark-mode .bg-purple-800,
+:root.high-contrast .bg-purple-600,
+:root.high-contrast .bg-purple-700,
+:root.high-contrast .bg-purple-800 {
+    background-color: var(--a11y-primary-strong) !important;
+    color: var(--a11y-on-primary) !important;
+}
+
+:root.dark-mode .bg-indigo-600,
+:root.dark-mode .bg-indigo-700,
+:root.high-contrast .bg-indigo-600,
+:root.high-contrast .bg-indigo-700,
+:root.dark-mode .bg-pink-600,
+:root.dark-mode .bg-pink-700,
+:root.high-contrast .bg-pink-600,
+:root.high-contrast .bg-pink-700 {
+    background-color: var(--a11y-primary-strong) !important;
+    color: var(--a11y-on-primary) !important;
+}
+
+/* Status “strong” buttons / badges */
+:root.dark-mode .bg-green-500,
+:root.dark-mode .bg-green-600,
+:root.dark-mode .bg-green-700,
+:root.dark-mode .bg-green-800,
+:root.high-contrast .bg-green-500,
+:root.high-contrast .bg-green-600,
+:root.high-contrast .bg-green-700,
+:root.high-contrast .bg-green-800 {
+    background-color: var(--a11y-success-strong) !important;
+    color: var(--a11y-on-success) !important;
+}
+
+:root.dark-mode .bg-red-500,
+:root.dark-mode .bg-red-600,
+:root.high-contrast .bg-red-500,
+:root.high-contrast .bg-red-600 {
+    background-color: var(--a11y-danger-strong) !important;
+    color: var(--a11y-on-danger) !important;
+}
+
+:root.dark-mode .bg-blue-500,
+:root.dark-mode .bg-blue-600,
+:root.dark-mode .bg-blue-700,
+:root.high-contrast .bg-blue-500,
+:root.high-contrast .bg-blue-600,
+:root.high-contrast .bg-blue-700 {
+    background-color: var(--a11y-info-strong) !important;
+    color: var(--a11y-on-info) !important;
+}
+
+:root.dark-mode .bg-yellow-500,
+:root.high-contrast .bg-yellow-500 {
+    background-color: var(--a11y-warning-strong) !important;
+    color: var(--a11y-on-warning) !important;
+}
+
+:root.dark-mode .bg-teal-600,
+:root.dark-mode .bg-teal-700,
+:root.high-contrast .bg-teal-600,
+:root.high-contrast .bg-teal-700 {
+    background-color: var(--a11y-teal-strong) !important;
+    color: var(--a11y-on-teal) !important;
+}
+
+/* Make Tailwind ring utilities visible against dark surfaces */
+:root.dark-mode,
+:root.high-contrast {
+    --tw-ring-color: var(--a11y-border);
+    --tw-ring-offset-color: var(--a11y-bg);
+}
+
+/* Landing-page translucent/blurred surfaces */
+:root.high-contrast [class~="bg-white/90"],
+:root.high-contrast [class~="bg-white/50"],
+:root.high-contrast [class~="bg-white/40"],
+:root.high-contrast [class~="bg-white/20"] {
+    background-color: var(--a11y-bg) !important;
+}
+
+:root.high-contrast [class~="bg-black/40"],
+:root.high-contrast [class~="bg-black/50"] {
+    background-color: var(--a11y-bg) !important;
+}
+
+:root.high-contrast [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+}
+
+:root.high-contrast [class~="text-white/50"],
+:root.high-contrast [class~="text-white/80"] {
+    color: var(--a11y-text) !important;
+}
+
+:root.high-contrast [class*="bg-gradient"] {
+    background-image: none !important;
+}
+
+:root.high-contrast a {
+    text-decoration: underline !important;
+    text-underline-offset: 0.2em;
+}
+
+:root.dark-mode .shadow-sm,
+:root.dark-mode .shadow-md,
+:root.dark-mode .shadow-lg,
+:root.dark-mode .shadow-xl,
+:root.dark-mode .shadow-2xl {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
 }
 
 :root.high-contrast .shadow-sm,
 :root.high-contrast .shadow-md,
 :root.high-contrast .shadow-lg,
-:root.high-contrast .shadow-xl {
-    box-shadow: 0 0 0 2px var(--hc-border) !important;
+:root.high-contrast .shadow-xl,
+:root.high-contrast .shadow-2xl {
+    box-shadow: none !important;
+}
+
+:root.high-contrast button,
+:root.high-contrast input,
+:root.high-contrast textarea,
+:root.high-contrast select {
+    border-width: 2px !important;
+}
+
+/* ========================================
+   COMFORT MODE - WCAG AAA, easier reading
+   ======================================== */
+:root.comfort-mode {
+    --cm-bg: #fdfcf9;
+    --cm-bg-secondary: #f5f3ed;
+    --cm-bg-tertiary: #ebe8df;
+    --cm-text: #2d2a24;
+    --cm-text-muted: #5c5850;
+    --cm-border: #d4d0c4;
+    --cm-primary: #6b46c1;
+    --cm-link: #4338ca;
+}
+
+:root.comfort-mode { --font-scale-multiplier: 1.2; }
+
+:root.comfort-mode body {
+    background-color: var(--cm-bg) !important;
+    color: var(--cm-text) !important;
+    line-height: 1.7 !important;
+    letter-spacing: 0.02em !important;
+}
+
+:root.comfort-mode .bg-white,
+:root.comfort-mode .bg-gray-50 {
+    background-color: var(--cm-bg) !important;
+}
+
+:root.comfort-mode .bg-gray-100 {
+    background-color: var(--cm-bg-secondary) !important;
+}
+
+:root.comfort-mode .bg-gray-200,
+:root.comfort-mode .bg-gray-300 {
+    background-color: var(--cm-bg-tertiary) !important;
+}
+
+:root.comfort-mode .text-gray-400,
+:root.comfort-mode .text-gray-500,
+:root.comfort-mode .text-gray-600 {
+    color: var(--cm-text-muted) !important;
+}
+
+:root.comfort-mode .text-gray-700,
+:root.comfort-mode .text-gray-800,
+:root.comfort-mode .text-gray-900,
+:root.comfort-mode .text-black {
+    color: var(--cm-text) !important;
+}
+
+:root.comfort-mode .border-gray-100,
+:root.comfort-mode .border-gray-200,
+:root.comfort-mode .border-gray-300 {
+    border-color: var(--cm-border) !important;
+}
+
+:root.comfort-mode .bg-purple-600,
+:root.comfort-mode .bg-purple-700 {
+    background-color: var(--cm-primary) !important;
+}
+
+:root.comfort-mode .text-purple-600,
+:root.comfort-mode .text-purple-700 {
+    color: var(--cm-primary) !important;
+}
+
+:root.comfort-mode a {
+    color: var(--cm-link) !important;
+}
+
+:root.comfort-mode input,
+:root.comfort-mode textarea,
+:root.comfort-mode select {
+    background-color: var(--cm-bg) !important;
+    color: var(--cm-text) !important;
+    border-color: var(--cm-border) !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1.05em !important;
+}
+
+:root.comfort-mode p,
+:root.comfort-mode li,
+:root.comfort-mode span {
+    line-height: 1.75 !important;
+}
+
+:root.comfort-mode h1, :root.comfort-mode h2, :root.comfort-mode h3,
+:root.comfort-mode h4, :root.comfort-mode h5, :root.comfort-mode h6 {
+    letter-spacing: 0.01em !important;
+    margin-bottom: 0.75em !important;
+}
+
+:root.comfort-mode .shadow-sm,
+:root.comfort-mode .shadow-md,
+:root.comfort-mode .shadow-lg,
+:root.comfort-mode .shadow-xl {
+    box-shadow: 0 2px 8px rgba(45, 42, 36, 0.1) !important;
 }

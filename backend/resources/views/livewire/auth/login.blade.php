@@ -35,7 +35,7 @@
                         <label for="accountType" class="block text-sm font-medium leading-6 text-gray-900">Account
                             type</label>
                         <div class="mt-2">
-                            <select id="accountType" wire:model="accountType"
+                            <select id="accountType" wire:model.live="accountType"
                                 class="block w-full rounded-lg border-0 p-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 bg-gray-50">
                                 <option value="pwd">User (PWD)</option>
                                 <option value="helpmate">HelpMate</option>
@@ -80,9 +80,10 @@
 
                     <div>
                         <button type="submit"
-                            class="flex w-full justify-center rounded-lg bg-purple-600 px-3 py-3 text-base font-semibold leading-6 text-white shadow-lg hover:bg-purple-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 transition-transform hover:-translate-y-0.5">
-                            <span wire:loading.remove>Sign in</span>
-                            <span wire:loading>Signing in...</span>
+                            class="flex w-full justify-center rounded-lg bg-purple-600 px-3 py-3 text-base font-semibold leading-6 text-white shadow-lg hover:bg-purple-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 transition-transform hover:-translate-y-0.5 disabled:opacity-50"
+                            wire:loading.attr="disabled" wire:target="login">
+                            <span wire:loading.remove wire:target="login">Sign in</span>
+                            <span wire:loading wire:target="login">Signing in...</span>
                         </button>
                     </div>
                 </form>

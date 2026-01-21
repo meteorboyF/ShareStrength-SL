@@ -35,6 +35,6 @@ class Payment extends Model
 
     public function payee()
     {
-        return $this->belongsTo(User::class, 'payee_id');
+        return $this->belongsTo(Helper::class, 'payee_id');
     }
 }

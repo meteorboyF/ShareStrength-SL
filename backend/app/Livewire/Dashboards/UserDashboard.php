@@ -7,6 +7,8 @@ use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Task;
 use App\Models\Application;
+use App\Models\Conversation;
+use App\Models\Payment;
 
 class UserDashboard extends Component
 {
@@ -17,11 +19,11 @@ class UserDashboard extends Component
     #[Layout('components.layouts.app', ['title' => 'Dashboard - ShareStrength'])]
     public function render()
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('pwd')->check()) {
             return redirect()->route('login');
         }
 
-        $user = Auth::user();
+        $user = Auth::guard('pwd')->user();
 
         $tasks = Task::where('created_by', $user->id)
             ->with(['caregiver'])
@@ -38,11 +40,21 @@ class UserDashboard extends Component
             ->with(['applications.helper'])
             ->get();
 
+        $pendingPayments = Payment::where('payer_id', $user->id)
+            ->where('status', 'pending')
+            ->with(['task', 'payee'])
+            ->latest()
+            ->get();
+
+        $cartCount = collect(session()->get('cart', []))
+            ->sum(fn($item) => $item['quantity'] ?? 0);
+
         return view('livewire.dashboards.user-dashboard', [
             'user' => $user,
             'tasks' => $tasks,
             'tasksWithApplications' => $tasksWithApplications,
-            'cartCount' => 0, // Placeholder
+            'pendingPayments' => $pendingPayments,
+            'cartCount' => $cartCount,
         ]);
     }
 
@@ -53,7 +65,7 @@ class UserDashboard extends Component
 
     public function deleteTask($taskId)
     {
-        $task = Task::where('id', $taskId)->where('created_by', Auth::id())->firstOrFail();
+        $task = Task::where('id', $taskId)->where('created_by', Auth::guard('pwd')->id())->firstOrFail();
         $task->delete();
 
         session()->flash('success', 'Task deleted successfully!');
@@ -61,16 +73,16 @@ class UserDashboard extends Component
 
     public function repostTask($taskId)
     {
-        $task = Task::where('id', $taskId)->where('created_by', Auth::id())->firstOrFail();
+        $task = Task::where('id', $taskId)->where('created_by', Auth::guard('pwd')->id())->firstOrFail();
 
         $newTask = Task::create([
-            'created_by' => Auth::id(),
+            'created_by' => Auth::guard('pwd')->id(),
             'title' => $task->title,
             'description' => $task->description,
             'location' => $task->location,
             'budget' => $task->budget,
             'urgency' => $task->urgency,
-            'skills_required' => $task->skills_required,
+            'required_skills' => $task->required_skills,
             'scheduled_at' => $task->scheduled_at,
             'status' => 'open',
         ]);
@@ -82,7 +94,7 @@ class UserDashboard extends Component
     {
         $app = Application::where('id', $applicationId)->firstOrFail();
         // Verify ownership
-        $task = Task::where('id', $app->task_id)->where('created_by', Auth::id())->firstOrFail();
+        $task = Task::where('id', $app->task_id)->where('created_by', Auth::guard('pwd')->id())->firstOrFail();
 
         $app->update(['status' => 'accepted']);
         $task->update(['status' => 'accepted', 'caregiver_id' => $app->helper_id]);
@@ -93,50 +105,30 @@ class UserDashboard extends Component
     public function rejectApplication($applicationId)
     {
         $app = Application::where('id', $applicationId)->firstOrFail();
-        $task = Task::where('id', $app->task_id)->where('created_by', Auth::id())->firstOrFail();
+        $task = Task::where('id', $app->task_id)->where('created_by', Auth::guard('pwd')->id())->firstOrFail();
 
         $app->update(['status' => 'rejected']);
 
         session()->flash('success', 'Application rejected.');
     }
 
-    public function startTask($taskId)
+    public function messageHelper($helperId, $taskId = null)
     {
-        $task = Task::where('id', $taskId)->where('created_by', Auth::id())->firstOrFail();
+        $user = Auth::guard('pwd')->user();
+        $conversation = Conversation::findOrCreate(
+            $user->id,
+            'user',
+            $helperId,
+            'helper',
+            $taskId
+        );
 
-        if ($task->status !== 'accepted') {
-            session()->flash('error', 'Task must be accepted before starting.');
-            return;
-        }
-
-        $task->update([
-            'status' => 'in_progress',
-            'started_at' => now(),
-        ]);
-
-        session()->flash('success', 'Task started!');
-    }
-
-    public function completeTask($taskId)
-    {
-        $task = Task::where('id', $taskId)->where('created_by', Auth::id())->firstOrFail();
-
-        if ($task->status !== 'in_progress') {
-            session()->flash('error', 'Task must be in progress to complete.');
-            return;
-        }
-
-        $task->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-        ]);
-
-        session()->flash('success', 'Task completed!');
+        return $this->redirect(route('messages', ['conversationId' => $conversation->id]), navigate: true);
     }
 
     public function logout()
     {
-        Auth::logout();
+        Auth::guard('pwd')->logout();
         session()->invalidate();
         session()->regenerateToken();
 

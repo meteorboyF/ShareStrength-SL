@@ -12,44 +12,43 @@ class Helper extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'helpers';
-    protected $primaryKey = 'helper_id';
 
     protected $fillable = [
         'name',
         'email',
-        'password_hash',
-        'phone_number',
+        'password',
+        'phone',
         'address',
+        'location',
         'skills',
-        'rating',
+        'bio',
         'profile_photo',
-        'verification_status',
-        'status',
-        'verified_by',
+        'profile_photo_url',
+        'is_verified',
+        'is_active',
     ];
 
     protected $hidden = [
-        'password_hash',
+        'password',
+        'remember_token',
     ];
 
-    // Password accessor for Laravel Auth
-    public function getAuthPassword()
-    {
-        return $this->password_hash;
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_verified' => 'boolean',
+        'is_active' => 'boolean',
+    ];
 
-    // Relationships
-    
     // Applications made by this helper
     public function applications()
     {
         return $this->hasMany(Application::class, 'helper_id');
     }
 
-    // Hiring records for this helper
-    public function hiringRecords()
+    public function assignedTasks()
     {
-        return $this->hasMany(HiringRecord::class, 'helper_id');
+        return $this->hasMany(Task::class, 'caregiver_id');
     }
 
     // Reviews received by this helper

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
+use App\Models\Helper;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +24,7 @@ class ConversationController extends Controller
             }
             
             $userId = $user->getKey();
-            $userType = $user instanceof \App\Models\Helper ? 'helper' : 'user';
+            $userType = $user instanceof Helper ? 'helper' : 'user';
 
             $conversations = Conversation::where(function($q) use ($userId, $userType) {
                     $q->where('user_one_id', $userId)->where('user_one_type', $userType);
@@ -52,15 +54,15 @@ class ConversationController extends Controller
                             'other_user' => $otherUser ? [
                                 'id' => $otherUser->getKey(),
                                 'name' => $otherUser->name ?? 'Unknown',
-                                'role' => ($otherUser instanceof \App\Models\Helper) ? 'caregiver' : 'pwd',
-                                'profile_photo' => $otherUser->profile_photo ?? null,
-                                'type' => ($otherUser instanceof \App\Models\Helper) ? 'helper' : 'user',
+                                'profile_photo' => $otherUser->profile_photo_url ?? $otherUser->profile_photo ?? null,
+                                'type' => $otherUser instanceof Helper ? 'helper' : 'user',
+                                'role' => $otherUser instanceof Helper ? 'helpmate' : 'pwd',
                             ] : null,
                             'task' => $conversation->task,
                             'last_message' => $lastMessage ? [
                                 'content' => $lastMessage->content,
                                 'created_at' => $lastMessage->created_at,
-                                'is_from_me' => $lastMessage->sender_id == $userId && $lastMessage->sender_type == $userType,
+                                'is_from_me' => $lastMessage->sender_id == $userId && $lastMessage->sender_type === $userType,
                             ] : null,
                             'unread_count' => $unreadCount,
                             'last_message_at' => $conversation->last_message_at,
@@ -90,13 +92,13 @@ class ConversationController extends Controller
     {
         $user = Auth::user();
         $userId = $user->getKey();
-        $userType = $user instanceof \App\Models\Helper ? 'helper' : 'user';
+        $userType = $user instanceof Helper ? 'helper' : 'user';
 
         $conversation = Conversation::findOrFail($id);
 
         // Verify user is part of this conversation using polymorphic types
-        $isUserOne = $conversation->user_one_id == $userId && $conversation->user_one_type == $userType;
-        $isUserTwo = $conversation->user_two_id == $userId && $conversation->user_two_type == $userType;
+        $isUserOne = $conversation->user_one_id == $userId && $conversation->user_one_type === $userType;
+        $isUserTwo = $conversation->user_two_id == $userId && $conversation->user_two_type === $userType;
 
         if (!$isUserOne && !$isUserTwo) {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -107,10 +109,18 @@ class ConversationController extends Controller
             ->orderBy('created_at', 'asc')
             ->paginate(50);
 
+        $otherUser = $conversation->getOtherUser($userId, $userType);
+
         return response()->json([
             'conversation' => [
                 'id' => $conversation->id,
-                'other_user' => $conversation->getOtherUser($userId),
+                'other_user' => $otherUser ? [
+                    'id' => $otherUser->getKey(),
+                    'name' => $otherUser->name ?? 'Unknown',
+                    'profile_photo' => $otherUser->profile_photo_url ?? $otherUser->profile_photo ?? null,
+                    'type' => $otherUser instanceof Helper ? 'helper' : 'user',
+                    'role' => $otherUser instanceof Helper ? 'helpmate' : 'pwd',
+                ] : null,
                 'task' => $conversation->task,
             ],
             'messages' => $messages,
@@ -125,12 +135,12 @@ class ConversationController extends Controller
         $validated = $request->validate([
             'other_user_id' => 'required|integer',
             'other_user_type' => 'required|in:user,helper',
-            'task_id' => 'nullable|exists:tasks,task_id',
+            'task_id' => 'nullable|exists:tasks,id',
         ]);
 
         $user = Auth::user();
         $userId = $user->getKey();
-        $userType = $user instanceof \App\Models\Helper ? 'helper' : 'user';
+        $userType = $user instanceof Helper ? 'helper' : 'user';
         
         $otherUserId = $validated['other_user_id'];
         $otherUserType = $validated['other_user_type'];
@@ -145,9 +155,9 @@ class ConversationController extends Controller
             'other_user' => [
                 'id' => $otherUser->getKey(),
                 'name' => $otherUser->name,
-                'role' => ($otherUser instanceof \App\Models\Helper) ? 'caregiver' : 'pwd',
-                'profile_photo' => $otherUser->profile_photo,
-                'type' => ($otherUser instanceof \App\Models\Helper) ? 'helper' : 'user',
+                'profile_photo' => $otherUser->profile_photo_url ?? $otherUser->profile_photo ?? null,
+                'type' => $otherUser instanceof Helper ? 'helper' : 'user',
+                'role' => $otherUser instanceof Helper ? 'helpmate' : 'pwd',
             ],
             'task' => $conversation->task,
             'created_at' => $conversation->created_at,

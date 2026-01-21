@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Admin;
+use App\Models\Helper;
 use App\Models\User;
 
 class RegisterHelpMate extends Component
@@ -36,20 +38,25 @@ class RegisterHelpMate extends Component
     {
         $this->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:helpers',
             'password' => 'required|string|min:8|confirmed',
             'skills' => 'array',
         ]);
 
-        $user = User::create([
+        if (User::where('email', $this->email)->exists() || Admin::where('email', $this->email)->exists()) {
+            $this->addError('email', 'Email already in use.');
+            return;
+        }
+
+        $user = Helper::create([
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
-            'role' => 'caregiver',
             'skills' => implode(', ', $this->skills),
+            'is_verified' => false,
         ]);
 
-        Auth::login($user);
+        Auth::guard('helpmate')->login($user);
 
         return redirect()->intended(route('helpmate.dashboard'));
     }

@@ -45,32 +45,27 @@ class Conversation extends Model
     }
 
     // Helper method to get the other user in the conversation
-    public function getOtherUser($currentUserId, $currentUserType)
+    public function getOtherUser($currentUserId, $currentUserType = null)
     {
-        // Determine which user is the "other" user
-        if ($this->user_one_id == $currentUserId && $this->user_one_type == $currentUserType) {
-            // Current user is user_one, so return user_two
-            $otherUserId = $this->user_two_id;
-            $otherUserType = $this->user_two_type;
-        } else {
-            // Current user is user_two, so return user_one
-            $otherUserId = $this->user_one_id;
-            $otherUserType = $this->user_one_type;
+        $currentTypes = is_array($currentUserType) ? $currentUserType : ($currentUserType ? [$currentUserType] : []);
+
+        if ($this->user_one_id == $currentUserId && (empty($currentTypes) || in_array($this->user_one_type, $currentTypes, true))) {
+            return $this->userTwo;
         }
 
-        // Manually fetch the user based on type
-        if ($otherUserType === 'helper') {
-            return \App\Models\Helper::find($otherUserId);
-        } else {
-            return \App\Models\User::find($otherUserId);
+        if ($this->user_two_id == $currentUserId && (empty($currentTypes) || in_array($this->user_two_type, $currentTypes, true))) {
+            return $this->userOne;
         }
+
+        return $this->userOne ?? $this->userTwo;
     }
 
     // Helper method to get unread message count for a specific user
-    public function getUnreadCountForUser($userId)
+    public function getUnreadCountForUser($userId, $userTypes = ['user', 'helper'])
     {
         return $this->messages()
             ->where('receiver_id', $userId)
+            ->whereIn('receiver_type', $userTypes)
             ->where('is_read', false)
             ->count();
     }
@@ -78,25 +73,42 @@ class Conversation extends Model
     // Static method to find or create a conversation between two users
     public static function findOrCreate($userOneId, $userOneType, $userTwoId, $userTwoType, $taskId = null)
     {
+        // Find existing conversation for this task/user pair (type-safe)
+        $existing = self::where('task_id', $taskId)
+            ->where(function ($q) use ($userOneId, $userOneType, $userTwoId, $userTwoType) {
+                $q->where(function ($sub) use ($userOneId, $userOneType, $userTwoId, $userTwoType) {
+                    $sub->where('user_one_id', $userOneId)
+                        ->where('user_one_type', $userOneType)
+                        ->where('user_two_id', $userTwoId)
+                        ->where('user_two_type', $userTwoType);
+                })->orWhere(function ($sub) use ($userOneId, $userOneType, $userTwoId, $userTwoType) {
+                    $sub->where('user_one_id', $userTwoId)
+                        ->where('user_one_type', $userTwoType)
+                        ->where('user_two_id', $userOneId)
+                        ->where('user_two_type', $userOneType);
+                });
+            })
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
         // Sort users to ensure consistent order (prevent duplicates)
-        // Sort by Type then ID
         $u1Key = $userOneType . ':' . $userOneId;
         $u2Key = $userTwoType . ':' . $userTwoId;
 
         if ($u1Key > $u2Key) {
-            // Swap
             [$userOneId, $userTwoId] = [$userTwoId, $userOneId];
             [$userOneType, $userTwoType] = [$userTwoType, $userOneType];
         }
 
-        return self::firstOrCreate(
-            [
-                'user_one_id' => $userOneId,
-                'user_one_type' => $userOneType,
-                'user_two_id' => $userTwoId,
-                'user_two_type' => $userTwoType,
-                'task_id' => $taskId,
-            ]
-        );
+        return self::create([
+            'user_one_id' => $userOneId,
+            'user_one_type' => $userOneType,
+            'user_two_id' => $userTwoId,
+            'user_two_type' => $userTwoType,
+            'task_id' => $taskId,
+        ]);
     }
 }

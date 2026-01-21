@@ -22,25 +22,15 @@ return new class extends Migration {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
-            $table->foreignId('caregiver_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('caregiver_id')->nullable()->constrained('helpers')->onDelete('set null');
             $table->string('title');
             $table->text('description');
             $table->string('location')->nullable();
             $table->decimal('budget', 10, 2)->nullable();
-            $table->enum('status', ['open', 'requested', 'accepted', 'completed', 'cancelled'])->default('open');
+            $table->enum('status', ['open', 'requested', 'accepted', 'in_progress', 'completed', 'cancelled'])->default('open');
             $table->json('required_skills')->nullable();
             $table->string('urgency')->nullable(); // low, medium, high
             $table->dateTime('scheduled_at')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('messages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('task_id')->nullable()->constrained('tasks')->onDelete('cascade');
-            $table->foreignId('sender_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('receiver_id')->constrained('users')->onDelete('cascade');
-            $table->text('content');
-            $table->boolean('is_read')->default(false);
             $table->timestamps();
         });
 
@@ -64,11 +54,19 @@ return new class extends Migration {
         Schema::create('resources', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('type'); // video, pdf, audio
-            $table->string('category')->nullable();
-            $table->string('url');
+            $table->string('type'); // audiobook, sign_language_video, braille, large_print, accessible_pdf, other
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->string('file_url')->nullable();
+            $table->unsignedBigInteger('file_size')->nullable();
+            $table->unsignedInteger('duration')->nullable();
+            $table->string('language')->nullable();
+            $table->string('author')->nullable();
+            $table->string('narrator')->nullable();
             $table->text('description')->nullable();
-            $table->foreignId('uploaded_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('uploaded_by')->nullable();
+            $table->unsignedBigInteger('task_id')->nullable();
+            $table->boolean('is_featured')->default(false);
+            $table->unsignedInteger('download_count')->default(0);
             $table->timestamps();
         });
 
@@ -76,7 +74,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('task_id')->constrained('tasks')->onDelete('cascade');
             $table->foreignId('payer_id')->constrained('users');
-            $table->foreignId('payee_id')->constrained('users');
+            $table->foreignId('payee_id')->constrained('helpers');
             $table->decimal('amount', 10, 2);
             $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
             $table->timestamp('paid_at')->nullable();

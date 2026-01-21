@@ -33,3 +33,90 @@
         transform: translateY(0);
     }
 }
+
+/* ========================================
+   ACCESSIBILITY: Font Size & High Contrast
+   ======================================== */
+
+:root {
+    --font-scale: 1;
+}
+
+/* Font Size Scales */
+:root.font-small { --font-scale: 0.85; }
+:root.font-medium { --font-scale: 1; }
+:root.font-large { --font-scale: 1.15; }
+:root.font-x-large { --font-scale: 1.3; }
+
+/* Apply font scaling globally */
+html {
+    font-size: calc(16px * var(--font-scale));
+}
+
+/* High Contrast Mode */
+:root.high-contrast {
+    --hc-bg: #000000;
+    --hc-bg-secondary: #1a1a1a;
+    --hc-text: #ffffff;
+    --hc-text-muted: #d0d0d0;
+    --hc-border: #ffffff;
+    --hc-primary: #a78bfa;
+    --hc-secondary: #34d399;
+}
+
+:root.high-contrast body {
+    background-color: var(--hc-bg) !important;
+    color: var(--hc-text) !important;
+}
+
+:root.high-contrast .bg-white,
+:root.high-contrast .bg-gray-50,
+:root.high-contrast .bg-gray-100 {
+    background-color: var(--hc-bg) !important;
+}
+
+:root.high-contrast .bg-gray-200,
+:root.high-contrast .bg-gray-300 {
+    background-color: var(--hc-bg-secondary) !important;
+}
+
+:root.high-contrast .text-gray-500,
+:root.high-contrast .text-gray-600 {
+    color: var(--hc-text-muted) !important;
+}
+
+:root.high-contrast .text-gray-700,
+:root.high-contrast .text-gray-800,
+:root.high-contrast .text-gray-900 {
+    color: var(--hc-text) !important;
+}
+
+:root.high-contrast .border-gray-200,
+:root.high-contrast .border-gray-300 {
+    border-color: var(--hc-border) !important;
+}
+
+:root.high-contrast .bg-purple-600,
+:root.high-contrast .bg-purple-700 {
+    background-color: var(--hc-primary) !important;
+}
+
+:root.high-contrast .text-purple-600,
+:root.high-contrast .text-purple-700 {
+    color: var(--hc-primary) !important;
+}
+
+:root.high-contrast input,
+:root.high-contrast textarea,
+:root.high-contrast select {
+    background-color: var(--hc-bg-secondary) !important;
+    color: var(--hc-text) !important;
+    border-color: var(--hc-border) !important;
+}
+
+:root.high-contrast .shadow-sm,
+:root.high-contrast .shadow-md,
+:root.high-contrast .shadow-lg,
+:root.high-contrast .shadow-xl {
+    box-shadow: 0 0 0 2px var(--hc-border) !important;
+}

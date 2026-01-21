@@ -16,17 +16,13 @@ class Resources extends Component
     #[Layout('components.layouts.app', ['title' => 'Resources - ShareStrength'])]
     public function render()
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('pwd')->check() && !Auth::guard('helpmate')->check()) {
             return redirect()->route('login');
         }
 
-        // Get unique categories from resources
-        $categories = Resource::select('category')
-            ->distinct()
-            ->whereNotNull('category')
-            ->pluck('category');
+        $categories = ResourceCategory::orderBy('name')->get();
 
-        $resourcesQuery = Resource::query();
+        $resourcesQuery = Resource::with('category');
 
         if ($this->searchTerm) {
             $resourcesQuery->where(function ($query) {
@@ -36,16 +32,20 @@ class Resources extends Component
         }
 
         if ($this->selectedCategory !== 'all') {
-            $resourcesQuery->where('category', $this->selectedCategory);
+            $resourcesQuery->where('category_id', $this->selectedCategory);
         }
 
         $resources = $resourcesQuery->latest()->get();
-        $featuredResources = collect(); // No featured flag in current schema
+        $featuredResources = Resource::with('category')->where('is_featured', true)
+            ->latest()
+            ->take(6)
+            ->get();
 
         return view('livewire.resources', [
             'resources' => $resources,
             'featuredResources' => $featuredResources,
             'categories' => $categories,
+            'isHelpmate' => Auth::guard('helpmate')->check(),
         ]);
     }
 
@@ -56,6 +56,11 @@ class Resources extends Component
 
     public function requestAsTask($resourceId)
     {
+        if (!Auth::guard('pwd')->check()) {
+            session()->flash('error', 'Only PWD users can request help.');
+            return;
+        }
+
         $resource = Resource::findOrFail($resourceId);
 
         // Redirect to post task page with pre-filled data
@@ -68,7 +73,11 @@ class Resources extends Component
 
     public function logout()
     {
-        Auth::logout();
+        if (Auth::guard('helpmate')->check()) {
+            Auth::guard('helpmate')->logout();
+        } else {
+            Auth::guard('pwd')->logout();
+        }
         session()->invalidate();
         session()->regenerateToken();
 

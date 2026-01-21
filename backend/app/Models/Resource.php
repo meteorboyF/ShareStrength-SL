@@ -41,7 +41,7 @@ class Resource extends Model
 
     public function uploader()
     {
-        return $this->belongsTo(User::class, 'uploaded_by');
+        return $this->belongsTo(Admin::class, 'uploaded_by');
     }
 
     public function task()

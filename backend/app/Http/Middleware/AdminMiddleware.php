@@ -16,14 +16,20 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (Auth::guard('admin')->check()) {
+            return $next($request);
+        }
+
+        $user = $request->user();
+        if ($user instanceof \App\Models\Admin) {
+            return $next($request);
+        }
+
         if (!Auth::check()) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        if (Auth::user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
-        }
+        return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
 
-        return $next($request);
     }
 }

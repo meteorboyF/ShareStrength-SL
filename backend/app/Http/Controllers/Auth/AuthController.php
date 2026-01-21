@@ -35,15 +35,16 @@ class AuthController extends Controller
             $skillDocPath = $request->file('skill_verification_doc')->store('skill_docs', 'public');
         }
 
-        // 3. Create the Helper
+        // 3. Create the Helper user
         $helper = Helper::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password_hash' => Hash::make($request->password),
-            'phone_number' => $request->phone,
+            'password' => Hash::make($request->password),
+            'phone' => $request->phone,
             'address' => $request->address,
             'skills' => $request->skills,
-            // Note: You would add a column to your DB for 'skill_document_path' to save $skillDocPath
+            'is_verified' => false,
+            // Note: Add a column for 'skill_document_path' to save $skillDocPath if needed.
         ]);
 
         // 4. Return success response
@@ -64,7 +65,6 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email',
             'phone' => 'required|string|max:15',
             'address' => 'required|string',
-            'user_type' => 'required|string|in:disabled_individual,caretaker',
             'password' => 'required|string|min:6',
         ]);
 
@@ -76,10 +76,9 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password_hash' => Hash::make($request->password),
-            'phone_number' => $request->phone,
+            'password' => Hash::make($request->password),
+            'phone' => $request->phone,
             'address' => $request->address,
-            'user_type' => $request->user_type,
         ]);
 
         // 3. Return success response
@@ -97,15 +96,18 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
+            'account_type' => 'nullable|in:pwd,helpmate',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        // Try to authenticate as a User first
-        $user = User::where('email', $request->email)->first();
-        if ($user && Hash::check($request->password, $user->password_hash)) {
+        $accountType = $request->input('account_type', 'pwd');
+        $model = $accountType === 'helpmate' ? Helper::class : User::class;
+        $user = $model::where('email', $request->email)->first();
+
+        if ($user && Hash::check($request->password, $user->password)) {
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
@@ -113,21 +115,7 @@ class AuthController extends Controller
                 'access_token' => $token,
                 'token_type' => 'Bearer',
                 'user' => $user,
-                'role' => 'user'
-            ]);
-        }
-
-        // If not a user, try to authenticate as a Helper
-        $helper = Helper::where('email', $request->email)->first();
-        if ($helper && Hash::check($request->password, $helper->password_hash)) {
-            $token = $helper->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'message' => 'Login successful',
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-                'user' => $helper,
-                'role' => 'helpmate'
+                'account_type' => $accountType,
             ]);
         }
 

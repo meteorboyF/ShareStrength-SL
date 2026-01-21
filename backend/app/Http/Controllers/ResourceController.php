@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
 use App\Models\Resource;
 use App\Models\ResourceCategory;
 use Illuminate\Http\Request;
@@ -95,6 +96,11 @@ class ResourceController extends Controller
     // Create new resource (Admin only)
     public function store(Request $request)
     {
+        $adminId = Auth::guard('admin')->id();
+        if (!$adminId && !($request->user() instanceof Admin)) {
+            return response()->json(['message' => 'Admin access required'], 403);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -125,7 +131,7 @@ class ResourceController extends Controller
             $validated['file_size'] = $file->getSize();
         }
 
-        $validated['uploaded_by'] = Auth::id();
+        $validated['uploaded_by'] = $adminId ?: $request->user()->getKey();
         $validated['download_count'] = 0;
 
         $resource = Resource::create($validated);
@@ -139,6 +145,10 @@ class ResourceController extends Controller
     // Update resource (Admin only)
     public function update(Request $request, $id)
     {
+        if (!Auth::guard('admin')->check() && !($request->user() instanceof Admin)) {
+            return response()->json(['message' => 'Admin access required'], 403);
+        }
+
         $resource = Resource::findOrFail($id);
 
         $validated = $request->validate([
@@ -163,6 +173,10 @@ class ResourceController extends Controller
     // Delete resource (Admin only)
     public function destroy($id)
     {
+        if (!Auth::guard('admin')->check() && !(request()->user() instanceof Admin)) {
+            return response()->json(['message' => 'Admin access required'], 403);
+        }
+
         $resource = Resource::findOrFail($id);
 
         // Delete file from storage

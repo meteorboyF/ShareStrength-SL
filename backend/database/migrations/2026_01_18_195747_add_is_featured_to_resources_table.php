@@ -10,9 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        if (!Schema::hasTable('resources')) {
+            return;
+        }
+
         Schema::table('resources', function (Blueprint $table) {
-            $table->boolean('is_featured')->default(false)->after('url');
-            $table->string('file_path')->nullable()->after('url'); // Adding file_path for uploads as well
+            if (!Schema::hasColumn('resources', 'is_featured')) {
+                $table->boolean('is_featured')->default(false);
+            }
         });
     }
 
@@ -21,8 +26,14 @@ return new class extends Migration {
      */
     public function down(): void
     {
+        if (!Schema::hasTable('resources')) {
+            return;
+        }
+
         Schema::table('resources', function (Blueprint $table) {
-            $table->dropColumn(['is_featured', 'file_path']);
+            if (Schema::hasColumn('resources', 'is_featured')) {
+                $table->dropColumn('is_featured');
+            }
         });
     }
 };

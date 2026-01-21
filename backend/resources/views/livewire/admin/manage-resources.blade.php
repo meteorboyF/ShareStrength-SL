@@ -3,7 +3,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-8">
             <div class="flex items-center gap-4">
-                <a href="{{ route('dashboard') }}" class="text-purple-600 hover:text-purple-700">
+                <a href="{{ route('admin.dashboard') }}" class="text-purple-600 hover:text-purple-700">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -53,14 +53,14 @@
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-                            <select wire:model="category"
+                            <select wire:model="category_id"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
                                 <option value="">Select Category</option>
                                 @foreach($categories as $cat)
-                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                 @endforeach
                             </select>
-                            @error('category') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            @error('category_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -93,7 +93,7 @@
                                         </label>
                                         <p class="pl-1">or drag and drop</p>
                                     </div>
-                                    <p class="text-xs text-gray-500">PDF, DOC, DOCX up to 10MB</p>
+                                    <p class="text-xs text-gray-500">Files up to 500MB</p>
                                 </div>
                             </div>
                             @if($file)
@@ -102,11 +102,32 @@
                             @error('file') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
 
+                        <div class="col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Language</label>
+                                <input type="text" wire:model="language"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                                @error('language') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Author</label>
+                                <input type="text" wire:model="author"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                                @error('author') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Narrator</label>
+                                <input type="text" wire:model="narrator"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                                @error('narrator') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
                         <div class="col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">URL (Optional)</label>
-                            <input type="url" wire:model="url" placeholder="https://example.com/resource"
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">File URL (Optional)</label>
+                            <input type="url" wire:model="file_url" placeholder="https://example.com/resource"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
-                            @error('url') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            @error('file_url') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-span-2">
@@ -157,7 +178,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                                        {{ $resource->category }}
+                                        {{ $resource->category->name ?? 'General' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 uppercase">

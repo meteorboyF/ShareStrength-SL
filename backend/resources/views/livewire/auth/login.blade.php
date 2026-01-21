@@ -32,6 +32,20 @@
             <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
                 <form class="space-y-6" wire:submit="login">
                     <div>
+                        <label for="accountType" class="block text-sm font-medium leading-6 text-gray-900">Account
+                            type</label>
+                        <div class="mt-2">
+                            <select id="accountType" wire:model="accountType"
+                                class="block w-full rounded-lg border-0 p-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 bg-gray-50">
+                                <option value="pwd">User (PWD)</option>
+                                <option value="helpmate">HelpMate</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        @error('accountType') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
                         <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email
                             address</label>
                         <div class="mt-2">

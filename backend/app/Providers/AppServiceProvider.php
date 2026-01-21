@@ -20,8 +20,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
-            'helper' => \App\Models\Helper::class,
             'user' => \App\Models\User::class,
+            'helper' => \App\Models\Helper::class,
         ]);
     }
 }

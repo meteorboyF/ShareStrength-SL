@@ -24,11 +24,11 @@ class TrustedContacts extends Component
     #[Layout('components.layouts.app', ['title' => 'Trusted Contacts - ShareStrength'])]
     public function render()
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('pwd')->check()) {
             return redirect()->route('login');
         }
 
-        $contacts = TrustedContact::where('user_id', Auth::id())
+        $contacts = TrustedContact::where('user_id', Auth::guard('pwd')->id())
             ->latest()
             ->get();
 
@@ -42,7 +42,7 @@ class TrustedContacts extends Component
         $this->validate();
 
         TrustedContact::create([
-            'user_id' => Auth::id(),
+            'user_id' => Auth::guard('pwd')->id(),
             'contact_name' => $this->contact_name,
             'contact_phone' => $this->contact_phone,
             'contact_email' => $this->contact_email,
@@ -58,7 +58,7 @@ class TrustedContacts extends Component
     public function deleteContact($id)
     {
         TrustedContact::where('id', $id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', Auth::guard('pwd')->id())
             ->delete();
 
         session()->flash('success', 'Contact deleted successfully!');
@@ -66,7 +66,7 @@ class TrustedContacts extends Component
 
     public function logout()
     {
-        Auth::logout();
+        Auth::guard('pwd')->logout();
         session()->invalidate();
         session()->regenerateToken();
 

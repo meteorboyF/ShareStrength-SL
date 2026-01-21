@@ -77,7 +77,7 @@
             <div class="container mx-auto px-6 max-w-7xl text-center">
                 <p class="text-sm font-bold text-primary uppercase tracking-wider mb-3 animate-fade-in-up">THE CHALLENGE
                 </p>
-                <h2 className="text-3xl md:text-4xl font-extrabold text-neutral-darkest mb-16 animate-fade-in-up delay-150"
+                <h2 class="text-3xl md:text-4xl font-extrabold text-neutral-darkest mb-16 animate-fade-in-up delay-150"
                     style="animation-delay: 150ms;">Finding Trustworthy Help Shouldn't Be Hard</h2>
 
                 <div class="grid md:grid-cols-3 gap-8 text-left">

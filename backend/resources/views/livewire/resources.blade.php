@@ -3,7 +3,7 @@
     <header class="bg-white shadow-sm sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <a href="{{ route('dashboard') }}" class="text-purple-600 hover:text-purple-700">
+                <a href="{{ $isHelpmate ? route('helpmate.dashboard') : route('dashboard') }}" class="text-purple-600 hover:text-purple-700">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -44,9 +44,9 @@
                         All
                     </button>
                     @foreach($categories as $category)
-                        <button wire:click="setCategory('{{ $category }}')"
-                            class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition {{ $selectedCategory == $category ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
-                            {{ $category }}
+                        <button wire:click="setCategory({{ $category->id }})"
+                            class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition {{ (string) $selectedCategory === (string) $category->id ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                            {{ $category->name }}
                         </button>
                     @endforeach
                 </div>
@@ -86,7 +86,7 @@
                                 <div class="flex items-start justify-between mb-3">
                                     <span
                                         class="px-3 py-1 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 rounded-full text-xs font-bold">
-                                        {{ $resource->category ?? 'General' }}
+                                        {{ $resource->category->name ?? 'General' }}
                                     </span>
                                     <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-semibold uppercase">
                                         {{ $resource->type }}
@@ -105,8 +105,8 @@
 
                                 <!-- Action Buttons -->
                                 <div class="mt-4 flex gap-2">
-                                    @if($resource->url)
-                                        <a href="{{ $resource->url }}" target="_blank"
+                                    @if($resource->file_url)
+                                        <a href="{{ $resource->file_url }}" target="_blank"
                                             class="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition text-sm">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -117,15 +117,17 @@
                                             View
                                         </a>
                                     @endif
-                                    <button wire:click="requestAsTask({{ $resource->id }})"
-                                        class="flex-1 inline-flex items-center justify-center gap-2 bg-white border-2 border-purple-600 text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-purple-50 transition text-sm"
-                                        title="Request help with this resource">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4" />
-                                        </svg>
-                                        Request Help
-                                    </button>
+                                    @if(!$isHelpmate)
+                                        <button wire:click="requestAsTask({{ $resource->id }})"
+                                            class="flex-1 inline-flex items-center justify-center gap-2 bg-white border-2 border-purple-600 text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-purple-50 transition text-sm"
+                                            title="Request help with this resource">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Request Help
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </div>

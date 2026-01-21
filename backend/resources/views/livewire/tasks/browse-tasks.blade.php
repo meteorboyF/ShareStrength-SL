@@ -131,9 +131,9 @@
                             </div>
 
                             <!-- Skills Required -->
-                            @if($task->skills_required)
+                            @if($task->required_skills)
                                 <div class="flex flex-wrap gap-2 mb-4">
-                                    @foreach(json_decode($task->skills_required) as $skill)
+                                    @foreach($task->required_skills as $skill)
                                         <span class="px-2 py-1 bg-teal-50 text-teal-700 rounded text-xs font-semibold">
                                             {{ $skill }}
                                         </span>
@@ -143,7 +143,7 @@
 
                             <!-- Posted By -->
                             <div class="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
-                                <img src="{{ $task->creator->profile_photo ?? 'https://placehold.co/40x40' }}"
+                                <img src="{{ $task->creator->profile_photo_url ?? $task->creator->profile_photo ?? 'https://placehold.co/40x40' }}"
                                     alt="{{ $task->creator->name }}" class="w-8 h-8 rounded-full">
                                 <div>
                                     <p class="text-xs text-gray-500">Posted by</p>

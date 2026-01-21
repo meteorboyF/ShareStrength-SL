@@ -3,18 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Models\Helper;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
     public function index(Request $request)
     {
-        // Return payments where user is payer or payee
-        return Payment::where('payer_id', $request->user()->id)
-            ->orWhere('payee_id', $request->user()->id)
-            ->with(['task:id,title', 'payer:id,name', 'payee:id,name'])
-            ->latest()
-            ->get();
+        $user = $request->user();
+
+        if ($user instanceof Helper) {
+            return Payment::where('payee_id', $user->getKey())
+                ->with(['task:id,title', 'payer:id,name', 'payee:id,name'])
+                ->latest()
+                ->get();
+        }
+
+        if ($user instanceof User) {
+            return Payment::where('payer_id', $user->getKey())
+                ->with(['task:id,title', 'payer:id,name', 'payee:id,name'])
+                ->latest()
+                ->get();
+        }
+
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
 
     /**
@@ -22,7 +35,11 @@ class PaymentController extends Controller
      */
     public function summary(Request $request)
     {
-        $userId = $request->user()->id;
+        $user = $request->user();
+        if (!$user instanceof User) {
+            return response()->json(['message' => 'Only PWD users can view summaries'], 403);
+        }
+        $userId = $user->getKey();
 
         // Get all payments where user is the payer
         $payments = Payment::where('payer_id', $userId)
@@ -47,16 +64,37 @@ class PaymentController extends Controller
      */
     public function insights(Request $request)
     {
-        $userId = $request->user()->id;
+        $user = $request->user();
+        if (!$user instanceof User) {
+            return response()->json(['message' => 'Only PWD users can view insights'], 403);
+        }
+        $userId = $user->getKey();
 
         // Monthly spending breakdown
-        $monthlyData = Payment::where('payer_id', $userId)
+        $monthlyPayments = Payment::where('payer_id', $userId)
             ->where('status', 'paid')
-            ->selectRaw('DATE_FORMAT(paid_at, "%b %Y") as month, SUM(amount) as total')
-            ->groupBy('month')
-            ->orderByRaw('MIN(paid_at) ASC')
-            ->limit(12)
+            ->orderBy('paid_at')
             ->get();
+
+        $monthlyBuckets = $monthlyPayments
+            ->groupBy(function ($payment) {
+                $date = $payment->paid_at ?? $payment->created_at;
+                return $date->format('Y-m');
+            })
+            ->map(function ($group) {
+                $first = $group->first();
+                $date = $first->paid_at ?? $first->created_at;
+                return [
+                    'label' => $date->format('M Y'),
+                    'total' => (float) $group->sum('amount'),
+                ];
+            })
+            ->sortKeys()
+            ->values();
+
+        if ($monthlyBuckets->count() > 12) {
+            $monthlyBuckets = $monthlyBuckets->slice(-12)->values();
+        }
 
         // Spending by helper
         $helperData = Payment::where('payer_id', $userId)
@@ -92,8 +130,8 @@ class PaymentController extends Controller
 
         return response()->json([
             'monthly' => [
-                'labels' => $monthlyData->pluck('month'),
-                'values' => $monthlyData->pluck('total')->map(fn($v) => (float) $v),
+                'labels' => $monthlyBuckets->pluck('label'),
+                'values' => $monthlyBuckets->pluck('total')->map(fn($v) => (float) $v),
             ],
             'helpers' => $helperData,
             'tasks' => $taskData,
@@ -102,16 +140,21 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        if (!$user instanceof User) {
+            return response()->json(['message' => 'Only PWD users can create payments'], 403);
+        }
+
         $validated = $request->validate([
             'task_id' => 'required|exists:tasks,id',
-            'payee_id' => 'required|exists:users,id',
+            'payee_id' => 'required|exists:helpers,id',
             'amount' => 'required|numeric|min:0',
         ]);
 
         $payment = Payment::create([
             ...$validated,
-            'payer_id' => $request->user()->id,
-            'status' => 'completed',
+            'payer_id' => $user->getKey(),
+            'status' => 'paid',
             'paid_at' => now(),
         ]);
 

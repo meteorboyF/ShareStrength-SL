@@ -3,12 +3,15 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\HelperController;
 use App\Http\Controllers\MatchingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TrustedContactController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +56,11 @@ Route::prefix('v1')->group(function () {
         Route::put('/profile', [\App\Http\Controllers\UserController::class, 'update']);
         Route::post('/profile/photo', [\App\Http\Controllers\UserController::class, 'uploadPhoto']);
 
+        // HelpMate Profile Routes
+        Route::get('/helpers/{id}', [HelperController::class, 'show']);
+        Route::put('/helper/profile', [HelperController::class, 'update']);
+        Route::post('/helper/profile/photo', [HelperController::class, 'uploadPhoto']);
+
         // Resource Routes (Public)
         Route::get('/resources', [\App\Http\Controllers\ResourceController::class, 'index']);
         Route::get('/resources/featured', [\App\Http\Controllers\ResourceController::class, 'featured']);
@@ -95,7 +103,7 @@ Route::prefix('v1')->group(function () {
                 'conversations_count' => \Illuminate\Support\Facades\DB::table('conversations')->count(),
                 'messages_count' => \App\Models\Message::count(),
                 'conversations_table_exists' => Schema::hasTable('conversations'),
-                'messages_columns' => \Illuminate\Support\Facades\DB::select('DESCRIBE messages'),
+                'messages_columns' => Schema::hasTable('messages') ? Schema::getColumnListing('messages') : [],
             ];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
@@ -119,46 +127,71 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/fix-messaging', function () {
         $results = [];
+
         try {
-            DB::statement("
-                CREATE TABLE IF NOT EXISTS conversations (
-                    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                    user_one_id BIGINT UNSIGNED NOT NULL,
-                    user_one_type VARCHAR(255) NOT NULL,
-                    user_two_id BIGINT UNSIGNED NOT NULL,
-                    user_two_type VARCHAR(255) NOT NULL,
-                    task_id BIGINT UNSIGNED NULL,
-                    last_message_at TIMESTAMP NULL,
-                    created_at TIMESTAMP NULL,
-                    updated_at TIMESTAMP NULL,
-                    INDEX idx_user_one (user_one_id, user_one_type),
-                    INDEX idx_user_two (user_two_id, user_two_type)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            ");
-            $results[] = 'Conversations table created';
+            if (!Schema::hasTable('conversations')) {
+                Schema::create('conversations', function ($table) {
+                    $table->id();
+                    $table->unsignedBigInteger('user_one_id');
+                    $table->string('user_one_type')->default('user');
+                    $table->unsignedBigInteger('user_two_id');
+                    $table->string('user_two_type')->default('user');
+                    $table->unsignedBigInteger('task_id')->nullable();
+                    $table->timestamp('last_message_at')->nullable();
+                    $table->timestamps();
+
+                    $table->index(['user_one_id', 'user_one_type'], 'idx_user_one');
+                    $table->index(['user_two_id', 'user_two_type'], 'idx_user_two');
+                });
+                $results[] = 'Conversations table created';
+            } else {
+                $results[] = 'Conversations table already exists';
+            }
         } catch (\Exception $e) {
             $results[] = 'Conversations: ' . $e->getMessage();
         }
 
         try {
-            DB::statement("ALTER TABLE messages ADD COLUMN conversation_id BIGINT UNSIGNED NULL AFTER id");
-            $results[] = 'Added conversation_id';
-        } catch (\Exception $e) {
-            $results[] = 'conversation_id: ' . $e->getMessage();
-        }
+            if (!Schema::hasTable('messages')) {
+                Schema::create('messages', function ($table) {
+                    $table->id();
+                    $table->unsignedBigInteger('conversation_id')->nullable();
+                    $table->unsignedBigInteger('task_id')->nullable();
+                    $table->unsignedBigInteger('sender_id');
+                    $table->string('sender_type')->default('user');
+                    $table->unsignedBigInteger('receiver_id');
+                    $table->string('receiver_type')->default('user');
+                    $table->text('content');
+                    $table->boolean('is_read')->default(false);
+                    $table->timestamps();
 
-        try {
-            DB::statement("ALTER TABLE messages ADD COLUMN sender_type VARCHAR(255) NOT NULL DEFAULT 'user' AFTER sender_id");
-            $results[] = 'Added sender_type';
+                    $table->index('conversation_id');
+                    $table->index('sender_id');
+                    $table->index('receiver_id');
+                });
+                $results[] = 'Messages table created';
+            } else {
+                Schema::table('messages', function ($table) {
+                    if (!Schema::hasColumn('messages', 'conversation_id')) {
+                        $table->unsignedBigInteger('conversation_id')->nullable()->index();
+                    }
+                    if (!Schema::hasColumn('messages', 'sender_type')) {
+                        $table->string('sender_type')->default('user');
+                    }
+                    if (!Schema::hasColumn('messages', 'receiver_type')) {
+                        $table->string('receiver_type')->default('user');
+                    }
+                    if (!Schema::hasColumn('messages', 'is_read')) {
+                        $table->boolean('is_read')->default(false);
+                    }
+                    if (!Schema::hasColumn('messages', 'task_id')) {
+                        $table->unsignedBigInteger('task_id')->nullable();
+                    }
+                });
+                $results[] = 'Messages table updated';
+            }
         } catch (\Exception $e) {
-            $results[] = 'sender_type: ' . $e->getMessage();
-        }
-
-        try {
-            DB::statement("ALTER TABLE messages ADD COLUMN receiver_type VARCHAR(255) NOT NULL DEFAULT 'user' AFTER receiver_id");
-            $results[] = 'Added receiver_type';
-        } catch (\Exception $e) {
-            $results[] = 'receiver_type: ' . $e->getMessage();
+            $results[] = 'Messages: ' . $e->getMessage();
         }
 
         return response()->json(['results' => $results]);
@@ -168,24 +201,42 @@ Route::prefix('v1')->group(function () {
         $results = [];
         try {
             // Fix 1: Change status column to VARCHAR
-            \Illuminate\Support\Facades\DB::statement("ALTER TABLE tasks MODIFY COLUMN status VARCHAR(50) DEFAULT 'open'");
-            $results[] = 'Status column updated to VARCHAR(50)';
+            if (Schema::hasTable('tasks') && Schema::hasColumn('tasks', 'status')) {
+                Schema::table('tasks', function ($table) {
+                    $table->string('status')->default('open')->change();
+                });
+                $results[] = 'Status column updated to VARCHAR(50)';
+            } else {
+                $results[] = 'Status column not found';
+            }
         } catch (\Exception $e) {
             $results[] = 'Status column error: ' . $e->getMessage();
         }
 
         try {
             // Fix 2: Add started_at column if not exists
-            \Illuminate\Support\Facades\DB::statement("ALTER TABLE tasks ADD COLUMN started_at TIMESTAMP NULL");
-            $results[] = 'started_at column added';
+            if (Schema::hasTable('tasks') && !Schema::hasColumn('tasks', 'started_at')) {
+                Schema::table('tasks', function ($table) {
+                    $table->timestamp('started_at')->nullable();
+                });
+                $results[] = 'started_at column added';
+            } else {
+                $results[] = 'started_at column already exists';
+            }
         } catch (\Exception $e) {
             $results[] = 'started_at: ' . $e->getMessage();
         }
 
         try {
             // Fix 3: Add completed_at column if not exists
-            \Illuminate\Support\Facades\DB::statement("ALTER TABLE tasks ADD COLUMN completed_at TIMESTAMP NULL");
-            $results[] = 'completed_at column added';
+            if (Schema::hasTable('tasks') && !Schema::hasColumn('tasks', 'completed_at')) {
+                Schema::table('tasks', function ($table) {
+                    $table->timestamp('completed_at')->nullable();
+                });
+                $results[] = 'completed_at column added';
+            } else {
+                $results[] = 'completed_at column already exists';
+            }
         } catch (\Exception $e) {
             $results[] = 'completed_at: ' . $e->getMessage();
         }
@@ -195,13 +246,22 @@ Route::prefix('v1')->group(function () {
 
 
     Route::get('/debug/fk', function () {
-        $keys = \Illuminate\Support\Facades\DB::select("
-            SELECT CONSTRAINT_NAME, COLUMN_NAME 
-            FROM information_schema.KEY_COLUMN_USAGE 
-            WHERE TABLE_NAME = 'messages' 
-            AND TABLE_SCHEMA = DATABASE()
-            AND REFERENCED_TABLE_NAME IS NOT NULL
-        ");
-        return $keys;
+        $driver = DB::getDriverName();
+
+        if ($driver === 'sqlite') {
+            return DB::select("PRAGMA foreign_key_list('messages')");
+        }
+
+        if ($driver === 'mysql') {
+            return DB::select("
+                SELECT CONSTRAINT_NAME, COLUMN_NAME 
+                FROM information_schema.KEY_COLUMN_USAGE 
+                WHERE TABLE_NAME = 'messages' 
+                AND TABLE_SCHEMA = DATABASE()
+                AND REFERENCED_TABLE_NAME IS NOT NULL
+            ");
+        }
+
+        return [];
     });
 });

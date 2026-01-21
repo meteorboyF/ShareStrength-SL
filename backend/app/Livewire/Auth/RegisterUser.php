@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Admin;
+use App\Models\Helper;
 use App\Models\User;
 
 class RegisterUser extends Component
@@ -29,14 +31,18 @@ class RegisterUser extends Component
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        if (Helper::where('email', $this->email)->exists() || Admin::where('email', $this->email)->exists()) {
+            $this->addError('email', 'Email already in use.');
+            return;
+        }
+
         $user = User::create([
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
-            'role' => 'pwd',
         ]);
 
-        Auth::login($user);
+        Auth::guard('pwd')->login($user);
 
         return redirect()->intended(route('dashboard'));
     }

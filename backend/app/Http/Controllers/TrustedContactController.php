@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TrustedContact;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,11 +11,21 @@ class TrustedContactController extends Controller
 {
     public function index()
     {
-        return response()->json(Auth::user()->trustedContacts);
+        $user = Auth::user();
+        if (!$user instanceof User) {
+            return response()->json(['message' => 'Only PWD users can view trusted contacts'], 403);
+        }
+
+        return response()->json($user->trustedContacts);
     }
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if (!$user instanceof User) {
+            return response()->json(['message' => 'Only PWD users can add trusted contacts'], 403);
+        }
+
         // Accept both 'name' (frontend) and 'contact_name' patterns
         $validated = $request->validate([
             'name' => 'nullable|string',
@@ -32,7 +43,7 @@ class TrustedContactController extends Controller
         }
 
         $contact = TrustedContact::create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->getKey(),
             'contact_name' => $contactName,
             'relation' => $validated['relation'] ?? null,
             'contact_email' => $validated['email'] ?? $validated['contact_email'] ?? null,

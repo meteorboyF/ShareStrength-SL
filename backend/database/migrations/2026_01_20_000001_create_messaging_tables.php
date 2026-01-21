@@ -1,48 +1,37 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        // Create conversations table if it doesn't exist
-        DB::statement("
-            CREATE TABLE IF NOT EXISTS conversations (
-                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                user_one_id BIGINT UNSIGNED NOT NULL,
-                user_one_type VARCHAR(255) NOT NULL,
-                user_two_id BIGINT UNSIGNED NOT NULL,
-                user_two_type VARCHAR(255) NOT NULL,
-                task_id BIGINT UNSIGNED NULL,
-                last_message_at TIMESTAMP NULL,
-                created_at TIMESTAMP NULL,
-                updated_at TIMESTAMP NULL,
-                INDEX idx_user_one (user_one_id, user_one_type),
-                INDEX idx_user_two (user_two_id, user_two_type)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-        ");
-
-        // Add columns to messages table if they don't exist
-        $columns = DB::select("SHOW COLUMNS FROM messages");
-        $columnNames = array_column($columns, 'Field');
-
-        if (!in_array('conversation_id', $columnNames)) {
-            DB::statement("ALTER TABLE messages ADD COLUMN conversation_id BIGINT UNSIGNED NULL AFTER id");
+        // Skip if conversations table already exists
+        if (Schema::hasTable('conversations')) {
+            // Just ensure indexes exist if needed, but skip table creation
+            return;
         }
 
-        if (!in_array('sender_type', $columnNames)) {
-            DB::statement("ALTER TABLE messages ADD COLUMN sender_type VARCHAR(255) NOT NULL DEFAULT 'user' AFTER sender_id");
-        }
+        // Create conversations table using Laravel Schema builder (database-agnostic)
+        Schema::create('conversations', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_one_id');
+            $table->string('user_one_type');
+            $table->unsignedBigInteger('user_two_id');
+            $table->string('user_two_type');
+            $table->unsignedBigInteger('task_id')->nullable();
+            $table->timestamp('last_message_at')->nullable();
+            $table->timestamps();
 
-        if (!in_array('receiver_type', $columnNames)) {
-            DB::statement("ALTER TABLE messages ADD COLUMN receiver_type VARCHAR(255) NOT NULL DEFAULT 'user' AFTER receiver_id");
-        }
+            $table->index(['user_one_id', 'user_one_type'], 'idx_user_one');
+            $table->index(['user_two_id', 'user_two_type'], 'idx_user_two');
+        });
     }
 
     public function down(): void
     {
-        DB::statement("DROP TABLE IF EXISTS conversations");
+        Schema::dropIfExists('conversations');
     }
 };

@@ -17,7 +17,7 @@ class BrowseTasks extends Component
     #[Layout('components.layouts.app', ['title' => 'Browse Tasks - ShareStrength'])]
     public function render()
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('helpmate')->check()) {
             return redirect()->route('login');
         }
 
@@ -37,13 +37,13 @@ class BrowseTasks extends Component
         }
 
         if ($this->filterCategory !== 'all') {
-            $tasksQuery->whereJsonContains('skills_required', $this->filterCategory);
+            $tasksQuery->whereJsonContains('required_skills', $this->filterCategory);
         }
 
         $tasks = $tasksQuery->latest()->get();
 
         // Get user's applications
-        $userApplications = Application::where('helper_id', Auth::id())
+        $userApplications = Application::where('helper_id', Auth::guard('helpmate')->id())
             ->pluck('task_id')
             ->toArray();
 
@@ -59,7 +59,7 @@ class BrowseTasks extends Component
 
         // Check if already applied
         $existingApplication = Application::where('task_id', $taskId)
-            ->where('helper_id', Auth::id())
+            ->where('helper_id', Auth::guard('helpmate')->id())
             ->first();
 
         if ($existingApplication) {
@@ -69,7 +69,8 @@ class BrowseTasks extends Component
 
         Application::create([
             'task_id' => $taskId,
-            'helper_id' => Auth::id(),
+            'helper_id' => Auth::guard('helpmate')->id(),
+            'applicant_type' => 'helper',
             'status' => 'pending',
         ]);
 
@@ -78,7 +79,7 @@ class BrowseTasks extends Component
 
     public function logout()
     {
-        Auth::logout();
+        Auth::guard('helpmate')->logout();
         session()->invalidate();
         session()->regenerateToken();
 

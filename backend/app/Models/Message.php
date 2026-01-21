@@ -13,7 +13,9 @@ class Message extends Model
         'conversation_id',
         'task_id',
         'sender_id',
+        'sender_type',
         'receiver_id',
+        'receiver_type',
         'content',
         'is_read',
     ];

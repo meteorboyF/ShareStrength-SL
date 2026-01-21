@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './context/CartContext'; // <--- Import Provider
+import AccessibilityWidget from './components/AccessibilityWidget';
 
 // Import all your pages
 import LandingPage from './pages/LandingPage';
@@ -25,6 +26,7 @@ import Messages from './pages/Messages'; // <--- Import this
 function App() {
   return (
     <CartProvider>
+      <AccessibilityWidget />
       <Router>
         <Routes>
           {/* Public Routes */}

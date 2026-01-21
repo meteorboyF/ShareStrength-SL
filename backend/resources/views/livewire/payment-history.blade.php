@@ -18,7 +18,7 @@
 
     <div class="max-w-7xl mx-auto p-6 lg:px-8">
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between">
                     <div>
@@ -27,18 +27,6 @@
                     </div>
                     <svg class="w-12 h-12 text-red-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                </div>
-            </div>
-
-            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-green-100 text-sm font-semibold">Total Received</p>
-                        <p class="text-3xl font-bold mt-2">${{ number_format($totalReceived, 2) }}</p>
-                    </div>
-                    <svg class="w-12 h-12 text-green-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
             </div>
@@ -70,12 +58,6 @@
                     class="px-4 py-2 rounded-lg font-semibold transition {{ $filterType === 'sent' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
                 >
                     Sent
-                </button>
-                <button 
-                    wire:click="setFilter('received')"
-                    class="px-4 py-2 rounded-lg font-semibold transition {{ $filterType === 'received' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
-                >
-                    Received
                 </button>
             </div>
         </div>
@@ -240,41 +222,28 @@
                             @foreach($payments as $payment)
                                 <tr wire:key="payment-{{ $payment->id }}" class="hover:bg-gray-50 transition">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $payment->created_at->format('M d, Y') }}
+                                        {{ ($payment->paid_at ?? $payment->created_at)->format('M d, Y') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($payment->payer_id === Auth::id())
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                                                <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                                </svg>
-                                                Sent
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                                                <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                                </svg>
-                                                Received
-                                            </span>
-                                        @endif
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                                            <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                            </svg>
+                                            Sent
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
                                         {{ $payment->task ? $payment->task->title : 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
-                                        @if($payment->payer_id === Auth::id())
-                                            {{ $payment->payee ? $payment->payee->name : 'Unknown' }}
-                                        @else
-                                            {{ $payment->payer ? $payment->payer->name : 'Unknown' }}
-                                        @endif
+                                        {{ $payment->payee ? $payment->payee->name : 'Unknown' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $payment->payer_id === Auth::id() ? 'text-red-600' : 'text-green-600' }}">
-                                        {{ $payment->payer_id === Auth::id() ? '-' : '+' }}${{ number_format($payment->amount, 2) }}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">
+                                        -${{ number_format($payment->amount, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-3 py-1 rounded-full text-xs font-bold
-                                            {{ $payment->status === 'completed' ? 'bg-green-100 text-green-700' : '' }}
+                                            {{ $payment->status === 'paid' ? 'bg-green-100 text-green-700' : '' }}
                                             {{ $payment->status === 'pending' ? 'bg-yellow-100 text-yellow-700' : '' }}
                                             {{ $payment->status === 'failed' ? 'bg-red-100 text-red-700' : '' }}
                                         ">

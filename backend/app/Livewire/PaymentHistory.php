@@ -9,27 +9,23 @@ use App\Models\Payment;
 
 class PaymentHistory extends Component
 {
-    public $filterType = 'all'; // all, sent, received
+    public $filterType = 'all'; // all, sent
 
     #[Layout('components.layouts.app', ['title' => 'Payment History - ShareStrength'])]
     public function render()
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('pwd')->check()) {
             return redirect()->route('login');
         }
 
-        $user = Auth::user();
+        $user = Auth::guard('pwd')->user();
 
         // Get payments based on filter
-        $paymentsQuery = Payment::where(function ($query) use ($user) {
-            $query->where('payer_id', $user->id)
-                ->orWhere('payee_id', $user->id);
-        })->with(['payer', 'payee', 'task']);
+        $paymentsQuery = Payment::where('payer_id', $user->id)
+            ->with(['payer', 'payee', 'task']);
 
         if ($this->filterType === 'sent') {
             $paymentsQuery->where('payer_id', $user->id);
-        } elseif ($this->filterType === 'received') {
-            $paymentsQuery->where('payee_id', $user->id);
         }
 
         $payments = $paymentsQuery->latest()->get();
@@ -39,23 +35,33 @@ class PaymentHistory extends Component
             ->where('status', 'paid')
             ->sum('amount');
 
-        $totalReceived = Payment::where('payee_id', $user->id)
-            ->where('status', 'paid')
-            ->sum('amount');
-
-        $pendingPayments = Payment::where(function ($query) use ($user) {
-            $query->where('payer_id', $user->id)
-                ->orWhere('payee_id', $user->id);
-        })->where('status', 'pending')->count();
+        $pendingPayments = Payment::where('payer_id', $user->id)
+            ->where('status', 'pending')
+            ->count();
 
         // Analysis Data (For 'Sent' perspective mainly)
         $monthlySpending = Payment::where('payer_id', $user->id)
             ->where('status', 'paid')
-            ->selectRaw('DATE_FORMAT(created_at, "%b %Y") as month, SUM(amount) as total') // Using created_at or paid_at if available
-            ->groupBy('month')
-            ->orderByRaw('MIN(created_at) ASC')
-            ->limit(6)
-            ->get();
+            ->orderBy('paid_at')
+            ->get()
+            ->groupBy(function ($payment) {
+                $date = $payment->paid_at ?? $payment->created_at;
+                return $date->format('Y-m');
+            })
+            ->map(function ($group) {
+                $first = $group->first();
+                $date = $first->paid_at ?? $first->created_at;
+                return (object) [
+                    'month' => $date->format('M Y'),
+                    'total' => (float) $group->sum('amount'),
+                ];
+            })
+            ->sortKeys()
+            ->values();
+
+        if ($monthlySpending->count() > 6) {
+            $monthlySpending = $monthlySpending->slice(-6)->values();
+        }
 
         $spendingByHelper = Payment::where('payer_id', $user->id)
             ->where('status', 'paid')
@@ -69,7 +75,6 @@ class PaymentHistory extends Component
         return view('livewire.payment-history', [
             'payments' => $payments,
             'totalSent' => $totalSent,
-            'totalReceived' => $totalReceived,
             'pendingPayments' => $pendingPayments,
             'monthlySpending' => $monthlySpending,
             'spendingByHelper' => $spendingByHelper,
@@ -83,7 +88,7 @@ class PaymentHistory extends Component
 
     public function logout()
     {
-        Auth::logout();
+        Auth::guard('pwd')->logout();
         session()->invalidate();
         session()->regenerateToken();
 

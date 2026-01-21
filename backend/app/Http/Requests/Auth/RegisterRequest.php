@@ -14,21 +14,23 @@ class RegisterRequest extends FormRequest
 
     public function rules(): array
     {
+        $accountType = $this->input('account_type', 'pwd');
+        $emailUniqueRule = $accountType === 'helpmate'
+            ? 'unique:helpers,email'
+            : 'unique:users,email';
+
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:pwd,caregiver'],
+            'account_type' => ['required', 'in:pwd,helpmate'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:500'],
             'skills' => ['nullable', 'string'],
             'disability_type' => ['nullable', 'string'],
         ];
 
-        if ($this->input('role') === 'caregiver') {
-            $rules['email'][] = 'unique:helpers,email';
-        } else {
-            $rules['email'][] = 'unique:users,email';
-        }
+        $rules['email'][] = $emailUniqueRule;
 
         return $rules;
     }

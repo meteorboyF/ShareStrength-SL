@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
-use App\Models\User;
+use App\Models\Helper;
 use Illuminate\Http\Request;
 
 class MatchingController extends Controller
@@ -15,8 +15,8 @@ class MatchingController extends Controller
     {
         $task = Task::findOrFail($taskId);
 
-        // Find users with role 'caregiver'
-        $query = User::where('role', 'caregiver');
+        // Find available helpers
+        $query = Helper::query();
 
         // Filter by location (simple string match for now)
         if ($task->location) {

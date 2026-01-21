@@ -29,7 +29,7 @@ class PostTask extends Component
     #[Layout('components.layouts.app', ['title' => 'Post Task - ShareStrength'])]
     public function render()
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('pwd')->check()) {
             return redirect()->route('login');
         }
 
@@ -47,7 +47,7 @@ class PostTask extends Component
         ]);
 
         Task::create([
-            'created_by' => Auth::id(),
+            'created_by' => Auth::guard('pwd')->id(),
             'title' => $this->title,
             'description' => $this->description,
             'location' => 'Remote',

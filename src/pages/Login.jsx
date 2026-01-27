@@ -16,12 +16,14 @@ const Login = () => {
     setError('');
 
     try {
-      const user = await authService.login(formData);
-      console.log('Login success:', user);
+      const { user, account_type } = await authService.login(formData);
+      console.log('Login success:', user, 'Type:', account_type);
 
-      // Redirect based on role
-      if (user.role === 'caregiver') {
+      // Redirect based on account type
+      if (account_type === 'helpmate') {
         navigate('/helper-dashboard');
+      } else if (account_type === 'admin') {
+        navigate('/admin-dashboard');
       } else {
         navigate('/dashboard');
       }

@@ -9,6 +9,7 @@ const HelpMateDashboard = () => {
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [offers, setOffers] = useState([]);
     const [activeJobs, setActiveJobs] = useState([]);
+    const [payments, setPayments] = useState([]);
     const [user, setUser] = useState({ name: 'HelpMate', email: '', photo: 'https://placehold.co/150x150', skills: [] });
 
     // Modal State
@@ -27,6 +28,7 @@ const HelpMateDashboard = () => {
                 localStorage.setItem('user', JSON.stringify(currentUser));
 
                 loadDashboardData();
+                fetchPayments();
             } catch (error) {
                 console.error('Failed to fetch current user:', error);
                 // Fallback to localStorage if API call fails
@@ -34,6 +36,7 @@ const HelpMateDashboard = () => {
                 if (cachedUser) {
                     setUser({ ...cachedUser, skills: cachedUser.skills ? cachedUser.skills.split(', ') : [] });
                     loadDashboardData();
+                    fetchPayments();
                 }
             }
         };
@@ -78,15 +81,18 @@ const HelpMateDashboard = () => {
             // 2. Filter Available Tasks
             const appliedTaskIds = new Set(myApps.map(app => app.task_id));
             const currentUser = authService.getCurrentUser();
-            const currentUserId = currentUser?.helper_id || currentUser?.user_id;
+            const currentUserId = currentUser?.id; // Standardize on ID
 
             const filteredTasks = allTasks.filter(t =>
-                t.status === 'open' && // ONLY show open tasks in available
+                t.status === 'open' && // ONLY show open tasks
                 !appliedTaskIds.has(t.task_id || t.id) &&
-                (currentUser.role === 'caregiver' ? true : t.user_id !== currentUserId)
+                // Show if I am a caregiver (can see all open tasks) OR if I am a user seeing other's tasks (marketplace logic)
+                // But specifically for Helper Dashboard, we want to see everything I can apply to.
+                (currentUser.role === 'helpmate' || currentUser.account_type === 'helpmate' ? true : t.created_by !== currentUserId)
             ).map(t => ({
                 ...t,
-                id: t.task_id || t.id, // Ensure id is mapped for consistent usage
+                id: t.task_id || t.id,
+                user_id: t.created_by || t.creator?.id,
                 user_name: t.creator?.name || 'Unknown User',
                 user_photo: t.creator?.profile_photo || 'https://placehold.co/150',
                 skill: t.skill_required, // Map skill_required to skill
@@ -95,17 +101,31 @@ const HelpMateDashboard = () => {
 
             // 3. Set Active Jobs (Assigned to me)
             const myActiveJobs = allTasks.filter(t =>
-                (t.status === 'accepted' || t.status === 'in_progress') && // Accepted means hired but not started
-                // Check if I am the assigned helper via hiringDecision OR legacy caregiver_id
-                (t.hiring_decision?.selected_helper_id == currentUserId || t.caregiver_id == currentUserId)
+                (t.status === 'accepted' || t.status === 'in_progress' || t.status === 'paused') &&
+                (t.caregiver_id == currentUserId)
             );
 
-            // Map to UI format
+            // 4. Set Pending Offers (Assigned but not accepted yet)
+            const myOffers = allTasks.filter(t =>
+                t.status === 'requested' && t.caregiver_id == currentUserId
+            );
+
+            // Map offers to UI format
+            setOffers(myOffers.map(t => ({
+                id: t.id,
+                title: t.title,
+                user_name: t.creator?.name || 'User',
+                hourly_rate: t.budget || t.hourly_rate || '0.00',
+                status: t.status
+            })));
+
+            // Map Active Jobs to UI format
             setActiveJobs(myActiveJobs.map(t => ({
                 id: t.task_id || t.id,
                 title: t.title,
                 user_name: t.creator?.name || 'User',
                 start_time: t.started_at ? new Date(t.started_at).getTime() : null,
+                accumulated_seconds: t.accumulated_seconds || 0,
                 status: t.status
             })));
 
@@ -114,14 +134,43 @@ const HelpMateDashboard = () => {
         }
     };
 
+    const fetchPayments = async () => {
+        try {
+            const res = await api.get('/payments');
+            console.log('Helper payments:', res.data);
+            setPayments(res.data);
+        } catch (error) {
+            console.error("Error loading payments:", error);
+        }
+    };
+
     const handleStartTask = async (taskId) => {
         try {
             await api.put(`/tasks/${taskId}/start`);
-            alert("Task Started!");
             loadDashboardData();
         } catch (e) {
             console.error(e);
-            alert("Failed to start task");
+            alert("Failed to start task: " + (e.response?.data?.message || e.message));
+        }
+    };
+
+    const handlePauseTask = async (taskId) => {
+        try {
+            await api.put(`/tasks/${taskId}/pause`);
+            loadDashboardData();
+        } catch (e) {
+            console.error(e);
+            alert("Failed to pause task: " + (e.response?.data?.message || e.message));
+        }
+    };
+
+    const handleResumeTask = async (taskId) => {
+        try {
+            await api.put(`/tasks/${taskId}/resume`);
+            loadDashboardData();
+        } catch (e) {
+            console.error(e);
+            alert("Failed to resume task: " + (e.response?.data?.message || e.message));
         }
     };
 
@@ -132,7 +181,24 @@ const HelpMateDashboard = () => {
             loadDashboardData();
         } catch (e) {
             console.error(e);
-            alert("Failed to complete task");
+            alert("Failed to complete task: " + (e.response?.data?.message || e.message));
+        }
+    };
+
+    const handleOfferAction = async (id, action) => {
+        if (action === 'accept') {
+            try {
+                await api.put(`/tasks/${id}/accept`);
+                alert("Offer Accepted!");
+                loadDashboardData();
+            } catch (e) {
+                console.error(e);
+                alert("Failed to accept offer: " + (e.response?.data?.message || e.message));
+            }
+        } else {
+            // Reject logic (for now just client side remove or api call if implemented)
+            setOffers(offers.filter(o => o.id !== id));
+            alert("Offer Rejected");
         }
     };
 
@@ -141,39 +207,39 @@ const HelpMateDashboard = () => {
     };
 
     // --- Live Timer Component ---
-    const Timer = ({ startTime }) => {
-        const [elapsed, setElapsed] = useState("00:00:00");
+    const Timer = ({ startTime, accumulatedSeconds, isRunning }) => {
+        const [elapsedString, setElapsedString] = useState("00:00:00");
 
         useEffect(() => {
-            // Validate startTime
-            if (!startTime || typeof startTime !== 'number' || startTime <= 0) {
-                setElapsed("00:00:00");
-                return;
-            }
+            const calculateTime = () => {
+                let totalSeconds = accumulatedSeconds || 0;
 
-            const interval = setInterval(() => {
-                const now = Date.now();
-                const diff = now - startTime;
-
-                // If diff is negative, show 00:00:00
-                if (diff < 0) {
-                    setElapsed("00:00:00");
-                    return;
+                if (isRunning && startTime) {
+                    const now = Date.now();
+                    // Max with 0 to prevent negative flashes if clocks drift slightly
+                    const currentSessionSeconds = Math.max(0, Math.floor((now - startTime) / 1000));
+                    totalSeconds += currentSessionSeconds;
                 }
 
-                const totalSeconds = Math.floor(diff / 1000);
                 const hours = Math.floor(totalSeconds / 3600);
                 const minutes = Math.floor((totalSeconds % 3600) / 60);
                 const seconds = totalSeconds % 60;
 
-                setElapsed(
-                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-                );
-            }, 1000);
-            return () => clearInterval(interval);
-        }, [startTime]);
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            };
 
-        return <span className="font-mono text-sm text-slate-700">{elapsed}</span>;
+            setElapsedString(calculateTime());
+
+            if (!isRunning) return;
+
+            const interval = setInterval(() => {
+                setElapsedString(calculateTime());
+            }, 1000);
+
+            return () => clearInterval(interval);
+        }, [startTime, accumulatedSeconds, isRunning]);
+
+        return <span className="font-mono text-sm text-slate-700">{elapsedString}</span>;
     };
 
     // Handlers
@@ -201,12 +267,6 @@ const HelpMateDashboard = () => {
 
         setShowModal(false);
         setSelectedTask(null);
-    };
-
-    const handleOfferAction = (id, action) => {
-        // Remove offer from list for demo
-        setOffers(offers.filter(o => o.id !== id));
-        alert(`Offer ${action}ed!`);
     };
 
     return (
@@ -265,17 +325,57 @@ const HelpMateDashboard = () => {
                         </section>
 
                         {/* Earnings */}
-                        <section className="bg-green-800 text-white p-6 rounded-xl shadow-lg animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                            <h3 className="font-semibold mb-2">My Stats</h3>
+                        <section className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                            <h3 className="font-bold text-slate-900 mb-4">💰 My Earnings</h3>
                             <div className="space-y-3">
-                                <div className="flex justify-between items-baseline">
-                                    <span className="text-sm text-green-200">Total Earnings</span>
-                                    <span className="text-2xl font-bold text-white">${(user.total_earnings || 0).toFixed(2)}</span>
+                                <div className="flex justify-between items-baseline pb-3 border-b border-slate-200">
+                                    <span className="text-sm text-slate-600">Total Paid</span>
+                                    <span className="text-2xl font-bold text-green-600">
+                                        ${payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-baseline pb-3 border-b border-slate-200">
+                                    <span className="text-sm text-slate-600">Pending</span>
+                                    <span className="text-lg font-semibold text-yellow-600">
+                                        ${payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0).toFixed(2)}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-baseline">
-                                    <span className="text-sm text-green-200">Completed Jobs</span>
-                                    <span className="text-2xl font-bold text-white">{user.completed_jobs || 0}</span>
+                                    <span className="text-sm text-slate-600">Completed Jobs</span>
+                                    <span className="text-lg font-bold text-slate-900">{payments.filter(p => p.status === 'paid').length}</span>
                                 </div>
+                            </div>
+
+                            {/* Recent Payments */}
+                            <div className="mt-4 pt-4 border-t border-slate-200">
+                                <h4 className="font-semibold text-sm text-slate-700 mb-3">Recent Payments</h4>
+                                {payments.length === 0 ? (
+                                    <p className="text-xs text-slate-500">No payments yet</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {payments.slice(0, 3).map(payment => (
+                                            <div key={payment.id} className="bg-slate-50 p-3 rounded-lg">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <div className="flex-1">
+                                                        <p className="font-medium text-xs text-slate-900">{payment.task?.title || 'Task'}</p>
+                                                        <p className="text-xs text-slate-500">from {payment.payer?.name || 'User'}</p>
+                                                        {payment.hours_worked && payment.hourly_rate && (
+                                                            <p className="text-xs text-slate-600 mt-1">
+                                                                {payment.hours_worked} hrs × ${payment.hourly_rate}/hr
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-bold text-sm text-slate-900">${parseFloat(payment.amount || 0).toFixed(2)}</p>
+                                                        <span className={`text-xs px-2 py-0.5 rounded-full ${payment.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                            {payment.status}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </section>
 
@@ -345,8 +445,8 @@ const HelpMateDashboard = () => {
                                                         <p className="font-bold text-blue-800">{job.title}</p>
                                                         <p className="text-xs text-blue-600">for {job.user_name} ({job.status})</p>
                                                     </div>
-                                                    <div className="flex items-center gap-3">
-                                                        {job.status === 'assigned' && (
+                                                    <div className="flex items-center gap-2">
+                                                        {job.status === 'accepted' && (
                                                             <button
                                                                 onClick={() => handleStartTask(job.id)}
                                                                 className="text-xs font-bold bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition"
@@ -355,16 +455,37 @@ const HelpMateDashboard = () => {
                                                             </button>
                                                         )}
 
-                                                        {job.status === 'in_progress' && (
+                                                        {(job.status === 'in_progress' || job.status === 'paused') && (
                                                             <>
                                                                 <div className="bg-white px-3 py-1 rounded border border-blue-100 shadow-sm">
-                                                                    <Timer startTime={job.start_time} />
+                                                                    <Timer
+                                                                        startTime={job.start_time}
+                                                                        accumulatedSeconds={job.accumulated_seconds}
+                                                                        isRunning={job.status === 'in_progress'}
+                                                                    />
                                                                 </div>
+
+                                                                {job.status === 'in_progress' ? (
+                                                                    <button
+                                                                        onClick={() => handlePauseTask(job.id)}
+                                                                        className="text-xs font-bold bg-amber-500 text-white px-3 py-2 rounded hover:bg-amber-600 transition"
+                                                                    >
+                                                                        Pause
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => handleResumeTask(job.id)}
+                                                                        className="text-xs font-bold bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition"
+                                                                    >
+                                                                        Resume
+                                                                    </button>
+                                                                )}
+
                                                                 <button
                                                                     onClick={() => handleEndTask(job.id)}
                                                                     className="text-xs font-bold bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition"
                                                                 >
-                                                                    End Task
+                                                                    End
                                                                 </button>
                                                             </>
                                                         )}
@@ -396,14 +517,18 @@ const HelpMateDashboard = () => {
                                                         <h3 className="font-bold text-green-700">{task.title}</h3>
                                                         <p className="text-xs text-slate-500">
                                                             Posted by{' '}
-                                                            <Link to={`/profile/user/${task.id === 501 ? 501 : 101}`} className="hover:text-green-600 hover:underline">
-                                                                {task.user_name}
-                                                            </Link>
+                                                            {task.user_id ? (
+                                                                <Link to={`/user/${task.user_id}`} className="text-green-600 hover:underline font-medium">
+                                                                    {task.user_name}
+                                                                </Link>
+                                                            ) : (
+                                                                <span>{task.user_name}</span>
+                                                            )}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xl font-bold text-slate-900">${task.hourly_rate}</p>
+                                                    <p className="text-xl font-bold text-slate-900">${task.budget || task.hourly_rate || '0.00'}</p>
                                                     <p className="text-xs text-slate-500">/hr</p>
                                                 </div>
                                             </div>

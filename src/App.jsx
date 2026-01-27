@@ -23,6 +23,7 @@ import ProfileView from './pages/ProfileView';
 import TaskStatus from './pages/TaskStatus'; // <--- Import this
 import ServicePayment from './pages/ServicePayment'; // <--- Import this
 import TrustedContacts from './pages/TrustedContacts'; // <--- Import this
+import PublicUserProfile from './pages/PublicUserProfile'; // <--- Import this
 import Messages from './pages/Messages'; // <--- Import this
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
           <Route path="/task-status" element={<TaskStatus />} />
           <Route path="/service-payment" element={<ServicePayment />} />
           <Route path="/trusted-contacts" element={<TrustedContacts />} />
+          <Route path="/user/:userId" element={<PublicUserProfile />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:conversationId" element={<Messages />} />
         </Routes>

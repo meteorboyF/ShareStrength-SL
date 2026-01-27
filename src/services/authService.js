@@ -7,7 +7,7 @@ const authService = {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
         }
-        return response.data.user;
+        return response.data;
     },
 
     register: async (userData) => {

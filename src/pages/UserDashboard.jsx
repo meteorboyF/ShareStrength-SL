@@ -5,17 +5,17 @@ import { useCart } from '../context/CartContext';
 import authService from '../services/authService';
 import api from '../services/api';
 
-const TASKS_WITH_APPLICANTS = [];
-const PENDING_PAYMENTS = [];
-
 const UserDashboard = () => {
     const { cartCount } = useCart();
     const [openApplicantTask, setOpenApplicantTask] = useState(null);
     const [showBanner, setShowBanner] = useState(true);
     const [tasks, setTasks] = useState([]);
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [reviewData, setReviewData] = useState({ taskId: null, helperId: null, rating: 5, comment: '' });
     const [user, setUser] = useState({ name: 'User', profile_photo: 'https://placehold.co/100x100' });
     const [tasksWithApplicants, setTasksWithApplicants] = useState([]);
     const [showCompleted, setShowCompleted] = useState(false);
+    const [pendingPayments, setPendingPayments] = useState([]);
 
     useEffect(() => {
         const fetchCurrentUser = async () => {
@@ -30,6 +30,7 @@ const UserDashboard = () => {
 
                 fetchTasks();
                 fetchApplications();
+                fetchPayments();
             } catch (error) {
                 console.error('Failed to fetch current user:', error);
                 // Fallback to localStorage if API call fails
@@ -38,6 +39,7 @@ const UserDashboard = () => {
                     setUser(cachedUser);
                     fetchTasks();
                     fetchApplications();
+                    fetchPayments();
                 }
             }
         };
@@ -61,8 +63,6 @@ const UserDashboard = () => {
         try {
             const response = await api.get('/my-tasks');
             const tasksData = response.data.data || response.data;
-            console.log('Fetched tasks:', tasksData);
-            console.log('In-progress tasks:', tasksData.filter(t => t.status === 'in_progress'));
             setTasks(tasksData);
         } catch (err) {
             console.error(err);
@@ -101,6 +101,61 @@ const UserDashboard = () => {
             setTasksWithApplicants(Object.values(grouped));
         } catch (err) {
             console.error("Failed to fetch applications", err);
+        }
+    };
+
+    const fetchPayments = async () => {
+        try {
+            const res = await api.get('/payments');
+            console.log('Fetched payments:', res.data);
+            // Filter for pending payments
+            const pending = res.data.filter(p => p.status === 'pending');
+            console.log('Pending payments:', pending);
+            setPendingPayments(pending);
+        } catch (err) {
+            console.error("Failed to fetch payments", err);
+        }
+    };
+
+    const handlePayment = async (paymentId) => {
+        const payment = pendingPayments.find(p => p.id === paymentId);
+        if (!window.confirm("Confirm payment of $" + (payment?.amount || 0) + "?")) return;
+
+        try {
+            await api.put(`/payments/${paymentId}`, { status: 'paid' });
+            alert("Payment successful! Please rate your helper.");
+            fetchPayments(); // Refresh list
+
+            // Open Review Modal immediately after payment
+            if (payment && payment.payee_id) {
+                setReviewData({
+                    taskId: payment.task_id,
+                    helperId: payment.payee_id,
+                    rating: 5, // Default 5 stars
+                    comment: ''
+                });
+                setReviewModalOpen(true);
+            }
+
+        } catch (err) {
+            console.error(err);
+            alert("Payment failed: " + (err.response?.data?.message || err.message));
+        }
+    };
+
+    const submitReview = async () => {
+        try {
+            await api.post('/reviews', {
+                task_id: reviewData.taskId,
+                reviewee_id: reviewData.helperId,
+                rating: reviewData.rating,
+                comment: reviewData.comment
+            });
+            alert("Review submitted! Thank you.");
+            setReviewModalOpen(false);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to submit review: " + (err.response?.data?.message || err.message));
         }
     };
 
@@ -294,17 +349,13 @@ const UserDashboard = () => {
                                                         }`}>
                                                         {task.status.toUpperCase()}
                                                     </span>
-                                                    {console.log('Task:', task.id, 'Status:', task.status, 'started_at:', task.started_at, 'Type:', typeof task.started_at)}
                                                     {task.status === 'in_progress' && (
                                                         <>
                                                             {task.started_at ? (
-                                                                <>
-                                                                    {console.log('Rendering timer for task:', task.id, 'started_at:', task.started_at)}
-                                                                    <div className="bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
-                                                                        <div className="text-xs text-blue-600 mb-1">Time Elapsed:</div>
-                                                                        <Timer startTime={new Date(task.started_at).getTime()} />
-                                                                    </div>
-                                                                </>
+                                                                <div className="bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                                                                    <div className="text-xs text-blue-600 mb-1">Time Elapsed:</div>
+                                                                    <Timer startTime={new Date(task.started_at).getTime()} />
+                                                                </div>
                                                             ) : (
                                                                 <div className="bg-red-50 px-3 py-2 rounded-lg border border-red-200">
                                                                     <div className="text-xs text-red-600">No start time recorded</div>
@@ -413,25 +464,34 @@ const UserDashboard = () => {
                         {/* Pending Payments */}
                         <section className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm animate-fade-in-up" style={{ animationDelay: '200ms' }}>
                             <h2 className="text-lg font-bold text-neutral-darkest mb-4">Pending Payments</h2>
-                            <ul className="space-y-4">
-                                {PENDING_PAYMENTS.map(pay => (
-                                    <li key={pay.id} className="border-b border-neutral-100 pb-3 last:border-0 last:pb-0">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <div>
-                                                <p className="font-medium text-sm text-neutral-darkest">{pay.title}</p>
-                                                <p className="text-xs text-neutral-medium">w/ {pay.helpmate}</p>
+                            {pendingPayments.length === 0 ? (
+                                <p className="text-sm text-neutral-500">No pending payments.</p>
+                            ) : (
+                                <ul className="space-y-4">
+                                    {pendingPayments.map(pay => (
+                                        <li key={pay.id} className="border-b border-neutral-100 pb-3 last:border-0 last:pb-0">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p className="font-medium text-sm text-neutral-darkest">{pay.task?.title || 'Task Payment'}</p>
+                                                    <p className="text-xs text-neutral-medium">w/ {pay.payee?.name || 'HelpMate'}</p>
+                                                    {pay.hours_worked && pay.hourly_rate && (
+                                                        <p className="text-xs text-slate-500 mt-1">
+                                                            {pay.hours_worked} hrs × ${pay.hourly_rate}/hr
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <span className="font-bold text-lg text-neutral-darkest">${typeof pay.amount === 'number' ? pay.amount.toFixed(2) : pay.amount}</span>
                                             </div>
-                                            <span className="font-bold text-neutral-darkest">${pay.amount}</span>
-                                        </div>
-                                        <Link
-                                            to="/service-payment"
-                                            className="block w-full text-center bg-green-50 text-green-700 text-xs font-bold py-2 rounded-lg hover:bg-green-100 transition"
-                                        >
-                                            Confirm & Pay
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
+                                            <button
+                                                onClick={() => handlePayment(pay.id)}
+                                                className="block w-full text-center bg-green-50 text-green-700 text-xs font-bold py-2 rounded-lg hover:bg-green-100 transition"
+                                            >
+                                                Confirm & Pay
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </section>
 
                         {/* Quick Access */}
@@ -465,6 +525,51 @@ const UserDashboard = () => {
             </div>
 
             <Chatbot />
+
+            {/* Review Modal */}
+            {reviewModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+                        <h3 className="text-xl font-bold text-neutral-darkest mb-4">Rate your Helper</h3>
+                        <p className="text-sm text-neutral-medium mb-4">How was your experience?</p>
+
+                        <div className="flex justify-center gap-2 mb-6">
+                            {[1, 2, 3, 4, 5].map(star => (
+                                <button
+                                    key={star}
+                                    onClick={() => setReviewData({ ...reviewData, rating: star })}
+                                    className={`text-3xl transition ${star <= reviewData.rating ? 'text-yellow-400 scale-110' : 'text-gray-300 hover:text-yellow-200'}`}
+                                >
+                                    ★
+                                </button>
+                            ))}
+                        </div>
+
+                        <textarea
+                            className="w-full border border-neutral-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary mb-4"
+                            rows="3"
+                            placeholder="Share your feedback..."
+                            value={reviewData.comment}
+                            onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
+                        ></textarea>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setReviewModalOpen(false)}
+                                className="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                            >
+                                Skip
+                            </button>
+                            <button
+                                onClick={submitReview}
+                                className="px-4 py-2 text-sm font-bold bg-primary text-white rounded-lg hover:bg-primary-dark transition shadow-md"
+                            >
+                                Submit Review
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -32,7 +32,7 @@ const RegisterUser = () => {
         email: formData.email,
         password: formData.password,
         password_confirmation: formData.confirmPassword,
-        role: 'pwd' // PWD Role
+        account_type: 'pwd' // PWD Role
       };
 
       await authService.register(payload);

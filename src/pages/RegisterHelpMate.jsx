@@ -42,7 +42,7 @@ const RegisterHelpMate = () => {
         email: formData.email,
         password: formData.password,
         password_confirmation: formData.confirmPassword,
-        role: 'caregiver',
+        account_type: 'helpmate',
         skills: formData.skills.join(', ') // Convert array to string
       };
 

@@ -10,21 +10,24 @@ class Application extends Model
     use HasFactory;
 
     protected $table = 'applications';
-    protected $primaryKey = 'application_id';
-
-    public $timestamps = false; // 'created_at' exists in DB but no updated_at
 
     protected $fillable = [
         'task_id',
         'helper_id',
+        'applicant_type',
         'status',
     ];
 
     // Relationships
 
+    public function helper()
+    {
+        return $this->belongsTo(Helper::class, 'helper_id');
+    }
+
     public function applicant()
     {
-        return $this->morphTo(__FUNCTION__, 'applicant_type', 'helper_id');
+        return $this->belongsTo(Helper::class, 'helper_id');
     }
 
     public function task()

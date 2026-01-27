@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Admin;
+use App\Models\Helper;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -10,32 +12,30 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create PWD User
         User::create([
-            'name' => 'Alice Pwd',
+            'name' => 'Alice PWD',
             'email' => 'alice@example.com',
             'password' => Hash::make('password'),
-            'role' => 'pwd',
             'disability_type' => 'Mobility Impairment',
             'address' => '123 Accessibility Ln',
+            'is_active' => true,
         ]);
 
-        // Create Caregiver User
-        User::create([
-            'name' => 'Bob Caregiver',
+        Helper::create([
+            'name' => 'Bob HelpMate',
             'email' => 'bob@example.com',
             'password' => Hash::make('password'),
-            'role' => 'caregiver',
             'skills' => 'First Aid, Lifting, Driving',
             'address' => '456 Helper St',
+            'is_verified' => true,
+            'is_active' => true,
         ]);
 
-        // Create Admin (Optional)
-        User::create([
+        Admin::create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
-            'role' => 'admin',
+            'is_active' => true,
         ]);
     }
 }

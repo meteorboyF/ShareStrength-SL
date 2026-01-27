@@ -12,38 +12,43 @@ class Helper extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'helpers';
-    protected $primaryKey = 'helper_id';
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'phone_number',
+        'phone',
         'address',
+        'location',
         'skills',
-        'rating',
+        'bio',
         'profile_photo',
-        'verification_status',
-        'status',
-        'verified_by',
+        'profile_photo_url',
+        'is_verified',
+        'is_active',
     ];
 
     protected $hidden = [
         'password',
+        'remember_token',
     ];
 
-    // Relationships
-    
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_verified' => 'boolean',
+        'is_active' => 'boolean',
+    ];
+
     // Applications made by this helper
     public function applications()
     {
         return $this->hasMany(Application::class, 'helper_id');
     }
 
-    // Hiring records for this helper
-    public function hiringRecords()
+    public function assignedTasks()
     {
-        return $this->hasMany(HiringRecord::class, 'helper_id');
+        return $this->hasMany(Task::class, 'caregiver_id');
     }
 
     // Reviews received by this helper

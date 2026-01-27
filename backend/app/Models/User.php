@@ -11,16 +11,19 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $primaryKey = 'user_id';
-    
     protected $fillable = [
         'name',
         'email',
         'password',
-        'user_type', // disabled_individual, family_member, caretaker
-        'phone_number',
+        'phone',
         'address',
+        'location',
+        'skills',
+        'disability_type',
         'profile_photo',
+        'profile_photo_url',
+        'bio',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -30,17 +33,14 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_active' => 'boolean',
     ];
 
     // Relationships
     public function tasks()
     {
         return $this->hasMany(Task::class, 'created_by');
-    }
-
-    public function assignedTasks()
-    {
-        return $this->hasMany(Task::class, 'caregiver_id');
     }
 
     public function trustedContacts()

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,9 +12,14 @@ class OrderController extends Controller
 {
     public function store(Request $request)
     {
+        $user = $request->user();
+        if (!$user instanceof User) {
+            return response()->json(['message' => 'Only PWD users can place orders'], 403);
+        }
+
         $request->validate([
             'items' => 'required|array',
-            'items.*.id' => 'required|exists:products,product_id',
+            'items.*.id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'payment_details' => 'required',
             'shipping_address' => 'required',
@@ -46,7 +52,7 @@ class OrderController extends Controller
 
             // Create Order
             $order = Order::create([
-                'user_id' => auth()->id(), // Authenticated user
+                'user_id' => $user->getKey(),
                 'total_amount' => $totalAmount,
                 'status' => 'paid', // Assume clean payment for now
                 'payment_details' => $request->payment_details,

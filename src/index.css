@@ -2,6 +2,117 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========================================
+   ACCESSIBILITY: Font Size & High Contrast
+   ======================================== */
+
+:root {
+  --font-scale: 1;
+
+  /* Default theme colors */
+  --color-bg: #ffffff;
+  --color-bg-secondary: #F9FAFB;
+  --color-text: #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6B7280;
+  --color-border: #E5E7EB;
+  --color-primary: #6D28D9;
+  --color-primary-light: #8B5CF6;
+  --color-secondary: #10B981;
+}
+
+/* Font Size Scales */
+:root.font-small { --font-scale: 0.85; }
+:root.font-medium { --font-scale: 1; }
+:root.font-large { --font-scale: 1.15; }
+:root.font-x-large { --font-scale: 1.3; }
+
+/* High Contrast Mode */
+:root.high-contrast {
+  --color-bg: #000000;
+  --color-bg-secondary: #1a1a1a;
+  --color-text: #ffffff;
+  --color-text-secondary: #f0f0f0;
+  --color-text-muted: #d0d0d0;
+  --color-border: #ffffff;
+  --color-primary: #a78bfa;
+  --color-primary-light: #c4b5fd;
+  --color-secondary: #34d399;
+}
+
+/* Apply font scaling globally */
+html {
+  font-size: calc(16px * var(--font-scale));
+}
+
+/* High contrast utility classes */
+.high-contrast body,
+:root.high-contrast body {
+  background-color: var(--color-bg) !important;
+  color: var(--color-text) !important;
+}
+
+:root.high-contrast .bg-white,
+:root.high-contrast .bg-neutral-light,
+:root.high-contrast .bg-gray-50,
+:root.high-contrast .bg-gray-100 {
+  background-color: var(--color-bg) !important;
+}
+
+:root.high-contrast .bg-neutral,
+:root.high-contrast .bg-gray-200 {
+  background-color: var(--color-bg-secondary) !important;
+}
+
+:root.high-contrast .text-gray-500,
+:root.high-contrast .text-gray-600,
+:root.high-contrast .text-neutral-medium {
+  color: var(--color-text-muted) !important;
+}
+
+:root.high-contrast .text-gray-700,
+:root.high-contrast .text-gray-800,
+:root.high-contrast .text-gray-900,
+:root.high-contrast .text-neutral-dark,
+:root.high-contrast .text-neutral-darkest {
+  color: var(--color-text) !important;
+}
+
+:root.high-contrast .border-gray-200,
+:root.high-contrast .border-gray-300 {
+  border-color: var(--color-border) !important;
+}
+
+:root.high-contrast .bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+:root.high-contrast .text-primary {
+  color: var(--color-primary) !important;
+}
+
+:root.high-contrast .bg-secondary {
+  background-color: var(--color-secondary) !important;
+}
+
+:root.high-contrast input,
+:root.high-contrast textarea,
+:root.high-contrast select {
+  background-color: var(--color-bg-secondary) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root.high-contrast .shadow-md,
+:root.high-contrast .shadow-lg,
+:root.high-contrast .shadow-xl {
+  box-shadow: 0 0 0 2px var(--color-border) !important;
+}
+
+/* ========================================
+   END ACCESSIBILITY
+   ======================================== */
+
 /* Your Custom Glassmorphism & Animations */
 .glassmorphism-header {
     background-color: rgba(255, 255, 255, 0.7);

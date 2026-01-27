@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Helper;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,7 +15,7 @@ class MessageController extends Controller
         // Get messages between current user and another user (or related to a task)
         $user = Auth::user();
         $userId = $user->getKey();
-        $userType = $user instanceof \App\Models\Helper ? 'helper' : 'user';
+        $userType = $user instanceof Helper ? 'helper' : 'user';
 
         $query = Message::query()
             ->where(function ($q) use ($userId, $userType) {
@@ -55,16 +57,19 @@ class MessageController extends Controller
         $validated = $request->validate([
             'receiver_id' => 'required|integer',
             'receiver_type' => 'required|in:user,helper',
-            'task_id' => 'nullable|exists:tasks,task_id',
+            'task_id' => 'nullable|exists:tasks,id',
             'content' => 'required|string',
         ]);
 
         $sender = Auth::user();
         $senderId = $sender->getKey();
-        $senderType = $sender instanceof \App\Models\Helper ? 'helper' : 'user';
+        $senderType = $sender instanceof Helper ? 'helper' : 'user';
         
         $receiverId = $validated['receiver_id'];
         $receiverType = $validated['receiver_type'];
+        $receiver = $receiverType === 'helper'
+            ? Helper::findOrFail($receiverId)
+            : User::findOrFail($receiverId);
         $taskId = $validated['task_id'] ?? null;
 
         // Find or create conversation
@@ -81,8 +86,9 @@ class MessageController extends Controller
             'sender_type' => $senderType,
             'receiver_id' => $receiverId,
             'receiver_type' => $receiverType,
+            'task_id' => $taskId,
             'content' => $validated['content'],
-            // read_at is null by default (unread)
+            'is_read' => false,
         ]);
 
         // Update conversation's last message timestamp
@@ -94,7 +100,14 @@ class MessageController extends Controller
     public function show($id)
     {
         $message = Message::findOrFail($id);
-        if ($message->sender_id !== Auth::id() && $message->receiver_id !== Auth::id()) {
+        $user = Auth::user();
+        $userType = $user instanceof Helper ? 'helper' : 'user';
+        $userId = $user->getKey();
+
+        $isSender = $message->sender_id === $userId && $message->sender_type === $userType;
+        $isReceiver = $message->receiver_id === $userId && $message->receiver_type === $userType;
+
+        if (!$isSender && !$isReceiver) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         return response()->json($message);
@@ -103,7 +116,9 @@ class MessageController extends Controller
     public function destroy($id)
     {
         $message = Message::findOrFail($id);
-        if ($message->sender_id !== Auth::id()) {
+        $user = Auth::user();
+        $userType = $user instanceof Helper ? 'helper' : 'user';
+        if ($message->sender_id !== $user->getKey() || $message->sender_type !== $userType) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         $message->delete();
@@ -115,18 +130,16 @@ class MessageController extends Controller
      */
     public function markAsRead($id)
     {
-        $user = Auth::user();
-        $userId = $user->getKey();
-        $userType = $user instanceof \App\Models\Helper ? 'helper' : 'user';
-        
         $message = Message::findOrFail($id);
+        $user = Auth::user();
+        $userType = $user instanceof Helper ? 'helper' : 'user';
         
         // Only the receiver can mark as read
-        if ($message->receiver_id !== $userId || $message->receiver_type !== $userType) {
+        if ($message->receiver_id !== $user->getKey() || $message->receiver_type !== $userType) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $message->update(['read_at' => now()]);
+        $message->update(['is_read' => true]);
         
         return response()->json(['message' => 'Message marked as read']);
     }
@@ -138,14 +151,12 @@ class MessageController extends Controller
     {
         $user = Auth::user();
         $userId = $user->getKey();
-        $userType = $user instanceof \App\Models\Helper ? 'helper' : 'user';
-        
+        $userType = $user instanceof Helper ? 'helper' : 'user';
         $conversation = \App\Models\Conversation::findOrFail($conversationId);
 
         // Verify user is part of this conversation
         $isUserOne = $conversation->user_one_id === $userId && $conversation->user_one_type === $userType;
         $isUserTwo = $conversation->user_two_id === $userId && $conversation->user_two_type === $userType;
-        
         if (!$isUserOne && !$isUserTwo) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -154,8 +165,8 @@ class MessageController extends Controller
         Message::where('conversation_id', $conversationId)
             ->where('receiver_id', $userId)
             ->where('receiver_type', $userType)
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
 
         return response()->json(['message' => 'Conversation marked as read']);
     }

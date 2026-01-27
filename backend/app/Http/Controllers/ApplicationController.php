@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
+use App\Models\Helper;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,11 +15,14 @@ class ApplicationController extends Controller
     // This index method assumes Auth::id() is looking for applications WHERE they are the applicant.
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $type = $user instanceof \App\Models\Helper ? 'helper' : 'user';
-        
+        $user = $request->user();
+
+        if (!$user instanceof Helper) {
+            return response()->json(['message' => 'Only HelpMates can view applications'], 403);
+        }
+
         $applications = Application::where('helper_id', $user->getKey())
-            ->where('applicant_type', $type)
+            ->where('applicant_type', 'helper')
             ->with(['task.creator'])
             ->get();
 
@@ -28,16 +33,18 @@ class ApplicationController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'task_id' => 'required|exists:tasks,task_id',
+            'task_id' => 'required|exists:tasks,id',
         ]);
 
-        $user = Auth::user();
-        $type = $user instanceof \App\Models\Helper ? 'helper' : 'user';
+        $user = $request->user();
+        if (!$user instanceof Helper) {
+            return response()->json(['message' => 'Only HelpMates can apply to tasks'], 403);
+        }
 
         // Check for existing application
         $exists = Application::where('task_id', $validated['task_id'])
             ->where('helper_id', $user->getKey())
-            ->where('applicant_type', $type)
+            ->where('applicant_type', 'helper')
             ->exists();
 
         if ($exists) {
@@ -47,7 +54,7 @@ class ApplicationController extends Controller
         $application = Application::create([
             'task_id' => $validated['task_id'],
             'helper_id' => $user->getKey(),
-            'applicant_type' => $type,
+            'applicant_type' => 'helper',
             'status' => 'pending'
         ]);
 
@@ -59,7 +66,8 @@ class ApplicationController extends Controller
     {
         $application = Application::findOrFail($id);
 
-        if ($application->task->user_id != Auth::id()) {
+        $user = $request->user();
+        if (!$user instanceof User || $application->task->created_by != $user->getKey()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -72,22 +80,8 @@ class ApplicationController extends Controller
         if ($validated['status'] === 'accepted') {
             $task = $application->task;
             $task->status = 'accepted'; 
+            $task->caregiver_id = $application->helper_id;
             $task->save();
-
-            // Create Hiring Decision
-            \App\Models\HiringDecision::firstOrCreate(
-                ['task_id' => $task->task_id, 'application_id' => $application->application_id],
-                [
-                    'selected_helper_id' => $application->helper_id, 
-                    // Note: HiringDecision might also need to be polymorphic if we hire Users? 
-                    // Assuming for now regular flow hires Helpers. 
-                    // But if "hhelper" (User) is hired... HiringDecision table schema?
-                    // It has 'selected_helper_id'. Does it enforce FK to helpers?
-                    // If so, we can't hire a user! 
-                    // I should check HiringDecision migration.
-                    'decision_status' => 'approved'
-                ]
-            );
         }
 
         return response()->json($application);
@@ -95,14 +89,18 @@ class ApplicationController extends Controller
 
     public function received(Request $request)
     {
-        $userId = Auth::id();
+        $user = $request->user();
+        if (!$user instanceof User) {
+            return response()->json(['message' => 'Only PWD users can view received applications'], 403);
+        }
+        $userId = $user->getKey();
 
         // 1. Get all task IDs created by this user
-        $taskIds = Task::where('user_id', $userId)->pluck('task_id');
+        $taskIds = Task::where('created_by', $userId)->pluck('id');
 
         // 2. Get applications for these tasks
         $applications = Application::whereIn('task_id', $taskIds)
-            ->with(['task', 'applicant']) // Eager load polymorphic applicant
+            ->with(['task.creator', 'applicant'])
             ->latest('created_at') 
             ->get();
 

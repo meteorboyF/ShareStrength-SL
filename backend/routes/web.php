@@ -9,6 +9,7 @@ use App\Livewire\Auth\RegisterHelpMate;
 use App\Livewire\Dashboards\UserDashboard;
 use App\Livewire\Dashboards\HelpMateDashboard;
 use App\Livewire\Dashboards\AdminDashboard;
+use App\Http\Controllers\ChatbotController;
 
 Route::get('/', LandingPage::class)->name('home');
 Route::get('/login', Login::class)->name('login');
@@ -61,3 +62,15 @@ Route::middleware('auth:admin')->group(function () {
 
 // Test route
 Route::get('/test', \App\Livewire\TestButton::class);
+
+Route::post('/chatbot/ask', [ChatbotController::class, 'ask'])
+    ->middleware(['throttle:30,1'])
+    ->name('chatbot.ask');
+
+Route::get('/chatbot/history', [ChatbotController::class, 'history'])
+    ->middleware(['throttle:60,1'])
+    ->name('chatbot.history');
+
+Route::post('/chatbot/stream', [ChatbotController::class, 'stream'])
+    ->middleware(['throttle:30,1'])
+    ->name('chatbot.stream');

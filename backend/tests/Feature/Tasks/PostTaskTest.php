@@ -13,16 +13,19 @@ class PostTaskTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected User $user;
+
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user = User::factory()->create(['role' => 'pwd']);
-        $this->actingAs($this->user);
+        $this->user = User::factory()->create();
     }
 
     /** @test */
     public function post_task_page_can_be_rendered()
     {
+        $this->actingAs($this->user, 'pwd');
+
         $response = $this->get(route('tasks.post'));
 
         $response->assertStatus(200);
@@ -32,31 +35,37 @@ class PostTaskTest extends TestCase
     /** @test */
     public function user_can_post_task_with_valid_data()
     {
+        $this->actingAs($this->user, 'pwd');
+
         Livewire::test(PostTask::class)
             ->set('title', 'Help with grocery shopping')
             ->set('description', 'Need someone to help me with weekly grocery shopping')
-            ->set('location', 'New York, NY')
+            ->set('selectedSkill', 'Transport & Errands')
             ->set('budget', 50.00)
             ->set('urgency', 'medium')
-            ->set('required_skills', ['Shopping', 'Driving'])
             ->call('postTask')
             ->assertRedirect(route('dashboard'));
 
-        $this->assertDatabaseHas('tasks', [
-            'title' => 'Help with grocery shopping',
-            'created_by' => $this->user->id,
-            'status' => 'open',
-        ]);
+        $task = Task::first();
+        $this->assertNotNull($task);
+        $this->assertEquals('Help with grocery shopping', $task->title);
+        $this->assertEquals($this->user->id, $task->created_by);
+        $this->assertEquals('open', $task->status);
+        $this->assertEquals('medium', $task->urgency);
+        $this->assertEquals(['Transport & Errands'], $task->required_skills);
     }
 
     /** @test */
-    public function task_requires_title_and_description()
+    public function task_requires_title_description_and_skill()
     {
+        $this->actingAs($this->user, 'pwd');
+
         Livewire::test(PostTask::class)
             ->set('title', '')
             ->set('description', '')
+            ->set('selectedSkill', '')
             ->call('postTask')
-            ->assertHasErrors(['title', 'description']);
+            ->assertHasErrors(['title', 'description', 'selectedSkill']);
 
         $this->assertDatabaseCount('tasks', 0);
     }
@@ -64,30 +73,34 @@ class PostTaskTest extends TestCase
     /** @test */
     public function budget_must_be_numeric()
     {
+        $this->actingAs($this->user, 'pwd');
+
         Livewire::test(PostTask::class)
             ->set('title', 'Test Task')
             ->set('description', 'Test Description')
+            ->set('selectedSkill', 'Other Support')
             ->set('budget', 'not-a-number')
             ->call('postTask')
             ->assertHasErrors('budget');
     }
 
     /** @test */
-    public function scheduled_date_must_be_in_future()
+    public function budget_must_be_within_allowed_range()
     {
+        $this->actingAs($this->user, 'pwd');
+
         Livewire::test(PostTask::class)
             ->set('title', 'Test Task')
             ->set('description', 'Test Description')
-            ->set('scheduled_at', now()->subDay()->format('Y-m-d\TH:i'))
+            ->set('selectedSkill', 'Other Support')
+            ->set('budget', 5)
             ->call('postTask')
-            ->assertHasErrors('scheduled_at');
+            ->assertHasErrors('budget');
     }
 
     /** @test */
     public function guest_cannot_access_post_task_page()
     {
-        auth()->logout();
-
         $response = $this->get(route('tasks.post'));
 
         $response->assertRedirect(route('login'));
@@ -96,9 +109,12 @@ class PostTaskTest extends TestCase
     /** @test */
     public function task_is_created_with_correct_default_status()
     {
+        $this->actingAs($this->user, 'pwd');
+
         Livewire::test(PostTask::class)
             ->set('title', 'Test Task')
             ->set('description', 'Test Description')
+            ->set('selectedSkill', 'Other Support')
             ->call('postTask');
 
         $task = Task::first();

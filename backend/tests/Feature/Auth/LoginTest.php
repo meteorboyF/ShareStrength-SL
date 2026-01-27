@@ -3,6 +3,8 @@
 namespace Tests\Feature\Auth;
 
 use Tests\TestCase;
+use App\Models\Admin;
+use App\Models\Helper;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -28,16 +30,16 @@ class LoginTest extends TestCase
         $user = User::factory()->create([
             'email' => 'test@example.com',
             'password' => Hash::make('password'),
-            'role' => 'pwd',
         ]);
 
         Livewire::test(Login::class)
+            ->set('accountType', 'pwd')
             ->set('email', 'test@example.com')
             ->set('password', 'password')
             ->call('login')
             ->assertRedirect(route('dashboard'));
 
-        $this->assertAuthenticatedAs($user);
+        $this->assertAuthenticatedAs($user, 'pwd');
     }
 
     /** @test */
@@ -49,12 +51,13 @@ class LoginTest extends TestCase
         ]);
 
         Livewire::test(Login::class)
+            ->set('accountType', 'pwd')
             ->set('email', 'test@example.com')
             ->set('password', 'wrong-password')
             ->call('login')
             ->assertHasErrors('email');
 
-        $this->assertGuest();
+        $this->assertGuest('pwd');
     }
 
     /** @test */
@@ -70,32 +73,38 @@ class LoginTest extends TestCase
     /** @test */
     public function helpmate_is_redirected_to_helpmate_dashboard()
     {
-        $helpmate = User::factory()->create([
+        $helpmate = Helper::create([
+            'name' => 'Test HelpMate',
             'email' => 'helpmate@example.com',
             'password' => Hash::make('password'),
-            'role' => 'caregiver',
         ]);
 
         Livewire::test(Login::class)
+            ->set('accountType', 'helpmate')
             ->set('email', 'helpmate@example.com')
             ->set('password', 'password')
             ->call('login')
             ->assertRedirect(route('helpmate.dashboard'));
+
+        $this->assertAuthenticatedAs($helpmate, 'helpmate');
     }
 
     /** @test */
     public function admin_is_redirected_to_admin_dashboard()
     {
-        $admin = User::factory()->create([
+        $admin = Admin::create([
+            'name' => 'Test Admin',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
-            'role' => 'admin',
         ]);
 
         Livewire::test(Login::class)
+            ->set('accountType', 'admin')
             ->set('email', 'admin@example.com')
             ->set('password', 'password')
             ->call('login')
             ->assertRedirect(route('admin.dashboard'));
+
+        $this->assertAuthenticatedAs($admin, 'admin');
     }
 }

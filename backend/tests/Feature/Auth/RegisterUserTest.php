@@ -34,10 +34,9 @@ class RegisterUserTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'email' => 'john@example.com',
-            'role' => 'pwd',
         ]);
 
-        $this->assertAuthenticated();
+        $this->assertAuthenticated('pwd');
     }
 
     /** @test */

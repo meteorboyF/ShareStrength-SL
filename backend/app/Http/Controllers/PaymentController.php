@@ -17,14 +17,50 @@ class PaymentController extends Controller
             return Payment::where('payee_id', $user->getKey())
                 ->with(['task:id,title', 'payer:id,name', 'payee:id,name'])
                 ->latest()
-                ->get();
+                ->get()
+                ->map(function($payment) {
+                    return [
+                        'id' => $payment->id,
+                        'task_id' => $payment->task_id,
+                        'payer_id' => $payment->payer_id,
+                        'payee_id' => $payment->payee_id,
+                        'amount' => $payment->amount,
+                        'hours_worked' => $payment->hours_worked,
+                        'hourly_rate' => $payment->hourly_rate,
+                        'status' => $payment->status,
+                        'paid_at' => $payment->paid_at,
+                        'task' => $payment->task,
+                        'payee' => $payment->payee,
+                        'payer' => $payment->payer,
+                        'created_at' => $payment->created_at,
+                        'updated_at' => $payment->updated_at
+                    ];
+                });
         }
 
         if ($user instanceof User) {
             return Payment::where('payer_id', $user->getKey())
                 ->with(['task:id,title', 'payer:id,name', 'payee:id,name'])
                 ->latest()
-                ->get();
+                ->get()
+                ->map(function($payment) {
+                    return [
+                        'id' => $payment->id,
+                        'task_id' => $payment->task_id,
+                        'payer_id' => $payment->payer_id,
+                        'payee_id' => $payment->payee_id,
+                        'amount' => $payment->amount,
+                        'hours_worked' => $payment->hours_worked,
+                        'hourly_rate' => $payment->hourly_rate,
+                        'status' => $payment->status,
+                        'paid_at' => $payment->paid_at,
+                        'task' => $payment->task,
+                        'payee' => $payment->payee,
+                        'payer' => $payment->payer,
+                        'created_at' => $payment->created_at,
+                        'updated_at' => $payment->updated_at
+                    ];
+                });
         }
 
         return response()->json(['message' => 'Unauthorized'], 403);
@@ -159,5 +195,31 @@ class PaymentController extends Controller
         ]);
 
         return response()->json($payment, 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $payment = Payment::findOrFail($id);
+        $user = $request->user();
+
+        // Authorization
+        if ($payment->payer_id !== $user->getKey()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:paid',
+        ]);
+
+        if ($validated['status'] === 'paid' && $payment->status !== 'paid') {
+            $payment->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
+            
+            // Start a conversation or send notification if needed
+        }
+
+        return response()->json($payment);
     }
 }

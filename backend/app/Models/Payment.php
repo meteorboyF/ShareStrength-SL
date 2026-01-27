@@ -14,12 +14,16 @@ class Payment extends Model
         'payer_id',
         'payee_id',
         'amount',
+        'hours_worked',
+        'hourly_rate',
         'status',
         'paid_at',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'hours_worked' => 'decimal:2',
+        'hourly_rate' => 'decimal:2',
         'paid_at' => 'datetime',
     ];
 

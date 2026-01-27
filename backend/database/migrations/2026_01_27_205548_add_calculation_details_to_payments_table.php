@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->renameColumn('password_hash', 'password');
+        Schema::table('payments', function (Blueprint $table) {
+            $table->decimal('hours_worked', 5, 2)->nullable()->after('amount');
+            $table->decimal('hourly_rate', 8, 2)->nullable()->after('hours_worked');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->renameColumn('password', 'password_hash');
+        Schema::table('payments', function (Blueprint $table) {
+            $table->dropColumn(['hours_worked', 'hourly_rate']);
         });
     }
 };

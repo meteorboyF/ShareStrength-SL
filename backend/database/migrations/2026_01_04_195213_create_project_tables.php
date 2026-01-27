@@ -94,6 +94,7 @@ return new class extends Migration {
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('accessibility_settings');
         Schema::dropIfExists('payments');
         Schema::dropIfExists('resources');
@@ -102,5 +103,6 @@ return new class extends Migration {
         Schema::dropIfExists('messages');
         Schema::dropIfExists('tasks');
         Schema::dropIfExists('trusted_contacts');
+        Schema::enableForeignKeyConstraints();
     }
 };

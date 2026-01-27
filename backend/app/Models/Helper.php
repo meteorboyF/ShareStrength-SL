@@ -26,6 +26,7 @@ class Helper extends Authenticatable
         'profile_photo_url',
         'is_verified',
         'is_active',
+        'rating',
     ];
 
     protected $hidden = [
@@ -38,6 +39,7 @@ class Helper extends Authenticatable
         'password' => 'hashed',
         'is_verified' => 'boolean',
         'is_active' => 'boolean',
+        'rating' => 'decimal:1',
     ];
 
     // Applications made by this helper

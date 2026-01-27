@@ -11,18 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('helpers', function (Blueprint $table) {
-            $table->renameColumn('password_hash', 'password');
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->unsignedInteger('accumulated_seconds')->default(0)->after('status');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('helpers', function (Blueprint $table) {
-            $table->renameColumn('password', 'password_hash');
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->dropColumn('accumulated_seconds');
         });
     }
 };

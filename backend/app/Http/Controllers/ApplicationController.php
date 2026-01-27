@@ -79,7 +79,7 @@ class ApplicationController extends Controller
 
         if ($validated['status'] === 'accepted') {
             $task = $application->task;
-            $task->status = 'accepted'; 
+            $task->status = 'requested'; 
             $task->caregiver_id = $application->helper_id;
             $task->save();
         }

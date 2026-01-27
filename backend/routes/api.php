@@ -51,11 +51,12 @@ Route::prefix('v1')->group(function () {
 
         Route::apiResource('communities', CommunityController::class);
         Route::apiResource('resources', \App\Http\Controllers\ResourceController::class);
-        Route::apiResource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store']);
+        Route::apiResource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store', 'update']);
         Route::get('/payments/summary', [\App\Http\Controllers\PaymentController::class, 'summary']);
         Route::get('/payments/insights', [\App\Http\Controllers\PaymentController::class, 'insights']);
         Route::get('/applications/received', [\App\Http\Controllers\ApplicationController::class, 'received']);
         Route::apiResource('applications', \App\Http\Controllers\ApplicationController::class)->only(['index', 'store', 'update']);
+        Route::post('/reviews', [\App\Http\Controllers\ReviewController::class, 'store']);
 
         // User Profile Routes
         Route::get('/users/{id}', [\App\Http\Controllers\UserController::class, 'show']);
@@ -90,7 +91,10 @@ Route::prefix('v1')->group(function () {
         Route::post('orders', [\App\Http\Controllers\OrderController::class, 'store']);
 
         // Matching
+        Route::put('/tasks/{id}/accept', [TaskController::class, 'accept']);
         Route::put('/tasks/{id}/start', [TaskController::class, 'start']);
+        Route::put('/tasks/{id}/pause', [TaskController::class, 'pause']);
+        Route::put('/tasks/{id}/resume', [TaskController::class, 'resume']);
         Route::put('/tasks/{id}/complete', [TaskController::class, 'complete']);
         Route::post('/tasks/{id}/repost', [TaskController::class, 'repost']);
         Route::get('/tasks/{id}/match', [MatchingController::class, 'matchCaregivers']);

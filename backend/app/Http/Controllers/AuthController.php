@@ -59,28 +59,39 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
         $credentials = $request->validated();
+        $email = $credentials['email'];
+        $password = $credentials['password'];
 
-        $accountType = $request->input('account_type', 'pwd');
-        $model = $accountType === 'helpmate' ? Helper::class : User::class;
+        // Define models to check
+        $guards = [
+            'pwd' => User::class,
+            'helpmate' => Helper::class,
+            'admin' => \App\Models\Admin::class,
+        ];
 
-        $user = $model::where('email', $credentials['email'])->first();
-        if ($user && Hash::check($credentials['password'], $user->password)) {
-            if (property_exists($user, 'is_active') && !$user->is_active) {
-                return response()->json(['message' => 'Account is inactive'], 403);
+        foreach ($guards as $type => $modelClass) {
+            $user = $modelClass::where('email', $email)->first();
+            
+            if ($user && Hash::check($password, $user->password)) {
+                // Check active status
+                if (property_exists($user, 'is_active') && !$user->is_active) {
+                    return response()->json(['message' => 'Account is inactive'], 403);
+                }
+
+                // Check verification for HelpMates
+                if ($type === 'helpmate' && !$user->is_verified) {
+                    return response()->json(['message' => 'HelpMate account pending verification'], 403);
+                }
+
+                $token = $user->createToken('auth_token')->plainTextToken;
+
+                return response()->json([
+                    'message' => 'Login successful',
+                    'user' => $user,
+                    'token' => $token,
+                    'account_type' => $type, // Return detected type
+                ]);
             }
-
-            if ($accountType === 'helpmate' && property_exists($user, 'is_verified') && !$user->is_verified) {
-                return response()->json(['message' => 'HelpMate account pending verification'], 403);
-            }
-
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'message' => 'Login successful',
-                'user' => $user,
-                'token' => $token,
-                'account_type' => $accountType,
-            ]);
         }
 
         return response()->json([
@@ -99,7 +110,20 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        $accountType = 'pwd'; // Default
+
+        if ($user instanceof Helper) {
+            $accountType = 'helpmate';
+        } elseif ($user instanceof \App\Models\Admin) {
+            $accountType = 'admin';
+        }
+
+        // Return user data merged with account_type
+        return response()->json(array_merge(
+            $user->toArray(),
+            ['account_type' => $accountType, 'role' => $accountType] // adding role for frontend compatibility
+        ));
     }
 
 }

@@ -40,6 +40,38 @@ class TaskController extends Controller
         );
     }
 
+    // Accept task (as Helper)
+    public function accept(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+        $user = $request->user();
+
+        if (!$user instanceof Helper) {
+            return response()->json(['message' => 'Only HelpMates can accept tasks'], 403);
+        }
+
+        // Authorization: Must be the assigned caregiver
+        if ($task->caregiver_id !== $user->getKey()) {
+            return response()->json([
+                'message' => 'Unauthorized. You are not assigned to this task.'
+            ], 403);
+        }
+
+        // Validation: Task must be in 'requested' status
+        if ($task->status !== 'requested') {
+            return response()->json([
+                'message' => 'Cannot accept task. Current status: ' . $task->status . '. Expected: requested'
+            ], 400);
+        }
+
+        $task->update(['status' => 'accepted']);
+
+        return response()->json([
+            'message' => 'Task accepted successfully',
+            'task' => $task
+        ]);
+    }
+
     // Start task
     public function start(Request $request, $id)
     {
@@ -76,6 +108,59 @@ class TaskController extends Controller
         ]);
     }
 
+    // Pause task
+    public function pause(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+        $user = $request->user();
+
+        if ($task->caregiver_id !== $user->getKey()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($task->status !== 'in_progress') {
+            return response()->json(['message' => 'Task not in progress'], 400);
+        }
+
+        // Calculate time since last start
+        $accumulated = $task->accumulated_seconds ?? 0;
+        if ($task->started_at) {
+            $start = \Carbon\Carbon::parse($task->started_at);
+            $seconds = $start->diffInSeconds(now());
+            $accumulated += $seconds;
+        }
+
+        $task->update([
+            'status' => 'paused',
+            'started_at' => null,
+            'accumulated_seconds' => $accumulated
+        ]);
+
+        return response()->json(['message' => 'Task paused', 'task' => $task]);
+    }
+
+    // Resume task
+    public function resume(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+        $user = $request->user();
+
+        if ($task->caregiver_id !== $user->getKey()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($task->status !== 'paused') {
+            return response()->json(['message' => 'Task not paused'], 400);
+        }
+
+        $task->update([
+            'status' => 'in_progress',
+            'started_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Task resumed', 'task' => $task]);
+    }
+
     // Complete task
     public function complete(Request $request, $id)
     {
@@ -93,26 +178,24 @@ class TaskController extends Controller
             ], 403);
         }
 
-        // Validation: Task must be in 'in_progress' status
-        if ($task->status !== 'in_progress') {
-            return response()->json([
-                'message' => 'Cannot complete task. Current status: ' . $task->status . '. Expected: in_progress'
-            ], 400);
+        // Calculate final accumulated time
+        $finalSeconds = $task->accumulated_seconds ?? 0;
+        
+        if ($task->status === 'in_progress' && $task->started_at) {
+            $start = \Carbon\Carbon::parse($task->started_at);
+            $finalSeconds += $start->diffInSeconds(now());
         }
 
         // Update task status and timestamp
         $task->update([
             'status' => 'completed',
             'completed_at' => now(),
+            'accumulated_seconds' => $finalSeconds,
+            'started_at' => null // Clear current start time
         ]);
 
-        // Calculate payment based on time worked
-        $start = \Carbon\Carbon::parse($task->started_at);
-        $end = \Carbon\Carbon::parse($task->completed_at);
-
         // Calculate hours with decimal precision
-        $totalMinutes = $start->diffInMinutes($end);
-        $hours = $totalMinutes / 60;
+        $hours = $finalSeconds / 3600;
 
         // Round up to nearest 0.5 hour, minimum 0.5 hours
         $hours = max(0.5, ceil($hours * 2) / 2);
@@ -127,6 +210,8 @@ class TaskController extends Controller
             'payer_id' => $task->created_by,
             'payee_id' => $task->caregiver_id,
             'amount' => $amount,
+            'hours_worked' => $hours,
+            'hourly_rate' => $hourlyRate,
             'status' => 'pending',
         ]);
 

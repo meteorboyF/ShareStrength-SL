@@ -10,27 +10,24 @@ class Review extends Model
     use HasFactory;
 
     protected $table = 'reviews';
-    protected $primaryKey = 'review_id';
-
-    public $timestamps = false;
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
-        'user_id',
-        'helper_id',
-        'hiring_id',
+        'task_id',
+        'reviewer_id',
+        'reviewee_id',
         'comment',
         'rating',
     ];
 
-    // Relationships
-
-    public function user()
+    public function reviewer()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'reviewer_id');
     }
 
-    public function helper()
+    public function reviewee()
     {
-        return $this->belongsTo(Helper::class, 'helper_id');
+        return $this->belongsTo(Helper::class, 'reviewee_id');
     }
 }

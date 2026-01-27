@@ -11,7 +11,7 @@ class UserController extends Controller
     // Get public profile of any user
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with('trustedContacts')->findOrFail($id);
 
         // Return public profile data
         return response()->json([
@@ -19,15 +19,28 @@ class UserController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
+            'phone_number' => $user->phone_number,
+            'address' => $user->address,
             'location' => $user->location,
             'disability_type' => $user->disability_type,
             'skills' => $user->skills,
             'bio' => $user->bio,
+            'profile_photo' => $user->profile_photo,
             'profile_photo_url' => $user->profile_photo_url,
             'rating' => $user->rating ?? 0,
             'total_earnings' => $user->total_earnings ?? 0,
             'completed_jobs' => $user->completed_jobs ?? 0,
             'created_at' => $user->created_at,
+            'trusted_contacts' => $user->trustedContacts->map(function($contact) {
+                return [
+                    'id' => $contact->id,
+                    'contact_name' => $contact->contact_name,
+                    'relation' => $contact->relation,
+                    'contact_email' => $contact->contact_email,
+                    'contact_phone' => $contact->contact_phone,
+                    'status' => $contact->status,
+                ];
+            }),
         ]);
     }
 

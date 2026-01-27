@@ -26,64 +26,53 @@ const ConversationListItem = ({ conversation, onClick, isActive }) => {
     };
 
     return (
-        <div
+        <button
             onClick={onClick}
-            className={`flex items-center p-4 cursor-pointer border-b border-gray-200 hover:bg-gray-50 transition-colors ${isActive ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
-                }`}
+            className={`
+                w-full flex items-start gap-3 p-4 rounded-2xl transition-all duration-200 group
+                ${isActive
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                    : 'hover:bg-slate-50 text-slate-600'}
+            `}
         >
-            {/* Avatar */}
-            <div className="flex-shrink-0 mr-3">
+            <div className="relative flex-shrink-0">
                 {conversation.other_user.profile_photo ? (
                     <img
                         src={conversation.other_user.profile_photo}
                         alt={conversation.other_user.name}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-12 h-12 rounded-full object-cover ring-2 ring-transparent group-hover:ring-slate-200 transition-all"
                     />
                 ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold ring-2 ring-transparent group-hover:ring-slate-200 transition-all">
                         {getInitials(conversation.other_user.name)}
                     </div>
                 )}
+                {/* Online indicator - you can add online status to your API later */}
+                <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 ${isActive ? 'border-blue-600 bg-green-400' : 'border-white bg-green-400'}`} />
             </div>
 
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-sm font-semibold text-gray-900 truncate">
+            <div className="flex-1 text-left min-w-0">
+                <div className="flex justify-between items-center mb-0.5">
+                    <h3 className={`font-semibold truncate ${isActive ? 'text-white' : 'text-slate-900'}`}>
                         {conversation.other_user.name}
                     </h3>
-                    {conversation.last_message_at && (
-                        <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                            {formatTime(conversation.last_message_at)}
+                    <span className={`text-[11px] font-medium ${isActive ? 'text-blue-100' : 'text-slate-400'}`}>
+                        {formatTime(conversation.last_message_at)}
+                    </span>
+                </div>
+                <div className="flex justify-between items-center gap-2">
+                    <p className={`text-xs truncate ${isActive ? 'text-blue-50' : 'text-slate-500'}`}>
+                        {conversation.last_message?.is_from_me && 'You: '}
+                        {conversation.last_message?.content || 'No messages yet'}
+                    </p>
+                    {conversation.unread_count > 0 && !isActive && (
+                        <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                            {conversation.unread_count > 9 ? '9+' : conversation.unread_count}
                         </span>
                     )}
                 </div>
-
-                {/* Last Message Preview */}
-                {conversation.last_message && (
-                    <p className="text-sm text-gray-600 truncate">
-                        {conversation.last_message.is_from_me && 'You: '}
-                        {conversation.last_message.content}
-                    </p>
-                )}
-
-                {/* Task Badge */}
-                {conversation.task && (
-                    <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">
-                        Task: {conversation.task.title}
-                    </span>
-                )}
             </div>
-
-            {/* Unread Badge */}
-            {conversation.unread_count > 0 && (
-                <div className="flex-shrink-0 ml-2">
-                    <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-blue-600 rounded-full">
-                        {conversation.unread_count > 9 ? '9+' : conversation.unread_count}
-                    </span>
-                </div>
-            )}
-        </div>
+        </button>
     );
 };
 

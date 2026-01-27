@@ -11,15 +11,16 @@ class Message extends Model
 
     protected $fillable = [
         'conversation_id',
-        'task_id',
         'sender_id',
+        'sender_type',
         'receiver_id',
+        'receiver_type',
         'content',
-        'is_read',
+        'read_at',
     ];
 
     protected $casts = [
-        'is_read' => 'boolean',
+        'read_at' => 'datetime',
     ];
 
     public function conversation()

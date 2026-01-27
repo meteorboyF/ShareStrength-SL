@@ -7,6 +7,7 @@ use App\Http\Controllers\MatchingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TrustedContactController;
+use App\Http\Controllers\DonationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,10 @@ Route::prefix('v1')->group(function () {
     // Public Routes
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    
+    // Donation Routes
+    Route::post('/donations', [DonationController::class, 'store']);
+    Route::get('/financial-transparency', [DonationController::class, 'index']);
 
     // Shop Routes (Public)
     Route::apiResource('products', \App\Http\Controllers\ProductController::class)->only(['index', 'show']);
@@ -28,6 +33,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/me', [AuthController::class, 'updateProfile']);
 
         // Feature Routes
         Route::get('my-tasks', [TaskController::class, 'myTasks']);

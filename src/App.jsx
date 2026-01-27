@@ -17,7 +17,8 @@ import RegisterHelpMate from './pages/RegisterHelpMate';   // Updated filename
 import ProductDetails from './pages/ProductDetails'; // <--- New
 import Cart from './pages/Cart'; // <--- New
 import Checkout from './pages/Checkout'; // <--- New
-import ProfileView from './pages/ProfileView'; // <--- Import this
+import UserProfile from './pages/UserProfile'; // <--- Import this
+import ProfileView from './pages/ProfileView';
 import TaskStatus from './pages/TaskStatus'; // <--- Import this
 import ServicePayment from './pages/ServicePayment'; // <--- Import this
 import TrustedContacts from './pages/TrustedContacts'; // <--- Import this
@@ -33,6 +34,7 @@ function App() {
 
           {/* User Routes */}
           <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/my-profile" element={<UserProfile />} /> {/* <--- New Route */}
           <Route path="/payment" element={<PaymentHistory />} />
           <Route path="/payment-insights" element={<PaymentInsights />} />
           <Route path="/resources" element={<Resources />} />

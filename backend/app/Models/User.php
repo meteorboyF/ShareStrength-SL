@@ -16,7 +16,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'password_hash',
+        'password',
         'user_type', // disabled_individual, family_member, caretaker
         'phone_number',
         'address',
@@ -24,19 +24,13 @@ class User extends Authenticatable
     ];
 
     protected $hidden = [
-        'password_hash',
+        'password',
         'remember_token',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-    
-    // Password accessor for Laravel Auth
-    public function getAuthPassword()
-    {
-        return $this->password_hash;
-    }
 
     // Relationships
     public function tasks()

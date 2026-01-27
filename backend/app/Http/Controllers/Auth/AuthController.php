@@ -39,7 +39,7 @@ class AuthController extends Controller
         $helper = Helper::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password_hash' => Hash::make($request->password),
+            'password' => Hash::make($request->password),
             'phone_number' => $request->phone,
             'address' => $request->address,
             'skills' => $request->skills,
@@ -76,7 +76,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password_hash' => Hash::make($request->password),
+            'password' => Hash::make($request->password),
             'phone_number' => $request->phone,
             'address' => $request->address,
             'user_type' => $request->user_type,
@@ -105,7 +105,7 @@ class AuthController extends Controller
 
         // Try to authenticate as a User first
         $user = User::where('email', $request->email)->first();
-        if ($user && Hash::check($request->password, $user->password_hash)) {
+        if ($user && Hash::check($request->password, $user->password)) {
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
@@ -119,7 +119,7 @@ class AuthController extends Controller
 
         // If not a user, try to authenticate as a Helper
         $helper = Helper::where('email', $request->email)->first();
-        if ($helper && Hash::check($request->password, $helper->password_hash)) {
+        if ($helper && Hash::check($request->password, $helper->password)) {
             $token = $helper->createToken('auth_token')->plainTextToken;
 
             return response()->json([
@@ -133,5 +133,34 @@ class AuthController extends Controller
 
         // If neither, authentication failed
         return response()->json(['message' => 'Invalid credentials'], 401);
+    }
+    /**
+     * Update the authenticated user's profile.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        
+        // Define validation rules based on user type
+        $rules = [
+            'name' => 'required|string|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+        ];
+
+        if ($user instanceof \App\Models\Helper) {
+            $rules['skills'] = 'nullable|string';
+            $rules['price_per_hour'] = 'nullable|numeric|min:0';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Update the user
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user
+        ]);
     }
 }

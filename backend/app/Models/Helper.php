@@ -17,7 +17,7 @@ class Helper extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'password_hash',
+        'password',
         'phone_number',
         'address',
         'skills',
@@ -29,14 +29,8 @@ class Helper extends Authenticatable
     ];
 
     protected $hidden = [
-        'password_hash',
+        'password',
     ];
-
-    // Password accessor for Laravel Auth
-    public function getAuthPassword()
-    {
-        return $this->password_hash;
-    }
 
     // Relationships
     

@@ -3,6 +3,8 @@ import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import Features from '../components/Features';
 import HowItWorks from '../components/HowItWorks';
+import DonationSection from '../components/DonationSection';
+import TransparencySection from '../components/TransparencySection';
 import Footer from '../components/Footer';
 
 function LandingPage() {
@@ -29,6 +31,8 @@ function LandingPage() {
         <Hero />
         <Features />
         <HowItWorks />
+        <DonationSection />
+        <TransparencySection />
       </main>
       <Footer />
     </div>

@@ -10,27 +10,27 @@ export const CartProvider = ({ children }) => {
   // Add item to cart
   const addToCart = (product) => {
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      const existing = prev.find(item => item.product_id === product.product_id);
       if (existing) {
         // If item exists, just increase quantity
-        return prev.map(item => 
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        return prev.map(item =>
+          item.product_id === product.product_id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
       // New item
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: 1, price: parseFloat(product.price) }]; // Ensure price is number
     });
   };
 
   // Remove item completely
   const removeFromCart = (id) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+    setCart(prev => prev.filter(item => item.product_id !== id));
   };
 
   // Increase/Decrease quantity
   const updateQuantity = (id, amount) => {
     setCart(prev => prev.map(item => {
-      if (item.id === id) {
+      if (item.product_id === id) {
         return { ...item, quantity: Math.max(1, item.quantity + amount) };
       }
       return item;

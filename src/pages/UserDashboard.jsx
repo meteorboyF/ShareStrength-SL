@@ -443,9 +443,9 @@ const UserDashboard = () => {
                                     Manage Trusted Contacts
                                 </Link>
 
-                                <button className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center text-neutral-dark">
+                                <Link to="/my-profile" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
                                     My Profile
-                                </button>
+                                </Link>
                                 <Link to="/payment" className="p-3 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50 hover:border-primary/50 transition text-center flex items-center justify-center text-neutral-dark">
                                     Payment History
                                 </Link>

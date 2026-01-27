@@ -20,7 +20,7 @@ class AuthController extends Controller
             $helper = \App\Models\Helper::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'password_hash' => Hash::make($validated['password']),
+                'password' => Hash::make($validated['password']),
                 'phone_number' => $validated['phone'] ?? null,
                 'address' => $validated['address'] ?? null,
                 'skills' => $validated['skills'] ?? null, // Helpers have skills
@@ -50,7 +50,7 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'password_hash' => Hash::make($validated['password']),
+                'password' => Hash::make($validated['password']),
                 'user_type' => $userTypeMap[$validated['role']] ?? 'disabled_individual',
                 'phone_number' => $validated['phone'] ?? null,
                 'address' => $validated['address'] ?? null,
@@ -73,7 +73,7 @@ class AuthController extends Controller
         
         // 1. Try finding in Users table
         $user = User::where('email', $credentials['email'])->first();
-        if ($user && Hash::check($credentials['password'], $user->password_hash)) {
+        if ($user && Hash::check($credentials['password'], $user->password)) {
             $token = $user->createToken('auth_token')->plainTextToken;
             
             // Map DB user_type to frontend role
@@ -93,7 +93,7 @@ class AuthController extends Controller
 
         // 2. Try finding in Helpers table
         $helper = \App\Models\Helper::where('email', $credentials['email'])->first();
-        if ($helper && Hash::check($credentials['password'], $helper->password_hash)) {
+        if ($helper && Hash::check($credentials['password'], $helper->password)) {
             $token = $helper->createToken('auth_token')->plainTextToken;
             $helper->role = 'caregiver';
 
@@ -135,6 +135,59 @@ class AuthController extends Controller
         }
 
         return response()->json($user);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        
+        // Define validation rules
+        $rules = [
+            'name' => 'required|string|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'profile_photo' => 'nullable|image|max:10240', // Max 10MB
+        ];
+
+        // Add additional rules for Helper
+        if ($user instanceof \App\Models\Helper) {
+            $rules['skills'] = 'nullable|string';
+            // Add other helper specific fields if needed
+        }
+
+        $validated = $request->validate($rules);
+
+        // Handle Profile Photo Upload
+        if ($request->hasFile('profile_photo')) {
+            // Delete old photo if exists and is not a placeholder (optional logic)
+            // if ($user->profile_photo && Storage::exists($user->profile_photo)) { 
+            //    Storage::delete($user->profile_photo);
+            // }
+
+            $path = $request->file('profile_photo')->store('profile_photos', 'public');
+            // Create full URL
+            $validated['profile_photo'] = asset('storage/' . $path);
+        }
+
+        // Update the user
+        $user->update($validated);
+
+        // Re-append role for consistency
+        if ($user instanceof \App\Models\Helper) {
+            $user->role = 'caregiver';
+        } else {
+            $roleMap = [
+                'disabled_individual' => 'pwd',
+                'family_member' => 'pwd',
+                'caretaker' => 'caregiver',
+            ];
+            $user->role = $roleMap[$user->user_type] ?? 'pwd';
+        }
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user
+        ]);
     }
 
 }

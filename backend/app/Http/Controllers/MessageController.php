@@ -81,14 +81,8 @@ class MessageController extends Controller
             'sender_type' => $senderType,
             'receiver_id' => $receiverId,
             'receiver_type' => $receiverType,
-            // 'task_id' => $taskId, // Message table doesn't have task_id in migration, only Conversation has it? 
-            // Checking migration... Migration didn't add task_id to messages, only conversation_id.
-            // Wait, Message definition in earlier turns might have had it?
-            // The logic below 'task_id' => $taskId in original code assumes it existed. 
-            // My migration didn't add it. I should remove it or check legacy chat_messages table.
-            // Assuming conversation holds the task context.
             'content' => $validated['content'],
-            'is_read' => false,
+            // read_at is null by default (unread)
         ]);
 
         // Update conversation's last message timestamp
@@ -121,14 +115,18 @@ class MessageController extends Controller
      */
     public function markAsRead($id)
     {
+        $user = Auth::user();
+        $userId = $user->getKey();
+        $userType = $user instanceof \App\Models\Helper ? 'helper' : 'user';
+        
         $message = Message::findOrFail($id);
         
         // Only the receiver can mark as read
-        if ($message->receiver_id !== Auth::id()) {
+        if ($message->receiver_id !== $userId || $message->receiver_type !== $userType) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $message->update(['is_read' => true]);
+        $message->update(['read_at' => now()]);
         
         return response()->json(['message' => 'Message marked as read']);
     }
@@ -138,19 +136,26 @@ class MessageController extends Controller
      */
     public function markConversationAsRead($conversationId)
     {
-        $userId = Auth::id();
+        $user = Auth::user();
+        $userId = $user->getKey();
+        $userType = $user instanceof \App\Models\Helper ? 'helper' : 'user';
+        
         $conversation = \App\Models\Conversation::findOrFail($conversationId);
 
         // Verify user is part of this conversation
-        if ($conversation->user_one_id !== $userId && $conversation->user_two_id !== $userId) {
+        $isUserOne = $conversation->user_one_id === $userId && $conversation->user_one_type === $userType;
+        $isUserTwo = $conversation->user_two_id === $userId && $conversation->user_two_type === $userType;
+        
+        if (!$isUserOne && !$isUserTwo) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         // Mark all messages where current user is receiver as read
         Message::where('conversation_id', $conversationId)
             ->where('receiver_id', $userId)
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
+            ->where('receiver_type', $userType)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
 
         return response()->json(['message' => 'Conversation marked as read']);
     }

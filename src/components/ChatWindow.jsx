@@ -1,18 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Home, Paperclip, Smile, Send, ChevronLeft } from 'lucide-react';
 import MessageBubble from './MessageBubble';
-import MessageInput from './MessageInput';
 import { getConversation, sendMessage, markConversationAsRead } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
-const ChatWindow = ({ conversationId, currentUserId, currentUserType }) => {
+const ChatWindow = ({ conversationId, currentUserId, currentUserType, onBack }) => {
+    const navigate = useNavigate();
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const [conversation, setConversation] = useState(null);
+    const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
+    const scrollRef = useRef(null);
     const pollIntervalRef = useRef(null);
+    const textareaRef = useRef(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
     };
 
     const fetchMessages = async (showLoading = true) => {
@@ -31,20 +38,22 @@ const ChatWindow = ({ conversationId, currentUserId, currentUserType }) => {
         }
     };
 
-    const handleSendMessage = async (content) => {
-        if (!conversation) return;
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (!conversation || !newMessage.trim()) return;
 
         setSending(true);
         try {
-            const response = await sendMessage({
+            await sendMessage({
                 receiver_id: conversation.other_user.id,
-                receiver_type: conversation.other_user.type, // Pass helper/user type
-                task_id: conversation.task?.id || null,
-                content,
+                receiver_type: conversation.other_user.type,
+                task_id: conversation.task?.task_id || null,
+                content: newMessage.trim(),
             });
 
-            // Add new message to the list
-            setMessages(prev => [...prev, response.data]);
+            setNewMessage('');
+            // Refresh messages to get the properly formatted data
+            await fetchMessages(false);
             scrollToBottom();
         } catch (error) {
             console.error('Failed to send message:', error);
@@ -75,28 +84,24 @@ const ChatWindow = ({ conversationId, currentUserId, currentUserType }) => {
         scrollToBottom();
     }, [messages]);
 
+    // Auto-resize textarea
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 128) + 'px';
+        }
+    }, [newMessage]);
+
     if (!conversationId) {
         return (
-            <div className="flex items-center justify-center h-full bg-gray-50">
-                <div className="text-center">
-                    <svg
-                        className="mx-auto h-24 w-24 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1}
-                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                    </svg>
-                    <h3 className="mt-4 text-lg font-medium text-gray-900">Select a conversation</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                        Choose a conversation from the list to start messaging
-                    </p>
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-slate-50 text-center">
+                <div className="w-24 h-24 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6 animate-bounce">
+                    <Send size={40} className="text-blue-500 -rotate-12" />
                 </div>
+                <h3 className="text-xl font-bold text-slate-800">Your Secure Messenger</h3>
+                <p className="text-slate-500 mt-2 max-w-sm leading-relaxed">
+                    Select a conversation to start messaging. All conversations are end-to-end encrypted for your safety.
+                </p>
             </div>
         );
     }
@@ -106,7 +111,7 @@ const ChatWindow = ({ conversationId, currentUserId, currentUserType }) => {
             <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading messages...</p>
+                    <p className="mt-4 text-slate-600">Loading messages...</p>
                 </div>
             </div>
         );
@@ -116,32 +121,54 @@ const ChatWindow = ({ conversationId, currentUserId, currentUserType }) => {
         <div className="flex flex-col h-full bg-white">
             {/* Chat Header */}
             {conversation && (
-                <div className="border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
-                    <div className="flex items-center">
-                        <div>
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                {conversation.other_user.name}
-                            </h2>
-                            <p className="text-sm text-gray-500 capitalize">
-                                {conversation.other_user.role}
-                            </p>
+                <header className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={onBack}
+                            className="md:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <div className="relative">
+                            {conversation.other_user.profile_photo ? (
+                                <img
+                                    src={conversation.other_user.profile_photo}
+                                    className="w-10 h-10 rounded-full object-cover"
+                                    alt={conversation.other_user.name}
+                                />
+                            ) : (
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                                    {conversation.other_user.name?.charAt(0)}
+                                </div>
+                            )}
+                            {/* Online indicator */}
+                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-white rounded-full" />
                         </div>
-                        {conversation.task && (
-                            <div className="ml-auto">
-                                <span className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-full">
-                                    Task: {conversation.task.title}
-                                </span>
-                            </div>
-                        )}
+                        <div>
+                            <h2 className="font-bold text-slate-800 leading-tight">{conversation.other_user.name}</h2>
+                            <p className="text-xs text-slate-400 font-medium capitalize">{conversation.other_user.role}</p>
+                        </div>
                     </div>
-                </div>
+
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-medium"
+                        title="Back to Dashboard"
+                    >
+                        <Home size={18} />
+                        <span>Return to Home</span>
+                    </button>
+                </header>
             )}
 
-            {/* Messages List */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
+            {/* Messages Area */}
+            <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50"
+            >
                 {messages.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-500">No messages yet. Start the conversation!</p>
+                        <p className="text-slate-500">No messages yet. Start the conversation!</p>
                     </div>
                 ) : (
                     <>
@@ -149,7 +176,7 @@ const ChatWindow = ({ conversationId, currentUserId, currentUserType }) => {
                             <MessageBubble
                                 key={message.id}
                                 message={message}
-                                isOwnMessage={message.sender_id === currentUserId && message.sender_type === currentUserType}
+                                isOwnMessage={parseInt(message.sender_id) === parseInt(currentUserId) && message.sender_type === currentUserType}
                             />
                         ))}
                         <div ref={messagesEndRef} />
@@ -157,8 +184,51 @@ const ChatWindow = ({ conversationId, currentUserId, currentUserType }) => {
                 )}
             </div>
 
-            {/* Message Input */}
-            <MessageInput onSend={handleSendMessage} disabled={sending} />
+            {/* Input Area */}
+            <footer className="p-4 bg-white border-t border-slate-100">
+                <form
+                    onSubmit={handleSendMessage}
+                    className="max-w-4xl mx-auto flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all"
+                >
+                    <div className="flex items-center gap-1">
+                        <button type="button" className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all">
+                            <Paperclip size={20} />
+                        </button>
+                        <button type="button" className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all">
+                            <Smile size={20} />
+                        </button>
+                    </div>
+
+                    <textarea
+                        ref={textareaRef}
+                        rows="1"
+                        placeholder="Type a message..."
+                        className="flex-1 bg-transparent border-none outline-none text-sm py-2 px-1 resize-none max-h-32 min-h-[40px]"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendMessage(e);
+                            }
+                        }}
+                        disabled={sending}
+                    />
+
+                    <button
+                        type="submit"
+                        disabled={!newMessage.trim() || sending}
+                        className={`
+                            p-3 rounded-xl transition-all shadow-md active:scale-95
+                            ${newMessage.trim() && !sending
+                                ? 'bg-blue-600 text-white shadow-blue-200 hover:bg-blue-700'
+                                : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
+                        `}
+                    >
+                        <Send size={18} />
+                    </button>
+                </form>
+            </footer>
         </div>
     );
 };

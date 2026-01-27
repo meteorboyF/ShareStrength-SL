@@ -1,18 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { PRODUCTS } from '../data/products';
+import api from '../services/api';
 import { useCart } from '../context/CartContext';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  
-  // Find the product matching the ID in the URL
-  const product = PRODUCTS.find(p => p.id === parseInt(id));
 
-  if (!product) {
-    return <div className="text-center py-20 text-xl">Product not found!</div>;
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await api.get(`/products/${id}`);
+        setProduct(response.data);
+      } catch (err) {
+        console.error("Failed to fetch product:", err);
+        setError("Product not found or failed to load.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return <div className="text-center py-20 text-xl text-red-500">{error || "Product not found!"}</div>;
   }
 
   const handleAddToCart = () => {
@@ -23,13 +50,13 @@ const ProductDetails = () => {
   return (
     <div className="min-h-screen bg-neutral-light font-sans p-6 lg:p-12">
       <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        
+
         <div className="flex flex-col md:flex-row">
           {/* Image Section */}
           <div className="w-full md:w-1/2 h-96 md:h-auto bg-gray-100 flex items-center justify-center p-8">
-            <img 
-              src={product.image_url} 
-              alt={product.name} 
+            <img
+              src={product.image_url}
+              alt={product.name}
               className="max-h-full max-w-full object-contain hover:scale-105 transition duration-500"
               onError={(e) => { e.target.src = 'https://placehold.co/600x600?text=No+Image'; }}
             />
@@ -40,13 +67,13 @@ const ProductDetails = () => {
             <Link to="/marketplace" className="text-neutral-500 hover:text-primary mb-6 inline-flex items-center text-sm font-bold">
               &larr; Back to Marketplace
             </Link>
-            
+
             <p className="text-sm font-bold text-primary uppercase tracking-wide mb-2">{product.category}</p>
             <h1 className="text-3xl md:text-4xl font-extrabold text-neutral-darkest mb-4">{product.name}</h1>
             <p className="text-sm text-neutral-500 mb-6">Sold by <span className="font-semibold text-neutral-dark">{product.vendor}</span></p>
-            
+
             <div className="text-3xl font-bold text-neutral-darkest mb-6">
-              ${product.price.toFixed(2)}
+              ${parseFloat(product.price).toFixed(2)}
             </div>
 
             <p className="text-neutral-medium leading-relaxed mb-8">
@@ -54,16 +81,16 @@ const ProductDetails = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <button 
+              <button
                 onClick={handleAddToCart}
                 className="flex-1 bg-primary text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-primary-dark hover:-translate-y-1 transform transition"
               >
                 Add to Cart
               </button>
-              <button 
+              <button
                 onClick={() => {
-                    handleAddToCart();
-                    navigate('/cart');
+                  handleAddToCart();
+                  navigate('/cart');
                 }}
                 className="flex-1 bg-secondary text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-green-700 hover:-translate-y-1 transform transition"
               >

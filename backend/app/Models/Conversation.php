@@ -47,18 +47,34 @@ class Conversation extends Model
     // Helper method to get the other user in the conversation
     public function getOtherUser($currentUserId, $currentUserType)
     {
+        $otherUserModel = null;
+        
         if ($this->user_one_id == $currentUserId && $this->user_one_type == $currentUserType) {
-            return $this->userTwo; // MorphTo automatic resolution
+            $otherUserModel = $this->userTwo; // MorphTo automatic resolution
+        } else {
+            $otherUserModel = $this->userOne;
         }
-        return $this->userOne;
+        
+        if (!$otherUserModel) {
+            return null;
+        }
+        
+        return [
+            'id' => $otherUserModel->getKey(),
+            'name' => $otherUserModel->name,
+            'role' => ($otherUserModel instanceof \App\Models\Helper) ? 'caregiver' : 'pwd',
+            'profile_photo' => $otherUserModel->profile_photo,
+            'type' => ($otherUserModel instanceof \App\Models\Helper) ? 'helper' : 'user',
+        ];
     }
 
     // Helper method to get unread message count for a specific user
-    public function getUnreadCountForUser($userId)
+    public function getUnreadCountForUser($userId, $userType)
     {
         return $this->messages()
             ->where('receiver_id', $userId)
-            ->where('is_read', false)
+            ->where('receiver_type', $userType)
+            ->whereNull('read_at')
             ->count();
     }
 

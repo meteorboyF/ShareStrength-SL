@@ -18,32 +18,26 @@ class ConversationController extends Controller
         $userId = $user->getKey();
         $userType = $user instanceof \App\Models\Helper ? 'helper' : 'user';
 
-        $conversations = Conversation::where(function($q) use ($userId, $userType) {
-                $q->where('user_one_id', $userId)->where('user_one_type', $userType);
-            })
-            ->orWhere(function($q) use ($userId, $userType) {
-                $q->where('user_two_id', $userId)->where('user_two_type', $userType);
+        $conversations = Conversation::where(function($query) use ($userId, $userType) {
+                $query->where(function($q) use ($userId, $userType) {
+                    $q->where('user_one_id', $userId)
+                      ->where('user_one_type', $userType);
+                })
+                ->orWhere(function($q) use ($userId, $userType) {
+                    $q->where('user_two_id', $userId)
+                      ->where('user_two_type', $userType);
+                });
             })
             ->with(['userOne', 'userTwo', 'task'])
             ->orderBy('last_message_at', 'desc')
             ->get()
-            ->map(function ($conversation) use ($userId, $userType) { // Pass userType too
+            ->map(function ($conversation) use ($userId, $userType) {
                 $otherUser = $conversation->getOtherUser($userId, $userType);
-                // getOtherUser needs update in Model which I did.
-                // But getUnreadCountForUser likely needs userId (and now userType?) 
-                // Message "receiver_id" is polymorphic now?
-                // Yes, messages have receiver_type.
-                
-                // We need to update getUnreadCountForUser in Model too or just do it here.
-                // Let's rely on model's method assuming I update it or check inline.
-                // I need to update Conversation::getUnreadCountForUser to handle types.
-                // Assuming I will do that or it's implicitly handled via receiver_id if IDs don't collide? 
-                // IDs WILL collide between tables. So valid type check is mandatory.
                 
                 $unreadCount = $conversation->messages()
                     ->where('receiver_id', $userId)
                     ->where('receiver_type', $userType)
-                    ->where('is_read', false)
+                    ->whereNull('read_at')
                     ->count();
 
                 // Get last message
@@ -51,13 +45,7 @@ class ConversationController extends Controller
 
                 return [
                     'id' => $conversation->id,
-                    'other_user' => [
-                        'id' => $otherUser->getKey(), // Safe access
-                        'name' => $otherUser->name,
-                        'role' => ($otherUser instanceof \App\Models\Helper) ? 'caregiver' : 'pwd', // Dynamic role
-                        'profile_photo' => $otherUser->profile_photo,
-                        'type' => ($otherUser instanceof \App\Models\Helper) ? 'helper' : 'user',
-                    ],
+                    'other_user' => $otherUser,
                     'task' => $conversation->task,
                     'last_message' => $lastMessage ? [
                         'content' => $lastMessage->content,
@@ -100,7 +88,7 @@ class ConversationController extends Controller
         return response()->json([
             'conversation' => [
                 'id' => $conversation->id,
-                'other_user' => $conversation->getOtherUser($userId),
+                'other_user' => $conversation->getOtherUser($userId, $userType),
                 'task' => $conversation->task,
             ],
             'messages' => $messages,

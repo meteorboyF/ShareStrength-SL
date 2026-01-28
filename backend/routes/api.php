@@ -49,8 +49,15 @@ Route::prefix('v1')->group(function () {
         Route::post('conversations/get-or-create', [ConversationController::class, 'getOrCreate']);
         Route::patch('conversations/{id}/read', [MessageController::class, 'markConversationAsRead']);
 
+        Route::get('/resources', [\App\Http\Controllers\ResourceController::class, 'index']);
+        Route::get('/resources/featured', [\App\Http\Controllers\ResourceController::class, 'featured']);
+        Route::get('/resources/search', [\App\Http\Controllers\ResourceController::class, 'search']);
+        Route::get('/resources/categories', [\App\Http\Controllers\ResourceCategoryController::class, 'index']);
+        Route::get('/resources/{id}', [\App\Http\Controllers\ResourceController::class, 'show']);
+        Route::get('/resources/{id}/download', [\App\Http\Controllers\ResourceController::class, 'download']);
+
         Route::apiResource('communities', CommunityController::class);
-        Route::apiResource('resources', \App\Http\Controllers\ResourceController::class);
+        Route::apiResource('resources', \App\Http\Controllers\ResourceController::class)->except(['index', 'show']);
         Route::apiResource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store', 'update']);
         Route::get('/payments/summary', [\App\Http\Controllers\PaymentController::class, 'summary']);
         Route::get('/payments/insights', [\App\Http\Controllers\PaymentController::class, 'insights']);
@@ -64,6 +71,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/profile/photo', [\App\Http\Controllers\UserController::class, 'uploadPhoto']);
 
         // HelpMate Profile Routes
+        Route::get('/helpers', [HelperController::class, 'index']);
         Route::get('/helpers/{id}', [HelperController::class, 'show']);
         Route::put('/helper/profile', [HelperController::class, 'update']);
         Route::post('/helper/profile/photo', [HelperController::class, 'uploadPhoto']);
@@ -78,6 +86,31 @@ Route::prefix('v1')->group(function () {
 
         // Admin-only resource management
         Route::middleware(\App\Http\Middleware\AdminMiddleware::class)->group(function () {
+            // Admin Dashboard Stats
+            Route::get('/admin/stats', [\App\Http\Controllers\AdminController::class, 'getStats']);
+            
+            // User Management
+            Route::get('/admin/users', [\App\Http\Controllers\AdminController::class, 'getUserList']);
+            Route::put('/admin/users/{id}/verify', [\App\Http\Controllers\AdminController::class, 'verifyUser']);
+            Route::put('/admin/users/{id}/suspend', [\App\Http\Controllers\AdminController::class, 'suspendUser']);
+            
+            // Helper Management
+            Route::get('/admin/helpers', [\App\Http\Controllers\AdminController::class, 'getHelperList']);
+            Route::put('/admin/helpers/{id}/verify', [\App\Http\Controllers\AdminController::class, 'verifyHelper']);
+            Route::put('/admin/helpers/{id}/suspend', [\App\Http\Controllers\AdminController::class, 'suspendHelper']);
+            
+            // Payment Management
+            Route::get('/admin/payments', [\App\Http\Controllers\AdminController::class, 'getPaymentList']);
+            Route::put('/admin/payments/{id}/approve', [\App\Http\Controllers\AdminController::class, 'approvePayment']);
+            
+            // Review Management
+            Route::get('/admin/reviews', [\App\Http\Controllers\AdminController::class, 'getReviewList']);
+            Route::delete('/admin/reviews/{id}', [\App\Http\Controllers\AdminController::class, 'deleteReview']);
+            
+            // Resource Management
+            Route::post('/admin/resources/upload', [\App\Http\Controllers\ResourceController::class, 'upload']);
+            Route::delete('/admin/resources/{id}/delete', [\App\Http\Controllers\ResourceController::class, 'delete']);
+            
             Route::post('/resources', [\App\Http\Controllers\ResourceController::class, 'store']);
             Route::put('/resources/{id}', [\App\Http\Controllers\ResourceController::class, 'update']);
             Route::delete('/resources/{id}', [\App\Http\Controllers\ResourceController::class, 'destroy']);

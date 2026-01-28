@@ -12,7 +12,9 @@ import PaymentInsights from './pages/PaymentInsights';
 import Resources from './pages/Resources';
 import Marketplace from './pages/MarketPlace'; // <--- Import this
 import PostTask from './pages/PostTask'; // <--- Import this
+import FindHelper from './pages/FindHelper'; // <--- Import this
 import HelpMateDashboard from './pages/HelpMateDashboard'; // <--- Import this
+import MyEarnings from './pages/MyEarnings'; // <--- Import this
 import RegisterUser from './pages/RegisterUser';
 import RegisterHelpMate from './pages/RegisterHelpMate';   // Updated filename
 import ProductDetails from './pages/ProductDetails'; // <--- New
@@ -24,6 +26,12 @@ import TaskStatus from './pages/TaskStatus'; // <--- Import this
 import ServicePayment from './pages/ServicePayment'; // <--- Import this
 import TrustedContacts from './pages/TrustedContacts'; // <--- Import this
 import PublicUserProfile from './pages/PublicUserProfile'; // <--- Import this
+import AdminDashboard from './pages/AdminDashboard'; // <--- Import this
+import UserManagement from './pages/admin/UserManagement';
+import HelperManagement from './pages/admin/HelperManagement';
+import PaymentManagement from './pages/admin/PaymentManagement';
+import ReviewManagement from './pages/admin/ReviewManagement';
+import ResourceManagement from './pages/admin/ResourceManagement';
 import Messages from './pages/Messages'; // <--- Import this
 function App() {
   return (
@@ -46,8 +54,10 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/post-task" element={<PostTask />} />
+          <Route path="/find-helper" element={<FindHelper />} />
           <Route path="/helper-dashboard" element={<HelpMateDashboard />} />
           <Route path="/helpmate-dashboard" element={<HelpMateDashboard />} />
+          <Route path="/my-earnings" element={<MyEarnings />} />
           <Route path="/register-helpmate" element={<RegisterHelpMate />} />
           <Route path="/register-user" element={<RegisterUser />} />
           <Route path="/profile/:type/:id" element={<ProfileView />} />
@@ -55,6 +65,12 @@ function App() {
           <Route path="/service-payment" element={<ServicePayment />} />
           <Route path="/trusted-contacts" element={<TrustedContacts />} />
           <Route path="/user/:userId" element={<PublicUserProfile />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/admin/helpers" element={<HelperManagement />} />
+          <Route path="/admin/payments" element={<PaymentManagement />} />
+          <Route path="/admin/reviews" element={<ReviewManagement />} />
+          <Route path="/admin/resources" element={<ResourceManagement />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:conversationId" element={<Messages />} />
         </Routes>

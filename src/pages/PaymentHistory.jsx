@@ -1,141 +1,148 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Doughnut } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Bar, Doughnut } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import api from '../services/api';
 
 // Register Chart.js components
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 const PaymentHistory = () => {
-  const [transactions, setTransactions] = useState([]);
-  const [summary, setSummary] = useState({ total_spent: 0, to_helpers: 0, platform_fees: 0 });
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPayments();
+    fetchInsights();
   }, []);
 
-  const fetchPayments = async () => {
+  const fetchInsights = async () => {
     try {
-      const res = await api.get('/payments');
-      setTransactions(res.data);
-      // Calculate summary logic could be here or backend
-      const total = res.data.reduce((acc, tx) => acc + parseFloat(tx.amount), 0);
-      setSummary({ total_spent: total, to_helpers: total * 0.9, platform_fees: total * 0.1 });
+      const res = await api.get('/payments/insights');
+      setData(res.data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
-  // Chart Configuration
-  const chartData = {
-    labels: ['Paid to Helpers', 'Platform Fees'],
-    datasets: [{
-      data: [SUMMARY.to_helpers, SUMMARY.platform_fees],
-      backgroundColor: ['#4f46e5', '#d1d5db'], // Indigo-600, Gray-300
-      borderColor: '#ffffff',
-      borderWidth: 2,
-    }]
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
+  }
+
+  if (!data) return <div className="text-center p-8">Failed to load data.</div>;
+
+  // Chart Data Preparation
+  const monthlyChartData = {
+    labels: data.monthly?.labels || [],
+    datasets: [
+      {
+        label: 'Spending ($)',
+        data: data.monthly?.values || [],
+        backgroundColor: '#4f46e5',
+        borderRadius: 4,
+      },
+    ],
   };
 
-  const chartOptions = {
-    cutout: '75%',
-    plugins: { legend: { display: false } }
-  };
-
-  // Helper for status badges
-  const getBadgeColor = (status) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'failed': case 'disputed': return 'bg-red-100 text-red-800';
-      case 'active': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const monthlyChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { display: false },
+    },
+    scales: {
+      y: { beginAtZero: true }
     }
   };
 
   return (
     <div className="min-h-screen bg-neutral-light font-sans p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Header */}
-        <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 animate-fade-in-up">
           <div>
             <Link to="/dashboard" className="text-primary hover:text-primary-dark text-sm font-semibold flex items-center gap-1 mb-2">
               &larr; Back to Dashboard
             </Link>
-            <h1 className="text-3xl font-extrabold text-neutral-darkest">Payment Dashboard</h1>
-            <p className="mt-1 text-neutral-medium">Overview of your payment activity.</p>
+            <h1 className="text-3xl font-extrabold text-neutral-darkest">Payment History & Analysis</h1>
+            <p className="mt-1 text-neutral-medium">Track your spending by time, task, and helper.</p>
           </div>
-          <Link to="/payment-insights" className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary-dark transition shadow-sm flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-            View Detailed Analysis
-          </Link>
         </header>
 
-        {/* Top Section: Summaries & Chart */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* 1. Spending Summaries (1m, 6m, 1y) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+            <p className="text-sm font-medium text-neutral-500 uppercase tracking-wide">Last 1 Month</p>
+            <p className="mt-2 text-3xl font-bold text-neutral-darkest">${data.spending_summary?.last_1_month?.toFixed(2) || '0.00'}</p>
+            <div className="mt-2 text-xs text-green-600 font-medium">Recent Spending</div>
+          </div>
+          <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+            <p className="text-sm font-medium text-neutral-500 uppercase tracking-wide">Last 6 Months</p>
+            <p className="mt-2 text-3xl font-bold text-neutral-darkest">${data.spending_summary?.last_6_months?.toFixed(2) || '0.00'}</p>
+            <div className="mt-2 text-xs text-blue-600 font-medium">Mid-term Analysis</div>
+          </div>
+          <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+            <p className="text-sm font-medium text-neutral-500 uppercase tracking-wide">Last 1 Year</p>
+            <p className="mt-2 text-3xl font-bold text-neutral-darkest">${data.spending_summary?.last_1_year?.toFixed(2) || '0.00'}</p>
+            <div className="mt-2 text-xs text-purple-600 font-medium">Long-term Total</div>
+          </div>
+        </div>
 
-          {/* Summary Cards */}
-          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm animate-fade-in-up">
-              <p className="text-sm font-medium text-neutral-medium">Total Spent</p>
-              <p className="mt-1 text-3xl font-bold text-neutral-darkest">${SUMMARY.total_spent.toFixed(2)}</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-              <p className="text-sm font-medium text-neutral-medium">Paid to Helpers</p>
-              <p className="mt-1 text-3xl font-bold text-neutral-darkest">${SUMMARY.to_helpers.toFixed(2)}</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-              <p className="text-sm font-medium text-neutral-medium">Platform Fees</p>
-              <p className="mt-1 text-3xl font-bold text-neutral-darkest">${SUMMARY.platform_fees.toFixed(2)}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+          {/* 2. Monthly Chart */}
+          <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+            <h3 className="text-lg font-bold text-neutral-darkest mb-4">Monthly Spending Trend</h3>
+            <div className="h-64">
+              <Bar data={monthlyChartData} options={monthlyChartOptions} />
             </div>
           </div>
 
-          {/* Chart Card */}
-          <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm flex flex-col items-center justify-center animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-            <h3 className="text-sm font-semibold text-neutral-darkest mb-4">Spending Overview</h3>
-            <div className="w-40 h-40">
-              <Doughnut data={chartData} options={chartOptions} />
+          {/* 3. Top Helpers */}
+          <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+            <h3 className="text-lg font-bold text-neutral-darkest mb-4">Spending by Helper</h3>
+            <div className="space-y-4">
+              {data.helpers?.length === 0 ? <p className="text-neutral-500">No data available.</p> :
+                data.helpers?.map((helper, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                    <span className="font-semibold text-neutral-700">{helper.name}</span>
+                    <span className="font-bold text-neutral-darkest">${parseFloat(helper.amount).toFixed(2)}</span>
+                  </div>
+                ))}
             </div>
           </div>
         </div>
 
-        {/* Transaction Table */}
-        <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+        {/* 4. Task History */}
+        <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden animate-fade-in-up" style={{ animationDelay: '300ms' }}>
           <div className="p-6 border-b border-neutral-100">
-            <h2 className="text-xl font-bold text-neutral-darkest">Transaction History</h2>
+            <h2 className="text-xl font-bold text-neutral-darkest">Task-wise Payment History</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-neutral-light text-neutral-medium">
                 <tr>
-                  <th className="px-6 py-3 font-medium">ID</th>
                   <th className="px-6 py-3 font-medium">Date</th>
-                  <th className="px-6 py-3 font-medium">Total</th>
-                  <th className="px-6 py-3 font-medium">Net (Helper)</th>
-                  <th className="px-6 py-3 font-medium">Payment</th>
-                  <th className="px-6 py-3 font-medium">Status</th>
+                  <th className="px-6 py-3 font-medium">Task Title</th>
+                  <th className="px-6 py-3 font-medium">Helper</th>
+                  <th className="px-6 py-3 font-medium text-right">Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {TRANSACTIONS.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-neutral-50">
-                    <td className="px-6 py-4 font-mono text-neutral-500">#{tx.id}</td>
-                    <td className="px-6 py-4 text-neutral-dark">{tx.date}</td>
-                    <td className="px-6 py-4 font-bold text-neutral-darkest">${tx.total.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-neutral-dark">${tx.net.toFixed(2)}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${getBadgeColor(tx.status)}`}>
-                        {tx.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${getBadgeColor(tx.hire_status)}`}>
-                        {tx.hire_status.toUpperCase()}
-                      </span>
-                    </td>
+                {data.tasks?.map((tx, i) => (
+                  <tr key={i} className="hover:bg-neutral-50">
+                    <td className="px-6 py-4 text-neutral-500">{tx.date}</td>
+                    <td className="px-6 py-4 font-medium text-neutral-darkest">{tx.title}</td>
+                    <td className="px-6 py-4 text-neutral-dark">{tx.helper}</td>
+                    <td className="px-6 py-4 font-bold text-neutral-darkest text-right">${parseFloat(tx.fee).toFixed(2)}</td>
                   </tr>
                 ))}
+                {(!data.tasks || data.tasks.length === 0) && (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-8 text-center text-neutral-500">No transaction records found.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

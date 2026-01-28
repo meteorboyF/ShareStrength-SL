@@ -19,6 +19,10 @@ class RagIndexer
         $collection = (string) config('rag.qdrant.collection', 'site_knowledge');
         $dim = (int) config('rag.gemini.embed_dim', 768);
 
+        if (!$this->qdrant->health()) {
+            throw new \RuntimeException("Qdrant is not reachable at {$this->qdrant->getUrl()}. Please make sure Qdrant is running (e.g., via Docker: docker run -p 6333:6333 qdrant/qdrant).");
+        }
+
         if ($reset) {
             $this->qdrant->recreateCollection($collection, $dim);
         } else {

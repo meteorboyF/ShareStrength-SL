@@ -107,12 +107,12 @@ const PublicUserProfile = () => {
                                             </div>
                                             <span>{user.email}</span>
                                         </div>
-                                        {user.phone_number && (
+                                        {(user.phone || user.phone_number) && (
                                             <div className="flex items-center gap-3 text-neutral-700">
                                                 <div className="bg-green-50 p-2 rounded-full text-green-600">
                                                     <Phone size={16} />
                                                 </div>
-                                                <span>{user.phone_number}</span>
+                                                <span>{user.phone || user.phone_number}</span>
                                             </div>
                                         )}
                                     </div>
@@ -191,8 +191,8 @@ const PublicUserProfile = () => {
                                                     </div>
                                                     {contact.status && (
                                                         <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-semibold ${contact.status === 'verified'
-                                                                ? 'bg-green-100 text-green-700'
-                                                                : 'bg-yellow-100 text-yellow-700'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-yellow-100 text-yellow-700'
                                                             }`}>
                                                             {contact.status}
                                                         </span>

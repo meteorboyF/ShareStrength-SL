@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Fixed duplicates if any, utilizing existing logic
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { User, Mail, Phone, MapPin, Edit2, Save, X, ArrowLeft, Camera } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Edit2, Save, X, ArrowLeft, Camera, FileText, Globe } from 'lucide-react';
 
 const UserProfile = () => {
     const navigate = useNavigate();
@@ -150,7 +150,7 @@ const UserProfile = () => {
                         <div className="absolute -bottom-12 left-8">
                             <div className="relative group">
                                 <img
-                                    src={previewImage || user.profile_photo || "https://placehold.co/150x150"}
+                                    src={previewImage || user.profile_photo || user.profile_photo_url || "https://placehold.co/150x150"}
                                     alt="Profile"
                                     className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white object-cover shadow-md bg-white"
                                 />
@@ -239,22 +239,51 @@ const UserProfile = () => {
                                         </label>
                                         <input
                                             type="tel"
-                                            name="phone_number"
-                                            value={formData.phone_number || ''}
+                                            name="phone" // Changed from phone_number to phone
+                                            value={formData.phone || ''}
                                             onChange={handleChange}
+                                            placeholder="+1 234 567 8900"
+                                            className="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+                                            <Globe size={16} /> Location (City, Country)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="location"
+                                            value={formData.location || ''}
+                                            onChange={handleChange}
+                                            placeholder="e.g. New York, USA"
                                             className="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                         />
                                     </div>
 
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-sm font-semibold text-neutral-700 flex items-center gap-2">
-                                            <MapPin size={16} /> Address
+                                            <MapPin size={16} /> Full Address
                                         </label>
                                         <textarea
                                             name="address"
                                             value={formData.address || ''}
                                             onChange={handleChange}
-                                            rows="3"
+                                            rows="2"
+                                            className="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+                                            <FileText size={16} /> Bio / About Me
+                                        </label>
+                                        <textarea
+                                            name="bio"
+                                            value={formData.bio || ''}
+                                            onChange={handleChange}
+                                            rows="4"
+                                            placeholder="Tell us a bit about yourself..."
                                             className="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
                                         />
                                     </div>
@@ -294,7 +323,7 @@ const UserProfile = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1">Contact Information</h3>
+                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Contact Information</h3>
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-3 text-neutral-700">
                                                 <div className="bg-blue-50 p-2 rounded-full text-blue-600"><Mail size={16} /></div>
@@ -302,32 +331,21 @@ const UserProfile = () => {
                                             </div>
                                             <div className="flex items-center gap-3 text-neutral-700">
                                                 <div className="bg-green-50 p-2 rounded-full text-green-600"><Phone size={16} /></div>
-                                                <span>{user.phone_number || 'No phone number added'}</span>
+                                                <span>{user.phone || 'No phone number added'}</span>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-neutral-700">
+                                                <div className="bg-purple-50 p-2 rounded-full text-purple-600"><Globe size={16} /></div>
+                                                <span>{user.location || 'No location set'}</span>
+                                            </div>
+                                            <div className="flex items-start gap-3 text-neutral-700">
+                                                <div className="bg-red-50 p-2 rounded-full text-red-600 mt-1"><MapPin size={16} /></div>
+                                                <span className="leading-relaxed">{user.address || 'No address added'}</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1">Location</h3>
-                                        <div className="flex items-start gap-3 text-neutral-700">
-                                            <div className="bg-red-50 p-2 rounded-full text-red-600 mt-1"><MapPin size={16} /></div>
-                                            <span className="leading-relaxed">{user.address || 'No address added'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-6">
-                                    {user.role === 'caregiver' && (
-                                        <div>
-                                            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1">Skills & Services</h3>
-                                            <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-100 text-neutral-700 whitespace-pre-line">
-                                                {user.skills || 'No skills listed yet.'}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1">Account Details</h3>
+                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Account Details</h3>
                                         <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-100 space-y-2">
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-neutral-500">Member Since</span>
@@ -339,6 +357,24 @@ const UserProfile = () => {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div>
+                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">About ({user.name})</h3>
+                                        <div className="text-neutral-700 leading-relaxed whitespace-pre-line">
+                                            {user.bio || 'No bio provided. Click edit to add a bio.'}
+                                        </div>
+                                    </div>
+
+                                    {user.role === 'caregiver' && (
+                                        <div>
+                                            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Skills & Services</h3>
+                                            <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-100 text-neutral-700 whitespace-pre-line">
+                                                {user.skills || 'No skills listed yet.'}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}

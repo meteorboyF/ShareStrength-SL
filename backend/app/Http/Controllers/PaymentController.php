@@ -171,6 +171,11 @@ class PaymentController extends Controller
             ],
             'helpers' => $helperData,
             'tasks' => $taskData,
+            'spending_summary' => [
+                'last_1_month' => (float) Payment::where('payer_id', $userId)->where('status', 'paid')->where('paid_at', '>=', now()->subMonth())->sum('amount'),
+                'last_6_months' => (float) Payment::where('payer_id', $userId)->where('status', 'paid')->where('paid_at', '>=', now()->subMonths(6))->sum('amount'),
+                'last_1_year' => (float) Payment::where('payer_id', $userId)->where('status', 'paid')->where('paid_at', '>=', now()->subYear())->sum('amount'),
+            ]
         ]);
     }
 

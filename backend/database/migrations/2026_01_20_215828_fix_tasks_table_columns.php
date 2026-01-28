@@ -13,13 +13,17 @@ return new class extends Migration
     public function up(): void
     {
         // First, expand the status enum to include all values (including old and new)
-        DB::statement("ALTER TABLE tasks MODIFY COLUMN status ENUM('open', 'in_progress', 'requested', 'accepted', 'completed', 'cancelled') DEFAULT 'open'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE tasks MODIFY COLUMN status ENUM('open', 'in_progress', 'requested', 'accepted', 'completed', 'cancelled') DEFAULT 'open'");
+        }
         
         // Update existing status values to match new enum
         DB::statement("UPDATE tasks SET status = 'accepted' WHERE status = 'in_progress'");
         
         // Now remove the old 'in_progress' value from enum
-        DB::statement("ALTER TABLE tasks MODIFY COLUMN status ENUM('open', 'requested', 'accepted', 'completed', 'cancelled') DEFAULT 'open'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE tasks MODIFY COLUMN status ENUM('open', 'requested', 'accepted', 'completed', 'cancelled') DEFAULT 'open'");
+        }
         
         Schema::table('tasks', function (Blueprint $table) {
             // Rename user_id to created_by if it exists

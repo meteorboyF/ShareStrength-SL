@@ -43,13 +43,15 @@ class DonationController extends Controller
         $fundsUsedPercentage = $totalRaised > 0 ? round(($totalSpent / $totalRaised) * 100, 1) : 0;
 
         // Get monthly data for the chart (current year)
-        $monthlyRaised = Donation::select(DB::raw('SUM(amount) as total'), DB::raw('MONTH(created_at) as month'))
+        $monthFunction = DB::getDriverName() === 'sqlite' ? "strftime('%m', created_at)" : 'MONTH(created_at)';
+        $monthlyRaised = Donation::select(DB::raw('SUM(amount) as total'), DB::raw("$monthFunction as month"))
             ->whereYear('created_at', date('Y'))
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('total', 'month');
 
-        $monthlyExpenses = Expense::select(DB::raw('SUM(amount) as total'), DB::raw('MONTH(date) as month'))
+        $monthFunctionExpense = DB::getDriverName() === 'sqlite' ? "strftime('%m', date)" : 'MONTH(date)';
+        $monthlyExpenses = Expense::select(DB::raw('SUM(amount) as total'), DB::raw("$monthFunctionExpense as month"))
             ->whereYear('date', date('Y'))
             ->groupBy('month')
             ->orderBy('month')

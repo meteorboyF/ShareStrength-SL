@@ -14,6 +14,11 @@ class QdrantClient
         $this->url = rtrim((string) config('rag.qdrant.url', 'http://localhost:6333'), '/');
     }
 
+    public function getUrl(): string
+    {
+        return $this->url;
+    }
+
     public function health(): bool
     {
         $resp = Http::timeout(5)->get($this->url.'/healthz');
@@ -40,10 +45,16 @@ class QdrantClient
             ],
         ]);
 
-        try {
-            $resp->throw();
-        } catch (RequestException $e) {
-            throw new \RuntimeException('Qdrant create collection failed: '.$resp->body(), previous: $e);
+        if (!$resp->successful()) {
+            $status = $resp->status();
+            $body = $resp->body();
+            throw new \RuntimeException("Qdrant create collection failed (HTTP {$status}): {$body}");
+        }
+
+        // Verify collection was created
+        $verify = Http::timeout(10)->get($this->url.'/collections/'.rawurlencode($collection));
+        if (!$verify->successful()) {
+            throw new \RuntimeException("Collection '{$collection}' creation reported success but collection not found. Qdrant may need more time to initialize.");
         }
     }
 
@@ -56,14 +67,26 @@ class QdrantClient
             return;
         }
 
-        $resp = Http::timeout(60)->put($this->url.'/collections/'.rawurlencode($collection).'/points?wait=true', [
+        $url = $this->url.'/collections/'.rawurlencode($collection).'/points?wait=true';
+        \Log::info("Qdrant upsert URL: {$url}");
+        \Log::info("First point structure: " . json_encode($points[0] ?? []));
+        
+        $resp = Http::timeout(60)->put($url, [
             'points' => $points,
         ]);
 
-        try {
-            $resp->throw();
-        } catch (RequestException $e) {
-            throw new \RuntimeException('Qdrant upsert failed: '.$resp->body(), previous: $e);
+        if (!$resp->successful()) {
+            $status = $resp->status();
+            $body = $resp->body();
+            $errorMsg = "Qdrant upsert failed (HTTP {$status})";
+            
+            if (!empty($body)) {
+                $errorMsg .= ": {$body}";
+            } else {
+                $errorMsg .= ". Empty response body. Check if Qdrant is properly initialized. URL was: {$url}";
+            }
+            
+            throw new \RuntimeException($errorMsg);
         }
     }
 

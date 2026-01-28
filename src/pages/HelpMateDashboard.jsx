@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import authService from '../services/authService';
+import { X } from 'lucide-react';
 
 const HelpMateDashboard = () => {
     // State
@@ -123,6 +124,7 @@ const HelpMateDashboard = () => {
             setActiveJobs(myActiveJobs.map(t => ({
                 id: t.task_id || t.id,
                 title: t.title,
+                user_id: t.creator?.id || t.created_by,
                 user_name: t.creator?.name || 'User',
                 start_time: t.started_at ? new Date(t.started_at).getTime() : null,
                 accumulated_seconds: t.accumulated_seconds || 0,
@@ -283,6 +285,9 @@ const HelpMateDashboard = () => {
                         <button className="hidden sm:inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 border border-slate-200 transition">
                             Edit Profile
                         </button>
+                        <Link to="/my-earnings" className="inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 border border-slate-200 transition">
+                            My Earnings
+                        </Link>
                         <Link to="/messages" className="inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 border border-slate-200 transition">
                             Messages
                         </Link>
@@ -324,60 +329,7 @@ const HelpMateDashboard = () => {
                             </div>
                         </section>
 
-                        {/* Earnings */}
-                        <section className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                            <h3 className="font-bold text-slate-900 mb-4">💰 My Earnings</h3>
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-baseline pb-3 border-b border-slate-200">
-                                    <span className="text-sm text-slate-600">Total Paid</span>
-                                    <span className="text-2xl font-bold text-green-600">
-                                        ${payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0).toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-baseline pb-3 border-b border-slate-200">
-                                    <span className="text-sm text-slate-600">Pending</span>
-                                    <span className="text-lg font-semibold text-yellow-600">
-                                        ${payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0).toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-baseline">
-                                    <span className="text-sm text-slate-600">Completed Jobs</span>
-                                    <span className="text-lg font-bold text-slate-900">{payments.filter(p => p.status === 'paid').length}</span>
-                                </div>
-                            </div>
 
-                            {/* Recent Payments */}
-                            <div className="mt-4 pt-4 border-t border-slate-200">
-                                <h4 className="font-semibold text-sm text-slate-700 mb-3">Recent Payments</h4>
-                                {payments.length === 0 ? (
-                                    <p className="text-xs text-slate-500">No payments yet</p>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {payments.slice(0, 3).map(payment => (
-                                            <div key={payment.id} className="bg-slate-50 p-3 rounded-lg">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <div className="flex-1">
-                                                        <p className="font-medium text-xs text-slate-900">{payment.task?.title || 'Task'}</p>
-                                                        <p className="text-xs text-slate-500">from {payment.payer?.name || 'User'}</p>
-                                                        {payment.hours_worked && payment.hourly_rate && (
-                                                            <p className="text-xs text-slate-600 mt-1">
-                                                                {payment.hours_worked} hrs × ${payment.hourly_rate}/hr
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="font-bold text-sm text-slate-900">${parseFloat(payment.amount || 0).toFixed(2)}</p>
-                                                        <span className={`text-xs px-2 py-0.5 rounded-full ${payment.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                                            {payment.status}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </section>
 
                         {/* Applied Jobs List */}
                         <section className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm animate-fade-in-up" style={{ animationDelay: '200ms' }}>
@@ -444,6 +396,15 @@ const HelpMateDashboard = () => {
                                                     <div>
                                                         <p className="font-bold text-blue-800">{job.title}</p>
                                                         <p className="text-xs text-blue-600">for {job.user_name} ({job.status})</p>
+                                                        {job.user_id && (
+                                                            <Link
+                                                                to={`/user/${job.user_id}`}
+                                                                className="text-xs font-semibold text-blue-700 hover:text-blue-900 underline mt-1.5 flex items-center gap-1"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                                                View Profile & Trusted Contacts
+                                                            </Link>
+                                                        )}
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         {job.status === 'accepted' && (
@@ -557,7 +518,13 @@ const HelpMateDashboard = () => {
             {/* Confirmation Modal */}
             {showModal && selectedTask && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in-up">
-                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative">
+                        <button
+                            onClick={() => setShowModal(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition"
+                        >
+                            <X size={20} />
+                        </button>
                         <h3 className="text-lg font-bold text-slate-900">Confirm Application</h3>
                         <p className="mt-2 text-sm text-slate-600">
                             Do you want to apply for <strong className="text-green-700">{selectedTask.title}</strong>?

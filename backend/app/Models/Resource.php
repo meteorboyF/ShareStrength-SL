@@ -10,17 +10,20 @@ class Resource extends Model
     use HasFactory;
 
     protected $fillable = [
+        'uploaded_by',
         'title',
         'description',
+        'file_path',
+        'file_type',
+        'file_size',
+        'is_public',
         'type',
         'category_id',
         'file_url',
-        'file_size',
         'duration',
         'language',
         'author',
         'narrator',
-        'uploaded_by',
         'task_id',
         'is_featured',
         'download_count',

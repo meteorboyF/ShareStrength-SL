@@ -126,4 +126,52 @@ class AuthController extends Controller
         ));
     }
 
+    /**
+     * Update authenticated user profile (supports multipart with image)
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        
+        // Validate based on user type
+        $rules = [
+            'name' => 'sometimes|string|max:255',
+            'phone' => 'sometimes|nullable|string|max:20',
+            'address' => 'sometimes|nullable|string|max:500',
+            'location' => 'sometimes|nullable|string|max:255',
+            'skills' => 'sometimes|nullable|string',
+            'bio' => 'sometimes|nullable|string|max:1000',
+            'profile_photo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ];
+
+        if ($user instanceof User) {
+            $rules['email'] = 'sometimes|email|unique:users,email,' . $user->id;
+            $rules['disability_type'] = 'sometimes|nullable|string|max:255';
+        } elseif ($user instanceof Helper) {
+            $rules['email'] = 'sometimes|email|unique:helpers,email,' . $user->id;
+        }
+
+        $validated = $request->validate($rules);
+
+        // Handle profile photo upload
+        if ($request->hasFile('profile_photo')) {
+            $file = $request->file('profile_photo');
+            $filename = time() . '_' . $user->id . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('profile_photos', $filename, 'public');
+            
+            $user->profile_photo_url = '/storage/' . $path;
+            $user->profile_photo = $user->profile_photo_url;
+            unset($validated['profile_photo']); // Remove from validated data to update separately
+        }
+
+        // Update other fields
+        $user->update($validated);
+        $user->save(); // Save photo changes
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user->fresh() // Return fresh data from DB
+        ]);
+    }
+
 }

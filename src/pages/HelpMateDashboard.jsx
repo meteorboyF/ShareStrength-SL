@@ -90,14 +90,21 @@ const HelpMateDashboard = () => {
                 // Show if I am a caregiver (can see all open tasks) OR if I am a user seeing other's tasks (marketplace logic)
                 // But specifically for Helper Dashboard, we want to see everything I can apply to.
                 (currentUser.role === 'helpmate' || currentUser.account_type === 'helpmate' ? true : t.created_by !== currentUserId)
-            ).map(t => ({
-                ...t,
-                id: t.task_id || t.id,
-                user_id: t.created_by || t.creator?.id,
-                user_name: t.creator?.name || 'Unknown User',
-                user_photo: t.creator?.profile_photo || 'https://placehold.co/150',
-                skill: t.skill_required, // Map skill_required to skill
-            }));
+            )
+                .sort((a, b) => {
+                    // Sort by created_at descending (newest first)
+                    const dateA = new Date(a.created_at);
+                    const dateB = new Date(b.created_at);
+                    return dateB - dateA;
+                })
+                .map(t => ({
+                    ...t,
+                    id: t.task_id || t.id,
+                    user_id: t.created_by || t.creator?.id,
+                    user_name: t.creator?.name || 'Unknown User',
+                    user_photo: t.creator?.profile_photo || 'https://placehold.co/150',
+                    skill: t.skill_required, // Map skill_required to skill
+                }));
             setAvailableTasks(filteredTasks);
 
             // 3. Set Active Jobs (Assigned to me)

@@ -21,7 +21,8 @@ class TaskController extends Controller
         }
 
         // Returns all tasks, in production would paginate and filter by visibility
-        return response()->json($query->latest()->get());
+        // Explicitly sort by created_at descending (newest first)
+        return response()->json($query->orderBy('created_at', 'desc')->get());
     }
 
     // Get tasks created by the authenticated user

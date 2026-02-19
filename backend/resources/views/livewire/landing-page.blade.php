@@ -44,30 +44,39 @@
 
     <main>
         <!-- Hero -->
+        <!-- Hero Section -->
         <section class="relative bg-cover bg-center pt-32 pb-20 md:pt-48 md:pb-32 text-center overflow-hidden"
             style="background-image: url('/img/indexbg.jpg')">
             <div class="absolute inset-0 bg-black/50"></div>
-            <div class="container mx-auto px-6 max-w-4xl relative z-10" x-data
-                x-intersect="$el.classList.add('is-visible')">
-                <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight opacity-0 translate-y-4 transition-all duration-1000 ease-out"
-                    :class="$el.classList.contains('is-visible') ? 'opacity-100 translate-y-0' : ''">Reliable Help,
-                    Right at Your Fingertips.</h1>
 
-                <p class="text-lg md:text-xl text-neutral-light max-w-2xl mx-auto mb-10 opacity-0 translate-y-4 transition-all duration-1000 ease-out delay-150"
-                    :class="$el.classList.contains('is-visible') ? 'opacity-100 translate-y-0' : ''">
+            <!-- We use 'visible' to control the fade -->
+            <div class="container mx-auto px-6 max-w-4xl relative z-10" x-data="{ visible: false }"
+                x-init="setTimeout(() => visible = true, 100)">
+
+                <!-- H1: Pure Fade In -->
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight transition-opacity duration-1000 ease-out"
+                    :class="visible ? 'opacity-100' : 'opacity-0'">
+                    Reliable Help, Right at Your Fingertips.
+                </h1>
+
+                <!-- P: Fade In with a slight delay -->
+                <p class="text-lg md:text-xl text-neutral-light max-w-2xl mx-auto mb-10 transition-opacity duration-1000 ease-out delay-300"
+                    :class="visible ? 'opacity-100' : 'opacity-0'">
                     ShareStrength is the trusted platform connecting individuals with disabilities to a community of
                     vetted, skilled, and compassionate helpmates for everyday tasks and specialized support.
                 </p>
 
-                <div class="flex flex-col sm:flex-row gap-4 justify-center opacity-0 translate-y-4 transition-all duration-1000 ease-out delay-300"
-                    :class="$el.classList.contains('is-visible') ? 'opacity-100 translate-y-0' : ''">
+                <!-- Buttons: Fade In with a longer delay -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center transition-opacity duration-1000 ease-out delay-500"
+                    :class="visible ? 'opacity-100' : 'opacity-0'">
                     <a href="/register-user"
                         class="bg-primary text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-primary-dark hover:-translate-y-1 transform transition">
                         Find a HelpMate Today
                     </a>
                     <a href="#how-it-works"
-                        class="bg-white/90 text-primary-dark font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-white hover:-translate-y-1 transform border border-primary/20 transition">Learn
-                        How It Works</a>
+                        class="bg-white/90 text-primary-dark font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-white hover:-translate-y-1 transform border border-primary/20 transition">
+                        Learn How It Works
+                    </a>
                 </div>
             </div>
         </section>
@@ -133,6 +142,7 @@
         </section>
 
         <!-- How It Works -->
+        <!-- How It Works Section -->
         <section id="how-it-works" class="py-20 md:py-28 bg-neutral-light">
             <div class="container mx-auto px-6 max-w-7xl">
                 <div class="text-center mb-16">
@@ -141,74 +151,96 @@
                 </div>
 
                 <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start" x-data="{ 
-                    activeStepId: 1, 
-                    steps: [
-                        { id: 1, title: '1. Post Your Task', desc: 'Describe what you need...', img: 'https://placehold.co/600x450/6D28D9/FFFFFF?text=1.+Post+Your+Task' },
-                        { id: 2, title: '2. Connect', desc: 'Receive applications...', img: 'https://placehold.co/600x450/5B21B6/FFFFFF?text=2.+Connect' },
-                        { id: 3, title: '3. Get Support', desc: 'Coordinate with your HelpMate...', img: 'https://placehold.co/600x450/4C1D95/FFFFFF?text=3.+Get+Support' },
-                        { id: 4, title: '4. Pay Securely', desc: 'Approve payment securely...', img: 'https://placehold.co/600x450/3730A3/FFFFFF?text=4.+Pay+Securely' }
-                    ],
-                    get activeStep() { return this.steps.find(s => s.id === this.activeStepId) }
-                 }">
+            activeStepId: 1, 
+            steps: [
+                { id: 1, title: '1. Post Your Task', desc: 'Describe what you need help with in just a few clicks.', img: '/img/step1-post.jpg' },
+                { id: 2, title: '2. Connect', desc: 'Browse profiles and connect with a vetted HelpMate near you.', img: '/img/step2-connect.jpg' },
+                { id: 3, title: '3. Get Support', desc: 'Receive compassionate, one-on-one assistance on your schedule.', img: '/img/step3-support.jpg' },
+                { id: 4, title: '4. Pay Securely', desc: 'Release payment only after you are satisfied with the task.', img: '/img/step4-pay.jpg' }
+            ],
+            get activeStep() { return this.steps.find(s => s.id === this.activeStepId) }
+         }">
+
                     <!-- Dynamic Image Area -->
                     <div class="lg:sticky top-28 h-96 lg:h-[30rem]">
-                        <div class="w-full h-full rounded-2xl shadow-2xl bg-cover bg-center transition-all duration-500"
-                            :style="`background-image: url('${activeStep.img}')`"></div>
+                        <div class="w-full h-full rounded-2xl shadow-2xl bg-cover bg-center transition-all duration-700 ease-in-out"
+                            :style="`background-image: url('${activeStep.img}')`">
+                            <!-- Dark overlay for consistent look -->
+                            <div class="w-full h-full bg-black/10 rounded-2xl"></div>
+                        </div>
                     </div>
 
                     <!-- Steps List -->
                     <div class="flex flex-col gap-6">
                         <template x-for="step in steps" :key="step.id">
                             <div @click="activeStepId = step.id"
-                                class="p-6 rounded-xl cursor-pointer border-2 transition-all duration-300"
-                                :class="activeStepId === step.id ? 'bg-white border-primary/50 shadow-lg' : 'border-transparent hover:bg-white/50'">
+                                class="p-6 rounded-xl cursor-pointer border-2 transition-all duration-300 transform"
+                                :class="activeStepId === step.id ? 'bg-white border-primary shadow-xl scale-[1.02]' : 'border-transparent hover:bg-white/50'">
                                 <div class="flex items-start gap-5">
-                                    <div
-                                        class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-primary/10 text-primary">
-                                        <span class="font-bold" x-text="step.id"></span>
+                                    <div class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full transition-colors duration-300"
+                                        :class="activeStepId === step.id ? 'bg-primary text-white' : 'bg-primary/10 text-primary'">
+                                        <span class="font-bold text-lg" x-text="step.id"></span>
                                     </div>
                                     <div>
-                                        <h4 class="font-bold text-lg text-neutral-darkest mb-1" x-text="step.title">
-                                        </h4>
-                                        <p class="text-neutral-medium" x-text="step.desc"></p>
+                                        <h4 class="font-bold text-xl mb-1"
+                                            :class="activeStepId === step.id ? 'text-primary-dark' : 'text-neutral-darkest'"
+                                            x-text="step.title"></h4>
+                                        <p :class="activeStepId === step.id ? 'text-neutral-dark' : 'text-neutral-medium'"
+                                            x-text="step.desc"></p>
                                     </div>
                                 </div>
                             </div>
                         </template>
                     </div>
+
                 </div>
             </div>
         </section>
-        
+
         <!-- Support Our Mission -->
-        <section id="donate" class="py-20 md:py-28 bg-white relative overflow-hidden" x-data="{ donationType: 'one-time', amount: 50, customAmount: '' }">
+        <section id="donate" class="py-20 md:py-28 bg-white relative overflow-hidden"
+            x-data="{ donationType: 'one-time', amount: 50, customAmount: '' }">
             <!-- Background Decoration -->
-             <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
-             <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-secondary/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div
+                class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none">
+            </div>
+            <div
+                class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-secondary/5 rounded-full blur-3xl pointer-events-none">
+            </div>
 
             <div class="container mx-auto px-6 max-w-7xl relative z-10">
                 <div class="text-center mb-16">
-                     <p class="text-sm font-bold text-primary uppercase tracking-wider mb-3 animate-fade-in-up">MAKE AN IMPACT</p>
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-neutral-darkest mb-4 animate-fade-in-up delay-100">Support Our Mission</h2>
-                    <p class="text-neutral-medium max-w-2xl mx-auto text-lg animate-fade-in-up delay-200">Your contribution directly empowers communities. Every dollar makes a transparent, verified impact.</p>
+                    <p class="text-sm font-bold text-primary uppercase tracking-wider mb-3 animate-fade-in-up">MAKE AN
+                        IMPACT</p>
+                    <h2
+                        class="text-3xl md:text-4xl font-extrabold text-neutral-darkest mb-4 animate-fade-in-up delay-100">
+                        Support Our Mission</h2>
+                    <p class="text-neutral-medium max-w-2xl mx-auto text-lg animate-fade-in-up delay-200">Your
+                        contribution directly empowers communities. Every dollar makes a transparent, verified impact.
+                    </p>
                 </div>
 
                 <div class="grid lg:grid-cols-12 gap-12 items-start">
-                    
+
                     <!-- Donation Widget (Left) -->
-                    <div class="lg:col-span-5 bg-white p-8 rounded-2xl shadow-xl border border-neutral-200 animate-fade-in-up delay-300">
+                    <div
+                        class="lg:col-span-5 bg-white p-8 rounded-2xl shadow-xl border border-neutral-200 animate-fade-in-up delay-300">
                         <!-- Toggle -->
                         <div class="bg-neutral-100 p-1 rounded-xl flex mb-8">
-                            <button @click="donationType = 'one-time'" class="flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all" :class="donationType === 'one-time' ? 'bg-primary text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'">One-time</button>
-                            <button @click="donationType = 'monthly'" class="flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all" :class="donationType === 'monthly' ? 'bg-primary text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'">Monthly</button>
+                            <button @click="donationType = 'one-time'"
+                                class="flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all"
+                                :class="donationType === 'one-time' ? 'bg-primary text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'">One-time</button>
+                            <button @click="donationType = 'monthly'"
+                                class="flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all"
+                                :class="donationType === 'monthly' ? 'bg-primary text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'">Monthly</button>
                         </div>
-                        
+
                         <!-- Amounts -->
                         <div class="grid grid-cols-3 gap-3 mb-6">
                             <template x-for="amt in [10, 25, 50, 100, 250]">
-                                <button @click="amount = amt; customAmount = ''" 
-                                class="py-3 px-2 rounded-xl font-bold border-2 transition-all hover:border-primary/50"
-                                :class="amount === amt && !customAmount ? 'border-primary bg-primary/5 text-primary' : 'border-neutral-200 text-neutral-600'">
+                                <button @click="amount = amt; customAmount = ''"
+                                    class="py-3 px-2 rounded-xl font-bold border-2 transition-all hover:border-primary/50"
+                                    :class="amount === amt && !customAmount ? 'border-primary bg-primary/5 text-primary' : 'border-neutral-200 text-neutral-600'">
                                     $<span x-text="amt"></span>
                                 </button>
                             </template>
@@ -216,32 +248,39 @@
 
                         <!-- Custom Amount -->
                         <div class="mb-8">
-                             <label class="block text-sm font-bold text-neutral-dark mb-2">Custom Amount</label>
-                             <div class="relative">
-                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">$</span>
-                                 <input type="number" x-model="customAmount" @input="amount = null" class="w-full pl-8 pr-4 py-3 rounded-xl border-neutral-200 focus:border-primary focus:ring focus:ring-primary/20 transition-all font-bold text-neutral-darkest" placeholder="Enter amount">
-                             </div>
+                            <label class="block text-sm font-bold text-neutral-dark mb-2">Custom Amount</label>
+                            <div class="relative">
+                                <span
+                                    class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">$</span>
+                                <input type="number" x-model="customAmount" @input="amount = null"
+                                    class="w-full pl-8 pr-4 py-3 rounded-xl border-neutral-200 focus:border-primary focus:ring focus:ring-primary/20 transition-all font-bold text-neutral-darkest"
+                                    placeholder="Enter amount">
+                            </div>
                         </div>
 
                         <!-- Button -->
                         <!-- Button -->
-                         <button 
-                            @click="$wire.processDonation(customAmount || amount, donationType)"
+                        <button @click="$wire.processDonation(customAmount || amount, donationType)"
                             class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg hover:bg-primary-dark transform hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>
-                             Donate <span x-text="'$' + (customAmount || amount)"></span> Today <span x-show="donationType==='monthly'">Monthly</span>
-                         </button>
-                         <p class="text-xs text-center text-neutral-400 mt-4 flex items-center justify-center gap-1">
-                             <span class="w-2 h-2 bg-green-500 rounded-full"></span> Secure SSL Encryption
-                         </p>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Donate <span x-text="'$' + (customAmount || amount)"></span> Today <span
+                                x-show="donationType==='monthly'">Monthly</span>
+                        </button>
+                        <p class="text-xs text-center text-neutral-400 mt-4 flex items-center justify-center gap-1">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span> Secure SSL Encryption
+                        </p>
                     </div>
 
                     <!-- Notification -->
-                    <div x-data="{ show: false, message: '' }" 
-                         x-on:donation-initiated.window="show = true; message = 'Thank you! Redirecting to payment for $' + $event.detail.amount + ' (' + $event.detail.type + ')...'; setTimeout(() => show = false, 5000)"
-                         x-show="show" 
-                         x-transition 
-                         class="fixed bottom-5 right-5 bg-neutral-darkest text-white px-6 py-4 rounded-xl shadow-2xl z-50 flex items-center gap-3">
+                    <div x-data="{ show: false, message: '' }"
+                        x-on:donation-initiated.window="show = true; message = 'Thank you! Redirecting to payment for $' + $event.detail.amount + ' (' + $event.detail.type + ')...'; setTimeout(() => show = false, 5000)"
+                        x-show="show" x-transition
+                        class="fixed bottom-5 right-5 bg-neutral-darkest text-white px-6 py-4 rounded-xl shadow-2xl z-50 flex items-center gap-3">
                         <div class="w-2 h-2 bg-green-400 rounded-full"></div>
                         <span x-text="message" class="font-bold"></span>
                     </div>
@@ -249,49 +288,78 @@
 
                     <!-- Impact & Chart (Right) -->
                     <div class="lg:col-span-7 flex flex-col gap-8">
-                        
-                         <!-- Impact Cards -->
-                         <div class="grid sm:grid-cols-3 gap-4">
-                             <!-- Card 1 -->
-                             <div class="bg-neutral-light p-6 rounded-2xl border border-neutral-100/50 animate-fade-in-up delay-400">
-                                 <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-3">
-                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                 </div>
-                                 <h4 class="font-bold text-neutral-darkest">Calls Provided</h4>
-                                 <p class="text-xs text-neutral-500 mt-1">Your donation helps cover essential communication costs.</p>
-                             </div>
-                             <!-- Card 2 -->
-                              <div class="bg-neutral-light p-6 rounded-2xl border border-neutral-100/50 animate-fade-in-up delay-500">
-                                 <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3">
-                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                                 </div>
-                                 <h4 class="font-bold text-neutral-darkest">Direct Aid</h4>
-                                 <p class="text-xs text-neutral-500 mt-1">Funds go directly to verified requests for food/medicine.</p>
-                             </div>
-                             <!-- Card 3 -->
-                              <div class="bg-neutral-light p-6 rounded-2xl border border-neutral-100/50 animate-fade-in-up delay-[600ms]">
-                                 <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-3">
-                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                 </div>
-                                 <h4 class="font-bold text-neutral-darkest">Community</h4>
-                                 <p class="text-xs text-neutral-500 mt-1">Join 1,200+ donors making a real difference.</p>
-                             </div>
-                         </div>
+
+                        <!-- Impact Cards -->
+                        <div class="grid sm:grid-cols-3 gap-4">
+                            <!-- Card 1 -->
+                            <div
+                                class="bg-neutral-light p-6 rounded-2xl border border-neutral-100/50 animate-fade-in-up delay-400">
+                                <div
+                                    class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                    </svg>
+                                </div>
+                                <h4 class="font-bold text-neutral-darkest">Calls Provided</h4>
+                                <p class="text-xs text-neutral-500 mt-1">Your donation helps cover essential
+                                    communication costs.</p>
+                            </div>
+                            <!-- Card 2 -->
+                            <div
+                                class="bg-neutral-light p-6 rounded-2xl border border-neutral-100/50 animate-fade-in-up delay-500">
+                                <div
+                                    class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                </div>
+                                <h4 class="font-bold text-neutral-darkest">Direct Aid</h4>
+                                <p class="text-xs text-neutral-500 mt-1">Funds go directly to verified requests for
+                                    food/medicine.</p>
+                            </div>
+                            <!-- Card 3 -->
+                            <div
+                                class="bg-neutral-light p-6 rounded-2xl border border-neutral-100/50 animate-fade-in-up delay-[600ms]">
+                                <div
+                                    class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <h4 class="font-bold text-neutral-darkest">Community</h4>
+                                <p class="text-xs text-neutral-500 mt-1">Join 1,200+ donors making a real difference.
+                                </p>
+                            </div>
+                        </div>
 
                         <!-- Chart Section -->
-                        <div class="bg-white p-8 rounded-2xl shadow-lg border border-neutral-100 relative animate-fade-in-up delay-[700ms]">
-                             <div class="flex items-center justify-center mb-6">
-                                 <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                                     100% Transparent
-                                 </span>
-                             </div>
-                             <h3 class="text-2xl font-bold text-center text-neutral-darkest mb-2 border-b-2 border-primary/10 pb-4 inline-block mx-auto">Where Your Money Goes</h3>
-                             <p class="text-neutral-medium text-center mb-8 max-w-md mx-auto block mt-2">Track every dollar from donation to impact.</p>
-                             
-                             <div class="relative h-64 w-full" 
-                                  wire:ignore
-                                  x-data="{
+                        <div
+                            class="bg-white p-8 rounded-2xl shadow-lg border border-neutral-100 relative animate-fade-in-up delay-[700ms]">
+                            <div class="flex items-center justify-center mb-6">
+                                <span
+                                    class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20"
+                                        fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                    100% Transparent
+                                </span>
+                            </div>
+                            <h3
+                                class="text-2xl font-bold text-center text-neutral-darkest mb-2 border-b-2 border-primary/10 pb-4 inline-block mx-auto">
+                                Where Your Money Goes</h3>
+                            <p class="text-neutral-medium text-center mb-8 max-w-md mx-auto block mt-2">Track every
+                                dollar from donation to impact.</p>
+
+                            <div class="relative h-64 w-full" wire:ignore x-data="{
                                       labels: @js($chartLabels),
                                       raised: @js($chartRaised),
                                       distributed: @js($chartDistributed),
@@ -343,8 +411,8 @@
                                           });
                                       }
                                   }">
-                                 <canvas x-ref="canvas"></canvas>
-                             </div>
+                                <canvas x-ref="canvas"></canvas>
+                            </div>
                         </div>
 
                     </div>

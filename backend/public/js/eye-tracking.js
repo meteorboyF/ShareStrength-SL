@@ -14,6 +14,25 @@
   // Prevent multiple initializations
   if (window.EyeTrackingLoaded) return;
   window.EyeTrackingLoaded = true;
+  let hardDisabled = false;
+
+  let __initialized = false;
+let __initializing = null;
+
+function ensureInitialized() {
+  if (__initialized) return Promise.resolve(true);
+  if (__initializing) return __initializing;
+
+  __initializing = (async () => {
+    // create UI once
+    createStyles();
+    createUI();
+    __initialized = true;
+    return true;
+  })();
+
+  return __initializing;
+}
 
   // Global configuration with smart defaults
   const CONFIG = {
@@ -370,6 +389,7 @@
     // Main widget
     const widget = document.createElement('div');
     widget.className = `eyetracking-widget ${CONFIG.widgetSize} ${CONFIG.widgetPosition}`;
+    widget.style.display = 'none'; // ✅ hide until Start()
     
     // Video element
     const video = document.createElement('video');
@@ -947,9 +967,18 @@
  }
 
  // Start tracking
+ function disableHard() {
+  hardDisabled = true;
+  stop(); // stops camera + hides everything
+}
+function enableHard() {
+  hardDisabled = false;
+}
  async function start() {
+   if (hardDisabled) return;   // <-- add this
    if (isTracking) return;
-   
+   await ensureInitialized();               
+   if (elements.widget) elements.widget.style.display = 'block'; // ✅ show UI
    try {
      if (!faceMesh) {
        showNotification('Initializing MediaPipe...', 2000);
@@ -1007,44 +1036,40 @@
    }
  }
 
- // Stop tracking
- function stop() {
-   if (!isTracking) return;
-   
-   isTracking = false;
-   isCalibrated = false;
-   isCalibrating = false;
-   
-   if (elements.video.srcObject) {
-     elements.video.srcObject.getTracks().forEach(track => track.stop());
-     elements.video.srcObject = null;
-   }
-   
-   elements.cursor.style.display = 'none';
-   Object.values(elements.calPoints).forEach(p => p.style.display = 'none');
-   elements.scrollUp.style.display = 'none';
-   elements.scrollDown.style.display = 'none';
-   
-   // Reset calibration data
-   calibrationData = { c: [], tl: [], tr: [], bl: [], br: [] };
-   
-   // Reset state
-   blinkState = false;
-   blinkCount = 0;
-   earHistory = [];
-   leftEarHistory = [];
-   rightEarHistory = [];
-   lastEyeState = 'none';
-   
-   updateStatus();
-   
-   elements.startBtn.disabled = false;
-   elements.calBtn.disabled = true;
-   elements.stopBtn.disabled = true;
-   
-   showNotification('Eye tracking stopped', 2000);
- }
+function stop() {
+  // don't return early; always cleanup
+  isTracking = false;
+  isCalibrated = false;
+  isCalibrating = false;
 
+  if (elements.video && elements.video.srcObject) {
+    elements.video.srcObject.getTracks().forEach(track => track.stop());
+    elements.video.srcObject = null;
+  }
+
+  if (elements.cursor) elements.cursor.style.display = 'none';
+  if (elements.calPoints) Object.values(elements.calPoints).forEach(p => p.style.display = 'none');
+  if (elements.scrollUp) elements.scrollUp.style.display = 'none';
+  if (elements.scrollDown) elements.scrollDown.style.display = 'none';
+
+  if (elements.widget) elements.widget.style.display = 'none'; // ✅ hide UI box
+  calibrationData = { c: [], tl: [], tr: [], bl: [], br: [] };
+
+  blinkState = false;
+  blinkCount = 0;
+  earHistory = [];
+  leftEarHistory = [];
+  rightEarHistory = [];
+  lastEyeState = 'none';
+
+  updateStatus();
+
+  if (elements.startBtn) elements.startBtn.disabled = false;
+  if (elements.calBtn) elements.calBtn.disabled = true;
+  if (elements.stopBtn) elements.stopBtn.disabled = true;
+
+  showNotification('Eye tracking stopped', 2000);
+}
  // Start calibration
  function calibrate() {
    if (!isTracking) return;
@@ -1113,36 +1138,30 @@
    return issues;
  }
 
- // Initialize everything
- async function initialize() {
-   // Check compatibility
-   const issues = checkCompatibility();
-   if (issues.length > 0) {
-     console.warn('EyeTracking compatibility issues:', issues);
-     showNotification(`Compatibility issues: ${issues.join(', ')}`, 10000);
-   }
-   
-   // Create UI
-   createStyles();
-   createUI();
-   
-   // Show welcome message
-   showNotification('Eye tracking ready! Click Start to begin.', 5000);
-   
-   // Auto-start if configured
-   if (CONFIG.autoStart) {
-     setTimeout(() => {
-       start();
-     }, 2000);
-   }
- }
+async function initialize() {
+  const issues = checkCompatibility();
+  if (issues.length > 0) {
+    console.warn('EyeTracking compatibility issues:', issues);
+    showNotification(`Compatibility issues: ${issues.join(', ')}`, 10000);
+  }
 
+  await ensureInitialized();
+
+  showNotification('Eye tracking ready! Click Start to begin.', 5000);
+
+  if (CONFIG.autoStart) {
+    setTimeout(() => start(), 2000);
+  }
+}
  // Expose global API
  window.EyeTracking = {
    start,
    stop,
    calibrate,
    config: CONFIG,
+   disable: disableHard,
+   enable: enableHard,
+   isDisabled: () => hardDisabled,
    isTracking: () => isTracking,
    isCalibrated: () => isCalibrated,
    updateConfig: (newConfig) => {
@@ -1170,6 +1189,7 @@
  // Keyboard shortcuts
  document.addEventListener('keydown', (e) => {
    // Ctrl+E to toggle tracking
+   if (hardDisabled) return;  // <-- add this
    if (e.ctrlKey && e.key === 'e') {
      e.preventDefault();
      if (isTracking) {
@@ -1202,6 +1222,7 @@
 
  // Handle visibility changes for performance
  document.addEventListener('visibilitychange', () => {
+   if (hardDisabled) return;  
    if (document.hidden && isTracking) {
      // Page hidden, pause tracking to save resources
      if (elements.video.srcObject) {
@@ -1221,6 +1242,7 @@
 
  // Add error handling for MediaPipe
  window.addEventListener('error', (e) => {
+   if (hardDisabled) return;  
    if (e.message && e.message.includes('MediaPipe')) {
      showNotification('MediaPipe error detected. Reloading libraries...', 3000);
      setTimeout(() => {

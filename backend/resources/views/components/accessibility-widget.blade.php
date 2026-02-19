@@ -16,8 +16,17 @@
 
         init() {
             this.applySettings();
+
+            // initialize global hard-disable flag
+            if (typeof window.__EyeTrackingHardDisabled === 'undefined') {
+                window.__EyeTrackingHardDisabled = !this.eyeTrackingEnabled;
+            }
+
+            // Enforce saved state on load
             if (this.eyeTrackingEnabled) {
-                this.loadEyeTracking();
+                this.enableEyeTrackingHard();
+            } else {
+                this.disableEyeTrackingHard();
             }
         },
 
@@ -55,39 +64,92 @@
             this.applySettings();
         },
 
+        enableEyeTrackingHard() {
+            window.__EyeTrackingHardDisabled = false;
+
+            // If script already exists, clear its internal hard disable too
+            if (window.EyeTracking && typeof window.EyeTracking.enable === 'function') {
+                window.EyeTracking.enable();
+            }
+
+            this.loadEyeTracking();
+        },
+
+        disableEyeTrackingHard() {
+            // hard guard so NOTHING can restart it
+            window.__EyeTrackingHardDisabled = true;
+
+            // If script exists, call its hard disable if available
+            if (window.EyeTracking && typeof window.EyeTracking.disable === 'function') {
+                window.EyeTracking.disable();
+            }
+
+            // stop immediately if it exists
+            if (window.EyeTracking && typeof window.EyeTracking.stop === 'function') {
+                window.EyeTracking.stop();
+            }
+
+            // extra: if camera stream still attached, kill tracks
+            const v = document.querySelector('video.eyetracking-video');
+            if (v && v.srcObject) {
+                try { v.srcObject.getTracks().forEach(t => t.stop()); } catch (_) {}
+                v.srcObject = null;
+            }
+        },
+
         loadEyeTracking() {
+            // If user disabled, never load/start
+            if (window.__EyeTrackingHardDisabled) return;
+
+            // Already loaded? just start if enabled
             if (window.EyeTrackingLoaded || this.eyeTrackingLoading) {
-                if (window.EyeTracking && this.eyeTrackingEnabled && !window.EyeTracking.isTracking()) {
+                if (
+                    window.EyeTracking &&
+                    this.eyeTrackingEnabled &&
+                    typeof window.EyeTracking.isTracking === 'function' &&
+                    !window.EyeTracking.isTracking()
+                ) {
                     window.EyeTracking.start();
                 }
                 return;
             }
 
             this.eyeTrackingLoading = true;
+
             const script = document.createElement('script');
             script.src = '/js/eye-tracking.js';
+
             script.onload = () => {
                 this.eyeTrackingLoading = false;
+
+                // If user toggled OFF while loading, don't start
+                if (window.__EyeTrackingHardDisabled) return;
+
                 if (window.EyeTracking && this.eyeTrackingEnabled) {
                     window.EyeTracking.start();
                 }
             };
+
             script.onerror = () => {
                 this.eyeTrackingLoading = false;
                 this.eyeTrackingEnabled = false;
                 localStorage.setItem('accessibility-eye-tracking', 'false');
+                window.__EyeTrackingHardDisabled = true;
             };
+
             document.body.appendChild(script);
         },
 
         toggleEyeTracking() {
+            if (this.eyeTrackingLoading) return;
+
             this.eyeTrackingEnabled = !this.eyeTrackingEnabled;
             localStorage.setItem('accessibility-eye-tracking', this.eyeTrackingEnabled.toString());
 
             if (this.eyeTrackingEnabled) {
-                this.loadEyeTracking();
-            } else if (window.EyeTracking && window.EyeTracking.isTracking()) {
-                window.EyeTracking.stop();
+                this.enableEyeTrackingHard();
+            } else {
+                this.disableEyeTrackingHard();
             }
         },
 

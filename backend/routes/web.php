@@ -10,6 +10,7 @@ use App\Livewire\Dashboards\UserDashboard;
 use App\Livewire\Dashboards\HelpMateDashboard;
 use App\Livewire\Dashboards\AdminDashboard;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\DonationController;
 
 Route::get('/', LandingPage::class)->name('home');
 Route::get('/login', Login::class)->name('login');
@@ -74,3 +75,13 @@ Route::get('/chatbot/history', [ChatbotController::class, 'history'])
 Route::post('/chatbot/stream', [ChatbotController::class, 'stream'])
     ->middleware(['throttle:30,1'])
     ->name('chatbot.stream');
+
+Route::post('/donations', [DonationController::class, 'store'])->name('donations.store');
+
+Route::get('/api/donation-stats', [DonationController::class, 'index']);
+
+// 1. Landing page sends data here to "go to checkout"
+Route::get('/donate/checkout', [DonationController::class, 'checkout'])->name('donations.checkout');
+
+// 2. The checkout page sends data here to "finalize"
+Route::post('/donate/process', [DonationController::class, 'process'])->name('donations.process');

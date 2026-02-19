@@ -157,7 +157,7 @@
             return this.displayMode === 'dark-mode' || this.displayMode === 'high-contrast';
         }
     }"
-    class="fixed bottom-4 right-4 z-50"
+    class="fixed bottom-4 left-4 z-50"
 >
     {{-- Settings Panel --}}
     <div
@@ -168,7 +168,7 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="mb-2 p-4 rounded-xl shadow-xl border"
+        class="mb-2 p-4 rounded-xl shadow-xl border origin-bottom-left"
         :class="isDark() ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
         style="min-width: 260px"
     >

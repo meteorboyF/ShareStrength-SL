@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+// Importing the tracking scripts from the parent directory (src/)
+import * as EyeTracking from '../EyeTracking';
+import * as VoiceTracking from '../SupaVoiceTracking';
 
 const FONT_SIZES = [
   { key: 'small', label: 'A', title: 'Small' },
@@ -11,6 +14,10 @@ export default function AccessibilityWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [fontSize, setFontSize] = useState('medium');
   const [highContrast, setHighContrast] = useState(false);
+  
+  // New States for Accessibility Tools
+  const [eyeTrackingEnabled, setEyeTrackingEnabled] = useState(false);
+  const [voiceNavEnabled, setVoiceNavEnabled] = useState(false);
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -22,6 +29,45 @@ export default function AccessibilityWidget() {
 
     applySettings(savedFontSize, savedHighContrast);
   }, []);
+
+  // --- Effect: Handle Eye Tracking ---
+  useEffect(() => {
+    if (eyeTrackingEnabled) {
+      console.log("Starting Eye Tracking...");
+      // We check if the start function exists to prevent crashes
+      if (EyeTracking && typeof EyeTracking.start === 'function') {
+        EyeTracking.start();
+      } else if (EyeTracking && typeof EyeTracking.init === 'function') {
+        EyeTracking.init();
+      } else {
+        console.warn("EyeTracking.js does not have a start() or init() export.");
+      }
+    } else {
+      console.log("Stopping Eye Tracking...");
+      if (EyeTracking && typeof EyeTracking.stop === 'function') {
+        EyeTracking.stop();
+      }
+    }
+  }, [eyeTrackingEnabled]);
+
+  // --- Effect: Handle Voice Navigation ---
+  useEffect(() => {
+    if (voiceNavEnabled) {
+      console.log("Starting Voice Navigation...");
+      if (VoiceTracking && typeof VoiceTracking.start === 'function') {
+        VoiceTracking.start();
+      } else if (VoiceTracking && typeof VoiceTracking.init === 'function') {
+        VoiceTracking.init();
+      } else {
+        console.warn("SupaVoiceTracking.js does not have a start() or init() export.");
+      }
+    } else {
+      console.log("Stopping Voice Navigation...");
+      if (VoiceTracking && typeof VoiceTracking.stop === 'function') {
+        VoiceTracking.stop();
+      }
+    }
+  }, [voiceNavEnabled]);
 
   // Apply settings to document
   const applySettings = (size, contrast) => {
@@ -60,15 +106,15 @@ export default function AccessibilityWidget() {
       {/* Settings Panel */}
       {isOpen && (
         <div
-          className={`mb-2 p-4 rounded-lg shadow-lg border ${
+          className={`mb-2 p-4 rounded-lg shadow-lg border space-y-4 ${
             highContrast
               ? 'bg-black border-white'
               : 'bg-white border-gray-200'
           }`}
-          style={{ minWidth: '200px' }}
+          style={{ minWidth: '240px' }}
         >
-          {/* Font Size */}
-          <div className="mb-4">
+          {/* 1. Font Size */}
+          <div>
             <label className={`block text-sm font-medium mb-2 ${
               highContrast ? 'text-white' : 'text-gray-700'
             }`}>
@@ -84,7 +130,7 @@ export default function AccessibilityWidget() {
                     fontSize === size.key
                       ? highContrast
                         ? 'bg-white text-black border-white'
-                        : 'bg-primary text-white border-primary'
+                        : 'bg-blue-600 text-white border-blue-600'
                       : highContrast
                         ? 'bg-black text-white border-white hover:bg-gray-800'
                         : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
@@ -97,7 +143,7 @@ export default function AccessibilityWidget() {
             </div>
           </div>
 
-          {/* High Contrast Toggle */}
+          {/* 2. High Contrast Toggle */}
           <div>
             <label className={`block text-sm font-medium mb-2 ${
               highContrast ? 'text-white' : 'text-gray-700'
@@ -122,23 +168,78 @@ export default function AccessibilityWidget() {
               </div>
             </button>
           </div>
+
+          <hr className={highContrast ? 'border-gray-700' : 'border-gray-200'} />
+
+          {/* 3. Eye Tracking Toggle */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              highContrast ? 'text-white' : 'text-gray-700'
+            }`}>
+              Eye Tracking
+            </label>
+            <button
+              onClick={() => setEyeTrackingEnabled(!eyeTrackingEnabled)}
+              className={`w-full py-2 px-4 rounded border transition-all flex items-center justify-between ${
+                highContrast
+                  ? 'bg-white text-black border-white'
+                  : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              <span>{eyeTrackingEnabled ? 'Active' : 'Disabled'}</span>
+              <div className={`w-10 h-5 rounded-full relative transition-colors ${
+                eyeTrackingEnabled ? 'bg-purple-600' : 'bg-gray-300'
+              }`}>
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                  eyeTrackingEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                }`} />
+              </div>
+            </button>
+          </div>
+
+          {/* 4. Voice Navigation Toggle */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              highContrast ? 'text-white' : 'text-gray-700'
+            }`}>
+              Voice Navigation
+            </label>
+            <button
+              onClick={() => setVoiceNavEnabled(!voiceNavEnabled)}
+              className={`w-full py-2 px-4 rounded border transition-all flex items-center justify-between ${
+                highContrast
+                  ? 'bg-white text-black border-white'
+                  : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              <span>{voiceNavEnabled ? 'Active' : 'Disabled'}</span>
+              <div className={`w-10 h-5 rounded-full relative transition-colors ${
+                voiceNavEnabled ? 'bg-red-500' : 'bg-gray-300'
+              }`}>
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                  voiceNavEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                }`} />
+              </div>
+            </button>
+          </div>
+
         </div>
       )}
 
-      {/* Toggle Button */}
+      {/* Main Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 ${
+        className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 ${
           highContrast
             ? 'bg-white text-black border-2 border-white'
-            : 'bg-primary text-white'
+            : 'bg-blue-600 text-white'
         }`}
         title="Accessibility Settings"
         aria-label="Accessibility Settings"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
+          className="h-8 w-8"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

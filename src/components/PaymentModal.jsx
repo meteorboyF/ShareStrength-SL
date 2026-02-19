@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { X, CreditCard, Lock, CheckCircle } from 'lucide-react';
+import { X, CreditCard, Lock } from 'lucide-react';
 
 const PaymentModal = ({ isOpen, onClose, amount, isMonthly, onConfirm }) => {
     const [isLoading, setIsLoading] = useState(false);
+    
+    // Kept your original state structure
     const [cardDetails, setCardDetails] = useState({
         number: '',
         expiry: '',
@@ -11,6 +13,11 @@ const PaymentModal = ({ isOpen, onClose, amount, isMonthly, onConfirm }) => {
     });
 
     if (!isOpen) return null;
+
+    // --- THE FIX ---
+    // Convert amount to a number and ensure it is positive.
+    // If it's invalid (NaN), default to 0.
+    const displayAmount = Math.abs(parseFloat(amount) || 0);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -53,7 +60,8 @@ const PaymentModal = ({ isOpen, onClose, amount, isMonthly, onConfirm }) => {
                     <div className="mb-6 flex justify-between items-end border-b pb-4 border-dashed border-neutral-200">
                         <div>
                             <p className="text-sm text-neutral-500">Total Amount</p>
-                            <p className="text-3xl font-bold text-neutral-900">${amount}</p>
+                            {/* Uses displayAmount to ensure no negative numbers show */}
+                            <p className="text-3xl font-bold text-neutral-900">${displayAmount}</p>
                         </div>
                         <div className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">
                             {isMonthly ? 'Monthly' : 'One-time'}
@@ -66,6 +74,8 @@ const PaymentModal = ({ isOpen, onClose, amount, isMonthly, onConfirm }) => {
                             <input
                                 type="text"
                                 name="number"
+                                value={cardDetails.number}
+                                onChange={handleInputChange}
                                 placeholder="0000 0000 0000 0000"
                                 className="w-full px-4 py-3 rounded-lg border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 required
@@ -78,6 +88,8 @@ const PaymentModal = ({ isOpen, onClose, amount, isMonthly, onConfirm }) => {
                                 <input
                                     type="text"
                                     name="expiry"
+                                    value={cardDetails.expiry}
+                                    onChange={handleInputChange}
                                     placeholder="MM/YY"
                                     className="w-full px-4 py-3 rounded-lg border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                     required
@@ -88,6 +100,8 @@ const PaymentModal = ({ isOpen, onClose, amount, isMonthly, onConfirm }) => {
                                 <input
                                     type="text"
                                     name="cvc"
+                                    value={cardDetails.cvc}
+                                    onChange={handleInputChange}
                                     placeholder="123"
                                     className="w-full px-4 py-3 rounded-lg border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                     required
@@ -100,6 +114,8 @@ const PaymentModal = ({ isOpen, onClose, amount, isMonthly, onConfirm }) => {
                             <input
                                 type="text"
                                 name="name"
+                                value={cardDetails.name}
+                                onChange={handleInputChange}
                                 placeholder="John Doe"
                                 className="w-full px-4 py-3 rounded-lg border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 required
@@ -121,7 +137,7 @@ const PaymentModal = ({ isOpen, onClose, amount, isMonthly, onConfirm }) => {
                                 </span>
                             ) : (
                                 <span className="flex items-center">
-                                    Pay ${amount}
+                                    Pay ${displayAmount}
                                 </span>
                             )}
                         </button>

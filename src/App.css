@@ -40,3 +40,53 @@
 .read-the-docs {
   color: #888;
 }
+
+
+/* Custom CSS for Animated Backgrounds */
+
+/* Main Gradient Animation */
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient-bg {
+  background: linear-gradient(-45deg, #a78bfa, #c4b5fd, #6d28d9, #9333ea); /* Softer purple to blue gradient */
+  background-size: 400% 400%;
+  animation: gradient-animation 15s ease infinite; /* Slower, smoother animation */
+}
+
+/* Animated Blob Elements */
+@keyframes blob-movement {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  25% {
+    transform: translateY(-25px) rotate(20deg) scale(1.05);
+    border-radius: 40% 60% 70% 30% / 30% 70% 40% 60%;
+  }
+  50% {
+    transform: translateY(25px) rotate(-20deg) scale(0.95);
+    border-radius: 70% 30% 40% 60% / 70% 40% 60% 30%;
+  }
+  75% {
+    transform: translateY(-15px) rotate(10deg) scale(1.02);
+    border-radius: 30% 70% 60% 40% / 40% 60% 30% 70%;
+  }
+}
+
+.animated-blob-1 {
+  animation: blob-movement 25s ease-in-out infinite alternate;
+}
+
+.animated-blob-2 {
+  animation: blob-movement 30s reverse ease-in-out infinite alternate;
+}

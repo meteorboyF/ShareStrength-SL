@@ -7,12 +7,9 @@
  * Version: 3.0.0 - Complete Edition
  * License: MIT
  */
-
-(function() {
   'use strict';
 
   // Prevent multiple initializations
-  if (window.EyeTrackingLoaded) return;
   window.EyeTrackingLoaded = true;
 
   // Global configuration with smart defaults
@@ -947,8 +944,8 @@
  }
 
  // Start tracking
- async function start() {
-   if (isTracking) return;
+async function internal_start() 
+{   if (isTracking) return;
    
    try {
      if (!faceMesh) {
@@ -1008,8 +1005,7 @@
  }
 
  // Stop tracking
- function stop() {
-   if (!isTracking) return;
+function internal_stop() {   if (!isTracking) return;
    
    isTracking = false;
    isCalibrated = false;
@@ -1159,13 +1155,6 @@
    })
  };
 
- // Auto-initialize when DOM is ready
- if (document.readyState === 'loading') {
-   document.addEventListener('DOMContentLoaded', initialize);
- } else {
-   // DOM already loaded
-   setTimeout(initialize, 100);
- }
 
  // Keyboard shortcuts
  document.addEventListener('keydown', (e) => {
@@ -1237,4 +1226,40 @@
  console.log('Usage: Simply include this script and eye tracking will auto-initialize.');
  console.log('Keyboard shortcuts: Ctrl+E (toggle), Ctrl+C (calibrate), Ctrl+R (recalibrate)');
 
-})();
+// --- START: NEW CODE TO ADD AT THE END OF THE FILE ---
+
+// This flag ensures we only initialize the UI and styles once.
+let isInitialized = false;
+
+// EXPORT 1: The new 'start' function
+export async function start() {
+  // If this is the first time running, set up everything.
+  if (!isInitialized) {
+    await initialize(); // This is your original setup function
+    isInitialized = true;
+  }
+
+  // Show the widget now that it's initialized and ready
+  if (elements.widget) {
+    elements.widget.style.display = 'block';
+  }
+  
+  // Call the original start logic from your script
+  // Note: The original 'start' function is renamed to 'internal_start'
+  await internal_start();
+}
+
+// EXPORT 2: The new 'stop' function
+export function stop() {
+  // Call the original stop logic
+  internal_stop();
+
+  // Hide the widget from the screen
+  if (elements.widget) {
+    elements.widget.style.display = 'none';
+  }
+}
+
+// We rename the original functions to avoid conflicts
+
+// --- END: NEW CODE TO ADD AT THE END OF THE FILE ---

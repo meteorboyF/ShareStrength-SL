@@ -1,5 +1,4 @@
-<div
-    x-data="{
+<div x-data="{
         isOpen: false,
         isLoading: false,
         askUrl: '{{ route('chatbot.ask') }}',
@@ -151,11 +150,10 @@
                 this.scrollToBottom();
             }
         }
-    }"
-    class="fixed bottom-6 right-4 z-50 flex flex-col items-end pointer-events-none"
->
+    }" class="fixed bottom-6 right-4 z-50 flex flex-col items-end pointer-events-none">
     <template x-if="isOpen">
-        <div class="bg-white w-80 h-96 rounded-2xl shadow-2xl border border-gray-200 mb-4 flex flex-col overflow-hidden pointer-events-auto">
+        <div
+            class="bg-white w-80 h-96 rounded-2xl shadow-2xl border border-gray-200 mb-4 flex flex-col overflow-hidden pointer-events-auto">
             <div class="bg-purple-600 p-4 text-white flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -163,7 +161,8 @@
                 </div>
                 <button @click="isOpen = false" class="text-white/80 hover:text-white" type="button">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -172,22 +171,17 @@
                 <template x-for="msg in messages" :key="msg.id">
                     <div class="flex" :class="msg.sender === 'user' ? 'justify-end' : 'justify-start'">
                         <div class="max-w-[80%]">
-                            <div
-                                class="rounded-xl p-3 text-sm"
-                                :class="msg.sender === 'user'
+                            <div class="rounded-xl p-3 text-sm" :class="msg.sender === 'user'
                                     ? 'bg-purple-600 text-white rounded-br-none'
                                     : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'"
-                                x-text="msg.text"
-                            ></div>
+                                x-text="msg.text"></div>
 
                             <template x-if="msg.sender === 'bot' && Array.isArray(msg.links) && msg.links.length">
                                 <div class="mt-2 text-[11px] text-gray-500 space-y-1">
                                     <div class="font-semibold uppercase tracking-wide">Quick Links</div>
                                     <template x-for="s in msg.links" :key="(s.url || '') + (s.chunk_index ?? '')">
-                                        <a
-                                            class="inline-flex items-center gap-2 w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 hover:border-purple-600 hover:text-purple-600 transition truncate"
-                                            :href="s.url"
-                                        >
+                                        <a class="inline-flex items-center gap-2 w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 hover:border-purple-600 hover:text-purple-600 transition truncate"
+                                            :href="s.url">
                                             <span class="truncate" x-text="s.title || s.url"></span>
                                             <span class="ml-auto text-[10px] text-gray-400">open</span>
                                         </a>
@@ -202,15 +196,13 @@
 
             <form @submit.prevent="sendMessage" class="p-3 bg-white border-t border-gray-200">
                 <div class="flex gap-2">
-                    <input
-                        type="text"
-                        x-model="inputText"
-                        placeholder="Type a message..."
-                        class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-600"
-                    />
-                    <button type="submit" class="bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-700 transition">
+                    <input type="text" x-model="inputText" placeholder="Type a message..."
+                        class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-600" />
+                    <button type="submit"
+                        class="bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-700 transition">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                         </svg>
                     </button>
                 </div>
@@ -218,20 +210,31 @@
         </div>
     </template>
 
-    <button
-        @click="isOpen = !isOpen"
+    <button @click="isOpen = !isOpen"
         class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg transition transform hover:scale-105 pointer-events-auto flex items-center justify-center"
-        type="button"
-    >
+        type="button">
         <template x-if="isOpen">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
         </template>
-        <template x-if="!isOpen">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-        </template>
+<template x-if="!isOpen">
+    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Bot Head Base -->
+        <rect x="4" y="8" width="16" height="12" rx="3" stroke-width="2" />
+        
+        <!-- Antenna -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M12 4v4m0-4a2 2 0 110-4 2 2 0 010 4z" />
+            
+        <!-- Friendly Eyes -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" 
+            d="M9 14h.01M15 14h.01" />
+            
+        <!-- Bot Ears -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M4 12H2m20 0h-2" />
+    </svg>
+</template>
     </button>
 </div>

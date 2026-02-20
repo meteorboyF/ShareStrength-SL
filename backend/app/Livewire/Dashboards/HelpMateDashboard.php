@@ -16,6 +16,8 @@ class HelpMateDashboard extends Component
     public $selectedTaskId = null;
     public $selectedTaskTitle = '';
 
+    public $conversations = [];
+
     #[Layout('components.layouts.app', ['title' => 'HelpMate Dashboard - ShareStrength'])]
     public function render()
     {
@@ -86,6 +88,7 @@ class HelpMateDashboard extends Component
 
         // Parse skills
         $skills = $user->skills ? explode(', ', $user->skills) : [];
+        $this->loadConversations();
 
         return view('livewire.dashboards.helpmate-dashboard', [
             'user' => $user,
@@ -202,4 +205,28 @@ class HelpMateDashboard extends Component
         session()->regenerateToken();
         return redirect()->to(route('home'));
     }
+
+
+public function loadConversations()
+{
+    // Change 'helper' to 'helpmate' or whatever guard you use in this dashboard
+    $user = Auth::guard('helpmate')->user(); 
+    
+    if (!$user) return;
+
+    $this->conversations = \App\Models\Conversation::where('user_one_id', $user->id)
+        ->orWhere('user_two_id', $user->id)
+        ->with(['userOne', 'userTwo', 'task'])
+        ->get()
+        ->map(function ($conv) use ($user) {
+            return [
+                'id' => $conv->id,
+                // Passing 'helper' here is correct for the logic, 
+                // but the Auth::guard above needs the correct guard name
+                'other_user' => $conv->getOtherUser($user->id, 'helper'), 
+                'task' => $conv->task,
+                'last_message_at' => $conv->last_message_at,
+            ];
+        })->toArray();
+}
 }

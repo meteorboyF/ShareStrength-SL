@@ -1,25 +1,39 @@
 <div class="min-h-screen bg-slate-50 font-sans text-slate-900">
 
-    {{-- Header --}}
-    <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-green-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Welcome, {{ $user->name }}!</h1>
-                <p class="text-xs text-slate-500">Manage your jobs and find new tasks.</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('my-profile') }}" class="hidden sm:inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 border border-slate-200 transition">
-                    Edit Profile
-                </a>
-                <a href="{{ route('messages') }}" class="inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 border border-slate-200 transition">
-                    Messages
-                </a>
-                <button wire:click="logout" class="inline-flex items-center gap-x-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition">
-                    Log Out
-                </button>
-            </div>
+ {{-- Header --}}
+<header class="bg-white shadow-sm sticky top-0 z-40 border-b border-green-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Welcome, {{ $user->name }}!</h1>
+            <p class="text-xs text-slate-500">Manage your jobs and find new tasks.</p>
         </div>
-    </header>
+        
+        <div class="flex items-center gap-3">
+            {{-- 1. Edit Profile Link (Now properly closed) --}}
+            <a href="{{ route('my-profile') }}" class="hidden sm:inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 border border-slate-200 transition">
+                Edit Profile
+            </a>
+
+            {{-- 2. Message Icon Button --}}
+            <button 
+                @click="$dispatch('open-messages')" 
+                type="button"
+                class="relative p-2 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-all duration-200"
+                title="Messages"
+            >
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
+                </svg>
+                <span class="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+            </button>
+
+            {{-- 3. Log Out Button --}}
+            <button wire:click="logout" class="inline-flex items-center gap-x-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition">
+                Log Out
+            </button>
+        </div>
+    </div>
+</header>
 
     {{-- Flash Messages --}}
     @if (session()->has('success'))
@@ -271,5 +285,55 @@
             </div>
         </div>
     @endif
+<div x-data="{ open: false }" @open-messages.window="open = true">
+    <!-- Sidebar Overlay -->
+    <div x-show="open" x-transition.opacity @click="open = false" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]"></div>
 
+    <!-- Sidebar Panel -->
+    <div x-show="open" 
+         x-transition:enter="transition transform duration-300" 
+         x-transition:enter-start="translate-x-full" 
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition transform duration-300" 
+         x-transition:leave-start="translate-x-0" 
+         x-transition:leave-end="translate-x-full"
+         class="fixed inset-y-0 right-0 w-80 sm:w-96 bg-white shadow-2xl z-[70] flex flex-col">
+        
+        <!-- Header -->
+        <div class="p-4 border-b flex items-center justify-between bg-green-600 text-white">
+            <h2 class="font-bold text-lg">Recent Messages</h2>
+            <button @click="open = false" class="hover:text-green-200">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <!-- Full Window Link -->
+        <a href="{{ route('messages') }}" class="p-4 text-center text-sm font-bold text-green-700 border-b hover:bg-green-50 transition">
+            Open Full Chat Window
+        </a>
+
+        <!-- Conversations List -->
+        <div class="flex-1 overflow-y-auto">
+            @forelse($conversations as $conv)
+                <div class="p-4 border-b hover:bg-gray-50 cursor-pointer transition flex items-center gap-3">
+                    <img src="{{ $conv['other_user']['profile_photo_url'] ?? 'https://placehold.co/50' }}" class="w-12 h-12 rounded-full border border-slate-200 shadow-sm">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center mb-1">
+                            <h3 class="text-sm font-bold truncate text-slate-900">{{ $conv['other_user']['name'] }}</h3>
+                            <span class="text-[10px] text-slate-400">{{ $conv['last_message_at'] ? $conv['last_message_at']->diffForHumans(null, true) : '' }}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 truncate font-medium">
+                            @if($conv['task']) <span class="text-green-600">Job:</span> {{ $conv['task']['title'] }} @else Chat @endif
+                        </p>
+                    </div>
+                </div>
+            @empty
+                <div class="p-12 text-center">
+                    <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                    <p class="text-slate-400 text-sm italic">No recent messages.</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+</div>
 </div>

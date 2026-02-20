@@ -1,41 +1,52 @@
 <div class="min-h-screen bg-gray-50 font-sans text-gray-800">
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <img src="{{ $user->profile_photo_url ?? $user->profile_photo ?? 'https://placehold.co/100x100' }}" alt="Profile" class="h-12 w-12 rounded-full border-2 border-purple-600 object-cover">
-                <div>
-                    <h1 class="text-xl font-bold text-gray-900">Welcome, {{ $user->name }}!</h1>
-                    <p class="text-xs text-gray-500">Your personal dashboard.</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-4">
-                <a href="{{ route('marketplace') }}" class="hidden sm:inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 border border-slate-200 transition">
-                    Marketplace
-                </a>
-
-                <a href="{{ route('messages') }}" class="relative p-2 text-gray-800 hover:text-purple-600 transition" title="Messages">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                    </svg>
-                </a>
-
-                <a href="{{ route('cart') }}" class="relative p-2 text-gray-800 hover:text-purple-600 transition">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                    @if($cartCount > 0)
-                        <span class="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
-                            {{ $cartCount }}
-                        </span>
-                    @endif
-                </a>
-
-                <a href="{{ route('tasks.post') }}" class="hidden sm:inline-flex bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-700 transition">
-                    + Post New Task
-                </a>
-                <button wire:click="logout" class="text-sm font-semibold text-gray-800 hover:text-red-600 transition">Log Out</button>
+ <header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        
+        <!-- User Info -->
+        <div class="flex items-center gap-4">
+            <img src="{{ $user->profile_photo_url ?? $user->profile_photo ?? 'https://placehold.co/100x100' }}" alt="Profile" class="h-12 w-12 rounded-full border-2 border-purple-600 object-cover">
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">Welcome, {{ $user->name }}!</h1>
+                <p class="text-xs text-gray-500">Your personal dashboard.</p>
             </div>
         </div>
-    </header>
+        
+        <!-- Actions -->
+        <div class="flex items-center gap-4">
+            
+<button 
+    @click="$dispatch('open-messages')" 
+    class="relative p-2 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-all duration-200"
+>
+    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
+    </svg>
+    <span class="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+</button>
+            <!-- Marketplace Button -->
+            <a href="{{ route('marketplace') }}" class="hidden sm:inline-flex items-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 border border-slate-200 transition-all">
+                Marketplace
+            </a>
+
+            <!-- Cart Icon (Kept intact) -->
+            <a href="{{ route('cart') }}" class="relative p-2 text-gray-800 hover:text-purple-600 transition">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                @if($cartCount > 0)
+                    <span class="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text- font-bold flex items-center justify-center rounded-full">
+                        {{ $cartCount }}
+                    </span>
+                @endif
+            </a>
+
+            <a href="{{ route('tasks.post') }}" class="hidden sm:inline-flex bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-700 transition">
+                + Post New Task
+            </a>
+            
+            <button wire:click="logout" class="text-sm font-semibold text-gray-800 hover:text-red-600 transition ml-2">Log Out</button>
+        </div>
+    </div>
+</header>
 
     <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:px-8">
 
@@ -261,31 +272,79 @@
                     </ul>
                 </section>
 
-                <!-- Quick Access -->
-                <section class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm animate-fade-in-up delay-300">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Quick Access</h2>
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="{{ route('trusted-contacts') }}" class="col-span-2 p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
-                            Manage Trusted Contacts
-                        </a>
-                        <a href="{{ route('my-profile') }}" class="p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
-                            My Profile
-                        </a>
-                        <a href="{{ route('payment-history') }}" class="p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
-                            Payment History
-                        </a>
-                        <a href="{{ route('resources') }}" class="p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
-                            Resources
-                        </a>
-                        <a href="{{ route('messages') }}" class="p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
-                            Messages
-                        </a>
-                        <a href="{{ route('marketplace') }}" class="col-span-2 p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
-                            Marketplace
-                        </a>
-                    </div>
-                </section>
+ <!-- Quick Access -->
+<section class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm animate-fade-in-up delay-300">
+    <h2 class="text-lg font-bold text-gray-900 mb-4">Quick Access</h2>
+    <div class="grid grid-cols-2 gap-3">
+        
+        <!-- Full Width Item -->
+        <a href="{{ route('trusted-contacts') }}" class="col-span-2 p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
+            Manage Trusted Contacts
+        </a>
+        
+        <!-- Half Width Items -->
+        <a href="{{ route('my-profile') }}" class="p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
+            My Profile
+        </a>
+        <a href="{{ route('payment-history') }}" class="p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
+            Payment History
+        </a>
+        <a href="{{ route('resources') }}" class="p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
+            Resources
+        </a>
+        <a href="{{ route('marketplace') }}" class="p-3 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-purple-600/50 transition text-center flex items-center justify-center text-gray-800 cursor-pointer">
+            Marketplace
+        </a>
+        
+    </div>
+</section>
             </aside>
         </div>
     </div>
+    <div x-data="{ open: false }" @open-messages.window="open = true">
+    <!-- Sidebar Overlay -->
+    <div x-show="open" x-transition.opacity @click="open = false" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]"></div>
+
+    <!-- Sidebar Panel -->
+    <div x-show="open" 
+         x-transition:enter="transition transform duration-300" 
+         x-transition:enter-start="translate-x-full" 
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition transform duration-300" 
+         x-transition:leave-start="translate-x-0" 
+         x-transition:leave-end="translate-x-full"
+         class="fixed inset-y-0 right-0 w-80 sm:w-96 bg-white shadow-2xl z-[70] flex flex-col">
+        
+        <!-- Header -->
+        <div class="p-4 border-b flex items-center justify-between bg-purple-600 text-white">
+            <h2 class="font-bold">Recent Messages</h2>
+            <button @click="open = false" class="hover:text-purple-200">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <!-- Full Window Link -->
+        <a href="{{ route('messages') }}" class="p-3 text-center text-sm font-bold text-purple-600 border-b hover:bg-purple-50">
+            Open Full Chat Window
+        </a>
+
+        <!-- Conversations List (Simplified from your messages.blade.php) -->
+        <div class="flex-1 overflow-y-auto">
+            @forelse($conversations as $conv)
+                <div class="p-4 border-b hover:bg-gray-50 cursor-pointer transition flex items-center gap-3">
+                    <img src="{{ $conv['other_user']['profile_photo_url'] ?? 'https://placehold.co/50' }}" class="w-10 h-10 rounded-full border">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between">
+                            <h3 class="text-sm font-bold truncate text-gray-900">{{ $conv['other_user']['name'] }}</h3>
+                            <span class="text-[10px] text-gray-400">{{ $conv['last_message_at'] ? $conv['last_message_at']->diffForHumans(null, true) : '' }}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 truncate">{{ $conv['task']['title'] ?? 'Chat' }}</p>
+                    </div>
+                </div>
+            @empty
+                <div class="p-10 text-center text-gray-400 text-sm">No conversations yet.</div>
+            @endforelse
+        </div>
+    </div>
+</div>
 </div>

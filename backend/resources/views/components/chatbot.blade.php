@@ -218,23 +218,21 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
         </template>
-<template x-if="!isOpen">
-    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <!-- Bot Head Base -->
-        <rect x="4" y="8" width="16" height="12" rx="3" stroke-width="2" />
-        
-        <!-- Antenna -->
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-            d="M12 4v4m0-4a2 2 0 110-4 2 2 0 010 4z" />
-            
-        <!-- Friendly Eyes -->
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" 
-            d="M9 14h.01M15 14h.01" />
-            
-        <!-- Bot Ears -->
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-            d="M4 12H2m20 0h-2" />
-    </svg>
-</template>
+        <template x-if="!isOpen">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <!-- Bot Head Base -->
+                <rect x="4" y="8" width="16" height="12" rx="3" stroke-width="2" />
+
+                <!-- Antenna -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 4v4m0-4a2 2 0 110-4 2 2 0 010 4z" />
+
+                <!-- Friendly Eyes -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 14h.01M15 14h.01" />
+
+                <!-- Bot Ears -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12H2m20 0h-2" />
+            </svg>
+        </template>
     </button>
 </div>

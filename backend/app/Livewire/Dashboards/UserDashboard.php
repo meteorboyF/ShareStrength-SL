@@ -15,6 +15,7 @@ class UserDashboard extends Component
     public $showCompleted = false;
     public $showBanner = true;
     public $openApplicantTask = null;
+    public $conversations = [];
 
     #[Layout('components.layouts.app', ['title' => 'Dashboard - ShareStrength'])]
     public function render()
@@ -48,6 +49,8 @@ class UserDashboard extends Component
 
         $cartCount = collect(session()->get('cart', []))
             ->sum(fn($item) => $item['quantity'] ?? 0);
+        
+        $this->loadConversations();
 
         return view('livewire.dashboards.user-dashboard', [
             'user' => $user,
@@ -134,4 +137,23 @@ class UserDashboard extends Component
 
         return redirect()->to(route('home'));
     }
+
+    public function loadConversations()
+{
+    $user = Auth::guard('pwd')->user();
+    if (!$user) return;
+
+    $this->conversations = \App\Models\Conversation::where('user_one_id', $user->id)
+        ->orWhere('user_two_id', $user->id)
+        ->with(['userOne', 'userTwo', 'task'])
+        ->get()
+        ->map(function ($conv) use ($user) {
+            return [
+                'id' => $conv->id,
+                'other_user' => $conv->getOtherUser($user->id, 'user'),
+                'task' => $conv->task,
+                'last_message_at' => $conv->last_message_at,
+            ];
+        })->toArray();
+}
 }

@@ -85,3 +85,5 @@ Route::get('/donate/checkout', [DonationController::class, 'checkout'])->name('d
 
 // 2. The checkout page sends data here to "finalize"
 Route::post('/donate/process', [DonationController::class, 'process'])->name('donations.process');
+
+Route::get('/support', \App\Livewire\CustomerSupport::class)->name('support');

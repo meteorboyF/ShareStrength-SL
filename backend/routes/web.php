@@ -59,6 +59,7 @@ Route::middleware('auth:pwd,helpmate')->group(function () {
 Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/dashboard', AdminDashboard::class)->name('admin.dashboard');
     Route::get('/admin/resources', \App\Livewire\Admin\ManageResources::class)->name('admin.resources');
+    Route::get('/admin/support', \App\Livewire\Admin\SupportTickets::class)->name('admin.support');
 });
 
 // Test route

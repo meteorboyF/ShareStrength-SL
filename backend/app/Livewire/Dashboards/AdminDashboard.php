@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\Resource;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\SupportTicket; // Import the SupportTicket model
 
 class AdminDashboard extends Component
 {
@@ -32,6 +33,7 @@ class AdminDashboard extends Component
             'payments_total' => (float) Payment::where('status', 'paid')->sum('amount'),
             'resources' => Resource::count(),
             'orders' => Order::count(),
+            'open_tickets' => SupportTicket::where('status', 'open')->count(), // Add Open Ticket count
         ];
 
         $latestUsers = User::latest()->take(5)->get();
@@ -41,6 +43,9 @@ class AdminDashboard extends Component
         $latestResources = Resource::with('category')->latest()->take(5)->get();
         $latestOrders = Order::with('user')->latest()->take(5)->get();
         $latestApplications = Application::with(['task.creator', 'helper'])->latest()->take(5)->get();
+        
+        // Fetch latest tickets
+        $latestTickets = SupportTicket::latest()->take(5)->get();
 
         return view('livewire.dashboards.admin-dashboard', [
             'user' => Auth::guard('admin')->user(),
@@ -52,6 +57,7 @@ class AdminDashboard extends Component
             'latestResources' => $latestResources,
             'latestOrders' => $latestOrders,
             'latestApplications' => $latestApplications,
+            'latestTickets' => $latestTickets, // Pass tickets to the view
         ]);
     }
 

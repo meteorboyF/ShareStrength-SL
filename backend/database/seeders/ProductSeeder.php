@@ -3,95 +3,99 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use App\Models\Product;
 
 class ProductSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        // 1. Disable Foreign Key Checks (so we can delete products even if they are in orders)
+        Schema::disableForeignKeyConstraints();
+
+        // 2. Wipe the table clean!
+        Product::truncate();
+
+        // 3. Re-enable Foreign Key Checks
+        Schema::enableForeignKeyConstraints();
+
         $products = [
             [
-                'name' => "Ergonomic Wheelchair",
-                'description' => "Comfortable and durable wheelchair designed for daily use.",
-                'vendor' => "MobilityPlus",
-                'price' => 2499.99,
-                'category' => "Mobility",
-                'stock_quantity' => 10,
-                'image_url' => "/products/wheelchair.png"
-            ],
-            [
-                'name' => "Braille Smartwatch",
-                'description' => "Smartwatch with braille display interface for accessibility.",
-                'vendor' => "TechVision",
-                'price' => 299.50,
-                'category' => "Vision",
-                'stock_quantity' => 3,
-                'image_url' => "/products/watch.jpg"
-            ],
-            [
-                'name' => "Hearing Aid Pro",
-                'description' => "High-fidelity digital hearing aid with noise cancellation.",
-                'vendor' => "AudioLife",
-                'price' => 899.00,
-                'category' => "Hearing",
-                'stock_quantity' => 15,
-                'image_url' => "/products/hearing-aid.jpg"
-            ],
-            [
-                'name' => "Smart Walking Stick",
-                'description' => "Walking stick with sensors and obstacle detection.",
-                'vendor' => "MobilityPlus",
-                'price' => 120.00,
-                'category' => "Mobility",
-                'stock_quantity' => 8,
-                'image_url' => "/products/stick.jpg"
-            ],
-            [
-                'name' => "Voice-To-Text Tablet",
-                'description' => "Tablet optimized for voice-to-text communication.",
-                'vendor' => "TechVision",
+                'name' => 'Eye-Tracking Smart Hub',
+                'description' => 'Control your smart home and computer using only your eyes. Perfect for individuals with limited mobility.',
                 'price' => 450.00,
-                'category' => "Communication",
-                'stock_quantity' => 5,
-                'image_url' => "/products/tablet.jpg"
-            ],
-            [
-                'name' => "Adaptive Kitchen Kit",
-                'description' => "Set of ergonomic kitchen tools including specialized knives and easy-grip utensils.",
-                'vendor' => "HomeAid",
-                'price' => 85.00,
-                'category' => "Daily Living",
-                'stock_quantity' => 20,
-                'image_url' => "/products/kitchen-kit.jpg"
-            ],
-            [
-                'name' => "Digital Magnifier",
-                'description' => "Portable electronic magnifier with high contrast modes for reading.",
-                'vendor' => "VisionAid",
-                'price' => 150.00,
-                'category' => "Vision",
+                'vendor' => 'VisionTech',
+                'category' => 'tech',
+                'image_url' => 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop',
                 'stock_quantity' => 12,
-                'image_url' => "/products/magnifier.jpg"
             ],
             [
-                'name' => "Shower Chair",
-                'description' => "Non-slip adjustable shower chair with backrest for safety.",
-                'vendor' => "MobilityPlus",
-                'price' => 45.00,
-                'category' => "Daily Living",
-                'stock_quantity' => 25,
-                'image_url' => "/products/shower-chair.jpg"
+                'name' => 'Braille Display Pro',
+                'description' => 'Refreshable braille display with 40 cells and seamless Bluetooth connectivity.',
+                'price' => 2100.00,
+                'vendor' => 'DotSystems',
+                'category' => 'vision',
+                'image_url' => 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=800&auto=format&fit=crop',
+                'stock_quantity' => 2,
+            ],
+            [
+                'name' => 'Voice Door Opener',
+                'description' => 'Voice-activated door opener system compatible with Alexa and Google Home.',
+                'price' => 180.00,
+                'vendor' => 'HomeSense',
+                'category' => 'smart home',
+                'image_url' => 'https://images.unsplash.com/photo-1558002038-1055907df827?q=80&w=800&auto=format&fit=crop',
+                'stock_quantity' => 15,
+            ],
+            [
+                'name' => 'Adaptive Gaming Mouse',
+                'description' => 'Fully customizable gaming controller with large buttons and switch inputs.',
+                'price' => 95.00,
+                'vendor' => 'LogiCare',
+                'category' => 'tech',
+                'image_url' => 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?q=80&w=800&auto=format&fit=crop',
+                'stock_quantity' => 20,
+            ],
+            [
+                'name' => 'Haptic Alarm Clock',
+                'description' => 'Vibrating alarm clock with bed shaker attachment for deep sleepers or hard of hearing.',
+                'price' => 65.00,
+                'vendor' => 'SilentAlert',
+                'category' => 'hearing',
+                'image_url' => 'https://images.unsplash.com/photo-1563991655280-cb95c90ca2fb?q=80&w=800&auto=format&fit=crop',
+                'stock_quantity' => 5,
+            ],
+            [
+                'name' => 'AI Text-to-Speech Glasses',
+                'description' => 'Wearable glasses that read text aloud from books, signs, and screens instantly.',
+                'price' => 3200.00,
+                'vendor' => 'OrCam',
+                'category' => 'vision',
+                'image_url' => 'https://images.unsplash.com/photo-1591076482161-42ce6da69f67?q=80&w=800&auto=format&fit=crop',
+                'stock_quantity' => 4,
+            ],
+            [
+                'name' => 'All-Terrain Powerchair',
+                'description' => 'Heavy-duty electric wheelchair designed for outdoor terrain and stability.',
+                'price' => 4800.00,
+                'vendor' => 'Apex Mobility',
+                'category' => 'mobility',
+                'image_url' => 'https://images.unsplash.com/photo-1534346589587-9b51347279eb?q=80&w=800&auto=format&fit=crop',
+                'stock_quantity' => 1,
+            ],
+            [
+                'name' => 'Noise Cancelling Headphones',
+                'description' => 'Premium noise cancelling headphones to help with sensory overload.',
+                'price' => 250.00,
+                'vendor' => 'Sony',
+                'category' => 'hearing',
+                'image_url' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800&auto=format&fit=crop',
+                'stock_quantity' => 10,
             ]
         ];
 
         foreach ($products as $product) {
-            \App\Models\Product::updateOrCreate(
-                ['name' => $product['name']], // Check by name
-                $product
-            );
+            Product::create($product);
         }
     }
 }

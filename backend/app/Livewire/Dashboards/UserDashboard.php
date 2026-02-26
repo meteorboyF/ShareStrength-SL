@@ -17,6 +17,11 @@ class UserDashboard extends Component
     public $openApplicantTask = null;
     public $conversations = [];
 
+    public $showRateModal = false;
+    public $ratingScore = 0;
+    public $ratingComment = '';
+    public $ratingTaskTitle = '';
+
     #[Layout('components.layouts.app', ['title' => 'Dashboard - ShareStrength'])]
     public function render()
     {
@@ -49,7 +54,7 @@ class UserDashboard extends Component
 
         $cartCount = collect(session()->get('cart', []))
             ->sum(fn($item) => $item['quantity'] ?? 0);
-        
+
         $this->loadConversations();
 
         return view('livewire.dashboards.user-dashboard', [
@@ -139,21 +144,48 @@ class UserDashboard extends Component
     }
 
     public function loadConversations()
-{
-    $user = Auth::guard('pwd')->user();
-    if (!$user) return;
+    {
+        $user = Auth::guard('pwd')->user();
+        if (!$user)
+            return;
 
-    $this->conversations = \App\Models\Conversation::where('user_one_id', $user->id)
-        ->orWhere('user_two_id', $user->id)
-        ->with(['userOne', 'userTwo', 'task'])
-        ->get()
-        ->map(function ($conv) use ($user) {
-            return [
-                'id' => $conv->id,
-                'other_user' => $conv->getOtherUser($user->id, 'user'),
-                'task' => $conv->task,
-                'last_message_at' => $conv->last_message_at,
-            ];
-        })->toArray();
-}
+        $this->conversations = \App\Models\Conversation::where('user_one_id', $user->id)
+            ->orWhere('user_two_id', $user->id)
+            ->with(['userOne', 'userTwo', 'task'])
+            ->get()
+            ->map(function ($conv) use ($user) {
+                return [
+                    'id' => $conv->id,
+                    'other_user' => $conv->getOtherUser($user->id, 'user'),
+                    'task' => $conv->task,
+                    'last_message_at' => $conv->last_message_at,
+                ];
+            })->toArray();
+    }
+
+
+    public function openRateModal($taskId, $taskTitle)
+    {
+        $this->ratingTaskTitle = $taskTitle;
+        $this->ratingScore = 0;
+        $this->ratingComment = '';
+        $this->showRateModal = true;
+    }
+
+    public function setRating($score)
+    {
+        $this->ratingScore = $score;
+    }
+
+    public function submitReview()
+    {
+        // For the demo video, we just simulate a successful submission
+        $this->showRateModal = false;
+
+        // Reset
+        $this->ratingScore = 0;
+        $this->ratingComment = '';
+
+        session()->flash('success', 'Review submitted successfully! Thank you for your feedback.');
+    }
 }

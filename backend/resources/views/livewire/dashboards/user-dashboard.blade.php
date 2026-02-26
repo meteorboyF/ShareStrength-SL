@@ -147,6 +147,15 @@
                                             <div class="flex gap-2 flex-wrap">
                                                 
                                                 @if(in_array($task->status, ['completed', 'cancelled']))
+                                                        <button 
+        wire:click="openRateModal({{ $task->id }}, '{{ addslashes($task->title) }}')"
+        class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full hover:bg-yellow-200 font-bold border border-yellow-200 flex items-center gap-1 transition-colors"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+        </svg>
+        Rate Helper
+    </button>
                                                     <button wire:click="repostTask({{ $task->id }})" class="text-xs bg-green-50 text-green-600 px-3 py-1 rounded-full hover:bg-green-100 font-semibold">
                                                         🔄 Repost
                                                     </button>
@@ -347,4 +356,58 @@
         </div>
     </div>
 </div>
+
+@if($showRateModal)
+<div class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+        
+        <!-- Header -->
+        <div class="bg-purple-600 p-6 text-center relative">
+            <h3 class="text-xl font-bold text-white">Rate Your Experience</h3>
+            <p class="text-purple-100 text-sm mt-1">{{ $ratingTaskTitle }}</p>
+            <button wire:click="$set('showRateModal', false)" class="absolute top-4 right-4 text-white/70 hover:text-white">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-8 text-center">
+            <p class="text-gray-600 mb-6 text-sm">How was the service provided by your HelpMate?</p>
+
+            <!-- Interactive Stars -->
+            <div class="flex justify-center gap-2 mb-8">
+                @foreach(range(1, 5) as $star)
+                    <button 
+                        wire:click="setRating({{ $star }})" 
+                        class="transition-transform hover:scale-125 focus:outline-none"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 {{ $ratingScore >= $star ? 'text-yellow-400 fill-current' : 'text-gray-200' }}" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                    </button>
+                @endforeach
+            </div>
+
+            <!-- Comment Box -->
+            <div class="relative">
+                <textarea 
+                    wire:model="ratingComment"
+                    rows="3" 
+                    placeholder="Share your feedback (optional)..." 
+                    class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none"
+                ></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button 
+                wire:click="submitReview"
+                class="w-full mt-6 bg-purple-600 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-purple-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                {{ $ratingScore === 0 ? 'disabled' : '' }}
+            >
+                Submit Review
+            </button>
+        </div>
+    </div>
+</div>
+@endif
 </div>

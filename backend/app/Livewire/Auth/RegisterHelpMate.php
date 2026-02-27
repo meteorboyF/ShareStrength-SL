@@ -16,22 +16,20 @@ class RegisterHelpMate extends Component
     public $email = '';
     public $password = '';
     public $password_confirmation = '';
-    public $skills = [];
-
-    public $availableSkills = [
-        "Mobility Support",
-        "Driving",
-        "Cooking",
-        "Housekeeping",
-        "Tech Support",
-        "Companionship",
-        "Reading Assistance"
-    ];
+    
+    // This will hold the selected skills as an array from the checkboxes
+    public $skills = []; 
 
     #[Layout('components.layouts.app', ['title' => 'Register HelpMate - ShareStrength'])]
     public function render()
     {
-        return view('livewire.auth.register-helpmate');
+        // 1. Pull the master list from config/skills.php
+        // This ensures it matches the Post Task and Profile Edit pages perfectly.
+        $availableSkills = config('skills');
+
+        return view('livewire.auth.register-helpmate', [
+            'availableSkills' => $availableSkills
+        ]);
     }
 
     public function register()
@@ -40,9 +38,10 @@ class RegisterHelpMate extends Component
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:helpers',
             'password' => 'required|string|min:8|confirmed',
-            'skills' => 'array',
+            'skills' => 'required|array|min:1', // Ensure at least one skill is selected
         ]);
 
+        // Prevent duplicate emails across User and Admin tables
         if (User::where('email', $this->email)->exists() || Admin::where('email', $this->email)->exists()) {
             $this->addError('email', 'Email already in use.');
             return;
@@ -52,8 +51,10 @@ class RegisterHelpMate extends Component
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
-            'skills' => implode(', ', $this->skills),
+            // 2. Convert the array (['Driving', 'Cooking']) to a string ("Driving, Cooking") for the DB
+            'skills' => implode(', ', $this->skills), 
             'is_verified' => false,
+            'is_active' => true, 
         ]);
 
         Auth::guard('helpmate')->login($user);

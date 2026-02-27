@@ -49,6 +49,7 @@ class MyProfile extends Component
         return view('livewire.my-profile', [
             'user' => Auth::guard('helpmate')->user() ?: Auth::guard('pwd')->user(),
             'isHelpmate' => Auth::guard('helpmate')->check(),
+            'availableSkills' => config('skills'), // <-- ADDED THIS: Passes the master list to the view
         ]);
     }
 

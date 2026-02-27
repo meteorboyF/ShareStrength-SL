@@ -15,8 +15,10 @@ class HelpMateDashboard extends Component
     public $showApplyModal = false;
     public $selectedTaskId = null;
     public $selectedTaskTitle = '';
-
     public $conversations = [];
+
+    // New property for the toggle switch
+    public $showRelevantOnly = true;
 
     #[Layout('components.layouts.app', ['title' => 'HelpMate Dashboard - ShareStrength'])]
     public function render()
@@ -24,14 +26,13 @@ class HelpMateDashboard extends Component
         $user = Auth::guard('helpmate')->user();
         $userId = $user->id;
 
-        // Get my applications
-        $myApplications = Application::where('helper_id', $userId)
-            ->with('task.creator')
-            ->get();
+        // Parse skills once
+        $mySkills = $user->skills ? array_map('trim', explode(',', str_replace(['[', ']', '"'], '', $user->skills))) : [];
 
+        // Get my applications
+        $myApplications = Application::where('helper_id', $userId)->with('task.creator')->get();
         $appliedTaskIds = $myApplications->pluck('task_id')->toArray();
 
-        // Applied Jobs (pending applications)
         $appliedJobs = $myApplications->map(function ($app) {
             return [
                 'id' => $app->id,
@@ -42,26 +43,41 @@ class HelpMateDashboard extends Component
             ];
         });
 
-        // Available Tasks (open, not already applied to)
-        $availableTasks = Task::where('status', 'open')
+        // --- UPDATED LOGIC: Available Tasks ---
+        $availableTasksQuery = Task::where('status', 'open')
             ->whereNotIn('id', $appliedTaskIds)
-            ->with('creator')
-            ->get()
-            ->map(function ($task) {
-                return [
-                    'id' => $task->id,
-                    'title' => $task->title,
-                    'description' => $task->description,
-                    'hourly_rate' => $task->budget ?? 0,
-                    'skill' => $task->required_skills[0] ?? null,
-                    'urgency' => $task->urgency ?? 'Normal',
-                    'user_name' => $task->creator->name ?? 'Unknown',
-                    'user_id' => $task->creator->id ?? null,
-                    'user_photo' => $task->creator->profile_photo_url ?? $task->creator->profile_photo ?? null,
-                ];
-            });
+            ->with('creator');
 
-        // Active Jobs (assigned to me, in_progress or accepted)
+        // Apply skill-based filtering if the toggle is on
+        if ($this->showRelevantOnly && !empty($mySkills)) {
+            $availableTasksQuery->where(function ($query) use ($mySkills) {
+                foreach ($mySkills as $skill) {
+                    // This will find tasks where the JSON array `required_skills` contains one of my skills
+                    $query->orWhereJsonContains('required_skills', $skill);
+                }
+            });
+        }
+
+        $availableTasks = $availableTasksQuery->latest()->get()->map(function ($task) {
+            // Laravel already casts this to an array, so we just assign it.
+            // The '?? []' prevents errors if the column is null.
+            $requiredSkills = $task->required_skills ?? [];
+
+            return [
+                'id' => $task->id,
+                'title' => $task->title,
+                'description' => $task->description,
+                'hourly_rate' => $task->budget ?? 0,
+                // Safely get the first skill from the array
+                'skill' => is_array($requiredSkills) ? $requiredSkills[0] ?? null : $requiredSkills,
+                'urgency' => $task->urgency ?? 'Normal',
+                'location' => $task->location,
+                'user_name' => $task->creator->name ?? 'Unknown',
+                'user_id' => $task->creator->id ?? null,
+                'user_photo' => $task->creator->profile_photo_url ?? $task->creator->profile_photo ?? null,
+            ];
+        });
+        // Active Jobs (unchanged)
         $activeJobs = Task::whereIn('status', ['accepted', 'in_progress'])
             ->where('caregiver_id', $userId)
             ->with('creator')
@@ -77,22 +93,15 @@ class HelpMateDashboard extends Component
                 ];
             });
 
-        // Calculate stats
-        $completedJobsCount = Task::where('caregiver_id', $userId)
-            ->where('status', 'completed')
-            ->count();
+        // Calculate stats (unchanged)
+        $completedJobsCount = Task::where('caregiver_id', $userId)->where('status', 'completed')->count();
+        $totalEarnings = Payment::where('payee_id', $userId)->where('status', 'paid')->sum('amount');
 
-        $totalEarnings = Payment::where('payee_id', $userId)
-            ->where('status', 'paid')
-            ->sum('amount');
-
-        // Parse skills
-        $skills = $user->skills ? explode(', ', $user->skills) : [];
         $this->loadConversations();
 
         return view('livewire.dashboards.helpmate-dashboard', [
             'user' => $user,
-            'skills' => $skills,
+            'skills' => $mySkills,
             'appliedJobs' => $appliedJobs,
             'availableTasks' => $availableTasks,
             'activeJobs' => $activeJobs,
@@ -100,6 +109,8 @@ class HelpMateDashboard extends Component
             'totalEarnings' => $totalEarnings,
         ]);
     }
+
+    // --- All other methods (openApplyModal, confirmApply, etc.) remain unchanged ---
 
     public function openApplyModal($taskId, $taskTitle)
     {
@@ -117,9 +128,9 @@ class HelpMateDashboard extends Component
 
     public function confirmApply()
     {
-        if (!$this->selectedTaskId) return;
+        if (!$this->selectedTaskId)
+            return;
 
-        // Check if already applied
         $existing = Application::where('task_id', $this->selectedTaskId)
             ->where('helper_id', Auth::guard('helpmate')->id())
             ->first();
@@ -168,7 +179,6 @@ class HelpMateDashboard extends Component
                 'completed_at' => now(),
             ]);
 
-            // Calculate payment based on hours worked
             $hoursWorked = $task->started_at->diffInMinutes($task->completed_at) / 60;
             $amount = $hoursWorked * ($task->budget ?? 0);
 
@@ -206,27 +216,23 @@ class HelpMateDashboard extends Component
         return redirect()->to(route('home'));
     }
 
+    public function loadConversations()
+    {
+        $user = Auth::guard('helpmate')->user();
+        if (!$user)
+            return;
 
-public function loadConversations()
-{
-    // Change 'helper' to 'helpmate' or whatever guard you use in this dashboard
-    $user = Auth::guard('helpmate')->user(); 
-    
-    if (!$user) return;
-
-    $this->conversations = \App\Models\Conversation::where('user_one_id', $user->id)
-        ->orWhere('user_two_id', $user->id)
-        ->with(['userOne', 'userTwo', 'task'])
-        ->get()
-        ->map(function ($conv) use ($user) {
-            return [
-                'id' => $conv->id,
-                // Passing 'helper' here is correct for the logic, 
-                // but the Auth::guard above needs the correct guard name
-                'other_user' => $conv->getOtherUser($user->id, 'helper'), 
-                'task' => $conv->task,
-                'last_message_at' => $conv->last_message_at,
-            ];
-        })->toArray();
-}
+        $this->conversations = \App\Models\Conversation::where('user_one_id', $user->id)
+            ->orWhere('user_two_id', $user->id)
+            ->with(['userOne', 'userTwo', 'task'])
+            ->get()
+            ->map(function ($conv) use ($user) {
+                return [
+                    'id' => $conv->id,
+                    'other_user' => $conv->getOtherUser($user->id, 'helper'),
+                    'task' => $conv->task,
+                    'last_message_at' => $conv->last_message_at,
+                ];
+            })->toArray();
+    }
 }

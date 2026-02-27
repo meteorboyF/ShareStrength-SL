@@ -11,7 +11,8 @@ class PostTask extends Component
 {
     public $title = '';
     public $description = '';
-    public $selectedSkill = '';
+    // Changed to an array to allow multiple selections
+    public $selectedSkills = []; 
     public $urgency = 'medium';
     public $budget = 25;
 
@@ -19,10 +20,15 @@ class PostTask extends Component
     {
         $this->title = request('title', '');
         $this->description = request('description', '');
+    }
 
-        if (request('resource_id')) {
-            // Optional: You could fetch the resource to double check or add more details
-            // For now, simple URL param pass-through is efficient
+    // Toggle skill in or out of the array
+    public function toggleSkill($skill)
+    {
+        if (in_array($skill, $this->selectedSkills)) {
+            $this->selectedSkills = array_diff($this->selectedSkills, [$skill]);
+        } else {
+            $this->selectedSkills[] = $skill;
         }
     }
 
@@ -33,7 +39,12 @@ class PostTask extends Component
             return redirect()->route('login');
         }
 
-        return view('livewire.tasks.post-task');
+        // Pull the central list of skills
+        $availableSkills = config('skills');
+
+        return view('livewire.tasks.post-task', [
+            'availableSkills' => $availableSkills
+        ]);
     }
 
     public function postTask()
@@ -41,7 +52,7 @@ class PostTask extends Component
         $this->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'selectedSkill' => 'required|string',
+            'selectedSkills' => 'required|array|min:1', // Ensure at least 1 skill is selected
             'budget' => 'required|numeric|min:10|max:100',
             'urgency' => 'required|in:low,medium,high',
         ]);
@@ -53,7 +64,8 @@ class PostTask extends Component
             'location' => 'Remote',
             'budget' => $this->budget,
             'urgency' => $this->urgency,
-            'required_skills' => [$this->selectedSkill],
+            // Save as JSON string representation of the array
+            'required_skills' => json_encode(array_values($this->selectedSkills)), 
             'scheduled_at' => now(),
             'status' => 'open',
         ]);

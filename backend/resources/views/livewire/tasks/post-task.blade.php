@@ -1,58 +1,46 @@
-<div class="min-h-screen flex items-center justify-center p-4 bg-gray-50 font-sans">
+<div class="min-h-screen flex items-center justify-center p-4 bg-gray-50 font-sans py-12">
     <div class="w-full max-w-5xl mx-auto animate-fade-in-up">
-        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-5">
 
             <!-- Left Side: Information & Tips (Purple Background) -->
-            <div class="p-8 bg-purple-700 text-white order-last md:order-first flex flex-col justify-between">
+            <div class="p-8 bg-purple-700 text-white md:col-span-2 flex flex-col justify-between">
                 <div>
                     <a href="{{ route('dashboard') }}"
-                        class="text-sm font-semibold text-purple-200 hover:text-white flex items-center gap-1 mb-8">
+                        class="text-sm font-semibold text-purple-200 hover:text-white flex items-center gap-1 mb-8 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                         </svg>
-                        Back to Portal
+                        Back to Dashboard
                     </a>
-                    <h1 class="text-3xl font-bold tracking-tight">Post a New Task</h1>
-                    <p class="mt-4 text-purple-200">Describe the support you need, and let our community of verified
-                        HelpMates find you.</p>
+                    <h1 class="text-3xl font-black tracking-tight">Post a New Task</h1>
+                    <p class="mt-4 text-purple-200 text-sm leading-relaxed">Describe the support you need, and let our community of verified HelpMates find you.</p>
 
-                    <div class="mt-8 pt-6 border-t border-purple-500 border-opacity-50 space-y-6">
-                        <div class="flex gap-4">
-                            <div class="flex-shrink-0"><svg class="h-6 w-6 text-purple-300" fill="none"
-                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                </svg></div>
+                    <div class="mt-10 space-y-6">
+                        <div class="flex gap-4 items-start">
+                            <div class="bg-purple-600 p-2 rounded-lg">
+                                <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            </div>
                             <div>
-                                <h4 class="font-semibold">Be Specific</h4>
-                                <p class="text-sm text-purple-200">Clearly describe the task, including any specific
-                                    requirements or times.</p>
+                                <h4 class="font-bold text-white text-sm">Be Specific</h4>
+                                <p class="text-xs text-purple-200 mt-1">Clearly describe the task, including any specific requirements.</p>
                             </div>
                         </div>
-                        <div class="flex gap-4">
-                            <div class="flex-shrink-0"><svg class="h-6 w-6 text-purple-300" fill="none"
-                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg></div>
+                        <div class="flex gap-4 items-start">
+                            <div class="bg-purple-600 p-2 rounded-lg">
+                                <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
                             <div>
-                                <h4 class="font-semibold">Offer a Fair Rate</h4>
-                                <p class="text-sm text-purple-200">A competitive hourly rate will attract more qualified
-                                    and experienced HelpMates.</p>
+                                <h4 class="font-bold text-white text-sm">Offer a Fair Rate</h4>
+                                <p class="text-xs text-purple-200 mt-1">A competitive hourly rate will attract experienced HelpMates.</p>
                             </div>
                         </div>
-                        <div class="flex gap-4">
-                            <div class="flex-shrink-0"><svg class="h-6 w-6 text-purple-300" fill="none"
-                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" />
-                                </svg></div>
+                        <div class="flex gap-4 items-start">
+                            <div class="bg-purple-600 p-2 rounded-lg">
+                                <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                            </div>
                             <div>
-                                <h4 class="font-semibold">Safety First</h4>
-                                <p class="text-sm text-purple-200">Remember, all HelpMates are verified by our platform
-                                    for your peace of mind.</p>
+                                <h4 class="font-bold text-white text-sm">Safety First</h4>
+                                <p class="text-xs text-purple-200 mt-1">Remember, all HelpMates are verified by our platform for your peace of mind.</p>
                             </div>
                         </div>
                     </div>
@@ -60,84 +48,83 @@
             </div>
 
             <!-- Right Side: Form -->
-            <div class="p-8">
-                <form wire:submit="postTask" class="space-y-8">
+            <div class="p-8 md:col-span-3">
+                <form wire:submit="postTask" class="space-y-6">
+                    
                     <!-- Title -->
                     <div>
-                        <label for="title" class="block text-sm font-semibold text-gray-900 mb-2">Task Title</label>
+                        <label for="title" class="block text-sm font-bold text-gray-800 mb-1.5">Task Title</label>
                         <input type="text" id="title" wire:model="title"
-                            class="block w-full rounded-lg border-gray-200 bg-gray-50 py-3 px-4 text-gray-900 shadow-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/50"
-                            placeholder="A clear and concise title" required />
-                        @error('title') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            class="block w-full rounded-xl border-gray-200 bg-gray-50 py-3 px-4 text-gray-900 shadow-sm focus:bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-colors"
+                            placeholder="e.g. Help with grocery shopping" required />
+                        @error('title') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Description -->
                     <div>
-                        <label for="description"
-                            class="block text-sm font-semibold text-gray-900 mb-2">Description</label>
+                        <label for="description" class="block text-sm font-bold text-gray-800 mb-1.5">Description</label>
                         <textarea id="description" wire:model="description" rows="4"
-                            class="block w-full rounded-lg border-gray-200 bg-gray-50 py-3 px-4 text-gray-900 shadow-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/50"
-                            placeholder="Describe the task in detail..." required></textarea>
-                        @error('description') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            class="block w-full rounded-xl border-gray-200 bg-gray-50 py-3 px-4 text-gray-900 shadow-sm focus:bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-colors resize-none"
+                            placeholder="Describe what you need help with, any specific times, locations, or requirements..." required></textarea>
+                        @error('description') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Skill Category Grid -->
+                    <!-- Skills selection (Multi-select pills) -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-900 mb-2">Skill Category</label>
-                        <div class="grid grid-cols-3 gap-3">
-                            @foreach(['Physical Assistance', 'Transport & Errands', 'Household Help', 'Companionship', 'Tech & Admin', 'Other Support'] as $skill)
-                                <div wire:click="$set('selectedSkill', '{{ $skill }}')" class="cursor-pointer">
-                                    <div
-                                        class="p-3 border-2 rounded-lg flex flex-col items-center justify-center gap-2 text-center transition-all duration-200 
-                                            {{ $selectedSkill === $skill ? 'border-purple-600 bg-purple-50 text-purple-700 ring-2 ring-purple-600/50' : 'border-gray-200 hover:border-purple-500/50 hover:bg-gray-50 text-gray-500' }}">
-                                        <svg class="h-8 w-8 {{ $selectedSkill === $skill ? 'text-purple-600' : 'text-gray-400' }}"
-                                            fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <span
-                                            class="text-xs font-semibold {{ $selectedSkill === $skill ? 'text-purple-700' : 'text-gray-900' }}">
-                                            {{ $skill }}
-                                        </span>
-                                    </div>
-                                </div>
+                        <label class="block text-sm font-bold text-gray-800 mb-1.5">Required Skills (Select one or more)</label>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($availableSkills as $skill)
+                                <button type="button" 
+                                    wire:click="toggleSkill('{{ $skill }}')" 
+                                    class="px-4 py-2 rounded-full border text-sm font-semibold transition-all transform active:scale-95
+                                    {{ in_array($skill, $selectedSkills) 
+                                        ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-200' 
+                                        : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50' }}">
+                                    {{ $skill }}
+                                </button>
                             @endforeach
                         </div>
+                        @error('selectedSkills') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Urgency and Rate Row -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-900 mb-2">Urgency</label>
-                            <div class="flex rounded-md shadow-sm">
-                                @foreach(['Low', 'Medium', 'High'] as $index => $level)
-                                    <button type="button" wire:click="$set('urgency', '{{ strtolower($level) }}')" class="flex-1 px-4 py-2 text-sm font-medium border transition-colors duration-200
-                                                {{ $index === 0 ? 'rounded-l-md' : '' }}
-                                                {{ $index === 2 ? 'rounded-r-md' : '' }}
-                                                {{ $urgency === strtolower($level) ? 'bg-purple-600 text-white border-purple-600 z-10' : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50' }}
-                                            ">
+                            <label class="block text-sm font-bold text-gray-800 mb-1.5">Urgency</label>
+                            <div class="flex rounded-xl shadow-sm border border-gray-200 overflow-hidden p-1 bg-gray-50">
+                                @foreach(['Low', 'Medium', 'High'] as $level)
+                                    <button type="button" wire:click="$set('urgency', '{{ strtolower($level) }}')" 
+                                        class="flex-1 px-4 py-2 text-sm font-bold rounded-lg transition-all duration-200
+                                        {{ $urgency === strtolower($level) 
+                                            ? 'bg-white text-purple-700 shadow-sm border border-gray-200' 
+                                            : 'text-gray-500 hover:text-gray-700 border border-transparent' }}">
                                         {{ $level }}
                                     </button>
                                 @endforeach
                             </div>
                         </div>
                         <div>
-                            <label for="budget" class="block text-sm font-semibold text-gray-900 mb-2">Proposed Rate
-                                ($/hr)</label>
+                            <label for="budget" class="block text-sm font-bold text-gray-800 mb-1.5">Hourly Rate ($)</label>
                             <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 font-bold">$</span>
+                                </div>
                                 <input type="number" id="budget" wire:model="budget"
-                                    class="block w-full rounded-lg border-gray-200 bg-gray-50 py-3 px-4 text-gray-900 shadow-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/50 text-center font-bold"
+                                    class="block w-full rounded-xl border-gray-200 bg-gray-50 py-3 pl-8 pr-4 text-gray-900 shadow-sm focus:bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 font-bold transition-colors"
                                     step="1" min="10" max="100" required />
                             </div>
                         </div>
                     </div>
 
-                    <div class="pt-2">
+                    <div class="pt-6">
                         <button type="submit"
-                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-base font-semibold text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg shadow-purple-200 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600 transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             wire:loading.attr="disabled" wire:target="postTask">
                             <span wire:loading.remove wire:target="postTask">Post Your Task</span>
-                            <span wire:loading wire:target="postTask">Posting...</span>
+                            <span wire:loading wire:target="postTask" class="flex items-center gap-2">
+                                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Posting...
+                            </span>
                         </button>
                     </div>
                 </form>

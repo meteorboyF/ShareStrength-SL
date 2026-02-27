@@ -10,29 +10,42 @@ use Illuminate\Support\Facades\DB;
 class DonationController extends Controller
 {
     /**
-     * Store a new donation from the landing page form.
+     * Show the checkout page with the selected amount.
      */
-    public function store(Request $request)
+    public function checkout(Request $request)
     {
-        // Map the Alpine.js "type" to the database "is_monthly" column
+        // Get the amount and type from the URL (e.g., ?amount=50&type=one-time)
+        $amount = $request->query('amount', 50);
+        $type = $request->query('type', 'one-time');
+
+        // Prevent negative numbers on the backend just in case
+        if ($amount < 1) $amount = 50;
+
+        return view('livewire.donate-checkout', compact('amount', 'type'));
+    }
+
+    /**
+     * Process the payment and save it to the database.
+     */
+    public function process(Request $request)
+    {
         $request->merge([
             'is_monthly' => $request->type === 'monthly',
-            'status' => 'completed', // Set to completed for demo; usually 'pending' until payment is confirmed
+            'status' => 'completed', // Set to completed for demo
+            'payment_method' => 'Credit Card',
         ]);
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'is_monthly' => 'required|boolean',
-            'currency' => 'nullable|string|size:3',
-            'donor_name' => 'nullable|string|max:255',
             'status' => 'required|string',
-            'payment_method' => 'nullable|string|max:50',
+            'payment_method' => 'nullable|string',
         ]);
 
         Donation::create($validated);
 
-        // Redirect back with a success message for the UI
-        return redirect()->back()->with('donation_success', 'Thank you! Your donation of $' . $request->amount . ' was received.');
+        // Redirect back to the homepage with a success message
+        return redirect()->route('home')->with('donation_success', 'Thank you! Your donation of $' . number_format($request->amount, 2) . ' was received.');
     }
 
     /**
@@ -58,7 +71,6 @@ class DonationController extends Controller
         $chartData = ['labels' => $months, 'raised' => [], 'expenses' => []];
 
         for ($i = 1; $i <= 12; $i++) {
-            // Ensure month is 2 digits for SQLite compatibility (01, 02...) or integer for MySQL
             $key = DB::getDriverName() === 'sqlite' ? str_pad($i, 2, '0', STR_PAD_LEFT) : $i;
             $chartData['raised'][] = $monthlyRaised->get($key, 0);
             $chartData['expenses'][] = $monthlyExpenses->get($key, 0);

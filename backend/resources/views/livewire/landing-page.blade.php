@@ -224,9 +224,10 @@
                             </div>
                         @endif
 
-                        <form action="{{ route('donations.store') }}" method="POST"
+                        <!-- UPDATED: Changed action to checkout, method to GET, and removed @csrf -->
+                        <form action="{{ route('donations.checkout') }}" method="GET"
                             class="bg-white p-8 rounded-2xl shadow-xl border border-neutral-200">
-                            @csrf
+
                             <input type="hidden" name="amount" :value="customAmount || amount">
                             <input type="hidden" name="type" :value="donationType">
 
@@ -250,7 +251,9 @@
 
                             <div class="mb-8">
                                 <label class="block text-sm font-bold text-neutral-dark mb-2">Custom Amount</label>
-                                <input type="number" x-model="customAmount" @input="amount = null"
+                                <!-- UPDATED: Added min="1" and Alpine logic to force positive numbers -->
+                                <input type="number" min="1" x-model="customAmount"
+                                    @input="if(customAmount < 0) customAmount = Math.abs(customAmount); amount = null"
                                     class="w-full px-4 py-3 rounded-xl border-neutral-200 focus:border-primary focus:ring focus:ring-primary/20 font-bold text-neutral-darkest"
                                     placeholder="Enter amount">
                             </div>

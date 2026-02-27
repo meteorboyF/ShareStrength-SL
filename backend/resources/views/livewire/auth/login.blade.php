@@ -60,8 +60,8 @@
                             <label for="password"
                                 class="block text-sm font-medium leading-6 text-gray-900">Password</label>
                             <div class="text-sm">
-                                <a href="#" class="font-semibold text-purple-600 hover:text-purple-500">Forgot
-                                    password?</a>
+                                <a href="{{ route('password.request') }}"
+                                    class="font-semibold text-purple-600 hover:text-purple-500">Forgot password?</a>
                             </div>
                         </div>
                         <div class="mt-2">

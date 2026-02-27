@@ -88,3 +88,6 @@ Route::get('/donate/checkout', [DonationController::class, 'checkout'])->name('d
 Route::post('/donate/process', [DonationController::class, 'process'])->name('donations.process');
 
 Route::get('/support', \App\Livewire\CustomerSupport::class)->name('support');
+
+Route::get('/forgot-password', \App\Livewire\Auth\ForgotPassword::class)->name('password.request');
+Route::get('/reset-password/{token}', \App\Livewire\Auth\ResetPassword::class)->name('password.reset');

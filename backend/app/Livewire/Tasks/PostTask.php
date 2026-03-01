@@ -4,6 +4,7 @@ namespace App\Livewire\Tasks;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On; // Import the On attribute
 use Illuminate\Support\Facades\Auth;
 use App\Models\Task;
 
@@ -11,10 +12,14 @@ class PostTask extends Component
 {
     public $title = '';
     public $description = '';
-    // Changed to an array to allow multiple selections
-    public $selectedSkills = []; 
+    public $selectedSkills = [];
     public $urgency = 'medium';
     public $budget = 25;
+
+    // NEW Location Properties
+    public $location = '';
+    public $latitude;
+    public $longitude;
 
     public function mount()
     {
@@ -22,7 +27,15 @@ class PostTask extends Component
         $this->description = request('description', '');
     }
 
-    // Toggle skill in or out of the array
+
+    // NEW: Listen for the 'locationSelected' event from the map
+    #[On('locationSelected')]
+    public function updateLocation($address, $lat, $lng)
+    {
+        $this->location = $address;
+        $this->latitude = $lat;
+        $this->longitude = $lng;
+    }
     public function toggleSkill($skill)
     {
         if (in_array($skill, $this->selectedSkills)) {
@@ -38,12 +51,8 @@ class PostTask extends Component
         if (!Auth::guard('pwd')->check()) {
             return redirect()->route('login');
         }
-
-        // Pull the central list of skills
-        $availableSkills = config('skills');
-
         return view('livewire.tasks.post-task', [
-            'availableSkills' => $availableSkills
+            'availableSkills' => config('skills')
         ]);
     }
 
@@ -52,20 +61,22 @@ class PostTask extends Component
         $this->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'selectedSkills' => 'required|array|min:1', // Ensure at least 1 skill is selected
+            'selectedSkills' => 'required|array|min:1',
             'budget' => 'required|numeric|min:10|max:100',
             'urgency' => 'required|in:low,medium,high',
+            'location' => 'required|string|min:5', // Add validation for location
         ]);
 
         Task::create([
             'created_by' => Auth::guard('pwd')->id(),
             'title' => $this->title,
             'description' => $this->description,
-            'location' => 'Remote',
+            'location' => $this->location, // Save the address
+            'latitude' => $this->latitude,   // Save the latitude
+            'longitude' => $this->longitude, // Save the longitude
             'budget' => $this->budget,
             'urgency' => $this->urgency,
-            // Save as JSON string representation of the array
-            'required_skills' => json_encode(array_values($this->selectedSkills)), 
+            'required_skills' => json_encode(array_values($this->selectedSkills)),
             'scheduled_at' => now(),
             'status' => 'open',
         ]);

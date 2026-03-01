@@ -16,6 +16,8 @@ class Task extends Model
         'title',
         'description',
         'location',
+        'latitude',
+        'longitude',
         'budget',
         'status',
         'required_skills',

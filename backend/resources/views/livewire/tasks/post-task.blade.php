@@ -69,6 +69,21 @@
                         @error('description') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
+                    <!-- NEW: Map Location Selection -->
+                    <div wire:ignore>
+                        <label for="location" class="block text-sm font-bold text-gray-800 mb-1.5">Task Location</label>
+                        <p class="text-xs text-gray-500 mb-2">Click on the map to pinpoint the location of the task.</p>
+                        
+                        <!-- The Map Container -->
+                        <div id="map" class="h-56 w-full rounded-xl border border-gray-300 z-0 overflow-hidden shadow-inner"></div>
+                        
+                        <!-- Readonly address input that gets filled by JS -->
+                        <input type="text" id="location" wire:model="location"
+                            class="mt-3 block w-full rounded-xl border-gray-200 bg-gray-100 py-3 px-4 text-gray-700 shadow-sm focus:outline-none transition-colors"
+                            placeholder="Drop a pin on the map to set address..." readonly required />
+                        @error('location') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
                     <!-- Skills selection (Multi-select pills) -->
                     <div>
                         <label class="block text-sm font-bold text-gray-800 mb-1.5">Required Skills (Select one or more)</label>
@@ -132,3 +147,75 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('livewire:init', () => {
+    
+    // Make sure Leaflet is available before running
+    if (typeof L === 'undefined') return;
+
+    // Initialize map centered on Bangladesh
+    const map = L.map('map').setView([23.8103, 90.4125], 7); 
+    let marker;
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Fix map rendering issues inside flex/grid containers
+    setTimeout(() => { map.invalidateSize(); }, 500);
+
+    function updateLocation(latlng) {
+        // Move or create marker
+        if (marker) {
+            marker.setLatLng(latlng);
+        } else {
+            marker = L.marker(latlng).addTo(map);
+        }
+
+        // Show a loading state in the input box
+        document.getElementById('location').value = 'Fetching address...';
+
+        // Reverse Geocoding (Turn coordinates into an address)
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`)
+            .then(response => response.json())
+            .then(data => {
+                const address = data.display_name || 'Address not found';
+                
+                // Update Livewire component variables safely
+                @this.dispatch('locationSelected', {
+                    address: address,
+                    lat: latlng.lat,
+                    lng: latlng.lng
+                });
+            })
+            .catch(error => {
+                console.error('Geocoding error:', error);
+                document.getElementById('location').value = 'Error finding address. Please try again.';
+            });
+    }
+
+    // Listen for clicks on the map
+    map.on('click', function(e) {
+        updateLocation(e.latlng);
+    });
+
+    // Optional: Ask browser for current location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const userLatLng = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            map.setView(userLatLng, 13);
+            updateLocation(userLatLng);
+        }, function(error) {
+            // User denied location or it failed, just leave it at default center
+            console.log("Geolocation not available or denied.");
+        });
+    }
+});
+</script>
+@endpush

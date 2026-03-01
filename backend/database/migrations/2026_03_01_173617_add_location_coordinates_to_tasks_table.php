@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            //
+            $table->decimal('latitude', 10, 7)->nullable()->after('location');
+            $table->decimal('longitude', 10, 7)->nullable()->after('latitude');
         });
     }
-
     /**
      * Reverse the migrations.
      */

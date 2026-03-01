@@ -26,15 +26,15 @@ class HelpMateDashboard extends Component
         $user = Auth::guard('helpmate')->user();
         $userId = $user->id;
 
-        // Parse skills once
-        $mySkills = $user->skills ? array_map('trim', explode(',', str_replace(['[', ']', '"'], '', $user->skills))) : [];
+        // Parse skills once safely
+        $mySkills = $user->skills ? array_map('trim', explode(',', str_replace(['[', ']', '"'], '', $user->skills))) :[];
 
         // Get my applications
         $myApplications = Application::where('helper_id', $userId)->with('task.creator')->get();
         $appliedTaskIds = $myApplications->pluck('task_id')->toArray();
 
         $appliedJobs = $myApplications->map(function ($app) {
-            return [
+            return[
                 'id' => $app->id,
                 'task_id' => $app->task_id,
                 'title' => $app->task->title ?? 'Unknown Task',
@@ -60,10 +60,29 @@ class HelpMateDashboard extends Component
 
         $availableTasks = $availableTasksQuery->latest()->get()->map(function ($task) {
             // Laravel already casts this to an array, so we just assign it.
-            // The '?? []' prevents errors if the column is null.
-            $requiredSkills = $task->required_skills ?? [];
+            // The '??[]' prevents errors if the column is null.
+            $requiredSkills = $task->required_skills ??[];
 
-            return [
+            // Privacy Feature: Extract General Area from Full Address
+            $generalLocation = 'Remote';
+            if (!empty($task->location)) {
+                $parts = array_map('trim', explode(',', $task->location));
+                $count = count($parts);
+                
+                // Nominatim format usually: House, Street, Neighborhood, City, State, ZIP, Country
+                if ($count >= 6) {
+                    // Drops House and Street. Keeps Neighborhood and City
+                    $generalLocation = $parts[3] . ', ' . $parts[4] . ', ' . $parts[5];
+                } elseif ($count >= 4) {
+                    $generalLocation = $parts[2] . ', ' . $parts[3]; 
+                } elseif ($count >= 2) {
+                    $generalLocation = $parts[1];
+                } else {
+                    $generalLocation = $task->location; // Fallback
+                }
+            }
+
+            return[
                 'id' => $task->id,
                 'title' => $task->title,
                 'description' => $task->description,
@@ -71,25 +90,27 @@ class HelpMateDashboard extends Component
                 // Safely get the first skill from the array
                 'skill' => is_array($requiredSkills) ? $requiredSkills[0] ?? null : $requiredSkills,
                 'urgency' => $task->urgency ?? 'Normal',
-                'location' => $task->location,
+                'location' => $generalLocation, // <--- Sends ONLY the general area
                 'user_name' => $task->creator->name ?? 'Unknown',
                 'user_id' => $task->creator->id ?? null,
                 'user_photo' => $task->creator->profile_photo_url ?? $task->creator->profile_photo ?? null,
             ];
         });
-        // Active Jobs (unchanged)
+
+        // Active Jobs (Once accepted, show the FULL address)
         $activeJobs = Task::whereIn('status', ['accepted', 'in_progress'])
             ->where('caregiver_id', $userId)
             ->with('creator')
             ->get()
             ->map(function ($task) {
-                return [
+                return[
                     'id' => $task->id,
                     'title' => $task->title,
                     'user_id' => $task->creator->id ?? null,
                     'user_name' => $task->creator->name ?? 'Unknown',
                     'status' => $task->status,
                     'started_at' => $task->started_at,
+                    'full_location' => $task->location, // <--- Sends the FULL address for accepted jobs
                 ];
             });
 
@@ -99,7 +120,7 @@ class HelpMateDashboard extends Component
 
         $this->loadConversations();
 
-        return view('livewire.dashboards.helpmate-dashboard', [
+        return view('livewire.dashboards.helpmate-dashboard',[
             'user' => $user,
             'skills' => $mySkills,
             'appliedJobs' => $appliedJobs,
@@ -227,7 +248,7 @@ class HelpMateDashboard extends Component
             ->with(['userOne', 'userTwo', 'task'])
             ->get()
             ->map(function ($conv) use ($user) {
-                return [
+                return[
                     'id' => $conv->id,
                     'other_user' => $conv->getOtherUser($user->id, 'helper'),
                     'task' => $conv->task,

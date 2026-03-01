@@ -24,7 +24,7 @@ class UserDashboard extends Component
     public $ratingTaskTitle = '';
 
     // Task Approval Props
-    public $approvalTask = null; 
+    public $approvalTask = null;
 
     #[Layout('components.layouts.app', ['title' => 'Dashboard - ShareStrength'])]
     public function render()
@@ -37,13 +37,19 @@ class UserDashboard extends Component
 
         $tasks = Task::where('created_by', $user->id)
             ->with(['caregiver'])
-            ->when(!$this->showCompleted, function ($query) {
-                return $query->whereNotIn('status', ['completed', 'cancelled']);
-            })
+            ->when(
+                $this->showCompleted,
+                // IF toggled ON: only show completed and cancelled
+                fn($query) => $query->whereIn('status', ['completed', 'cancelled']),
+                // IF toggled OFF: only show everything else
+                fn($query) => $query->whereNotIn('status', ['completed', 'cancelled'])
+            )
             ->latest()
             ->get();
 
         $tasksWithApplications = Task::where('created_by', $user->id)
+            // Fix: Only show tasks that are NOT completed or cancelled
+            ->whereNotIn('status', ['completed', 'cancelled'])
             ->whereHas('applications', function ($q) {
                 $q->where('status', '!=', 'rejected');
             })
@@ -96,7 +102,7 @@ class UserDashboard extends Component
     {
         if ($this->approvalTask && $this->approvalTask->status === 'pending_end') {
             $task = $this->approvalTask;
-            
+
             $task->update([
                 'status' => 'completed',
                 'completed_at' => now(),
@@ -105,8 +111,9 @@ class UserDashboard extends Component
             // Calculate Payment
             $hoursWorked = $task->started_at->diffInMinutes($task->completed_at) / 60;
             // Minimum 15 mins charge
-            if($hoursWorked < 0.25) $hoursWorked = 0.25; 
-            
+            if ($hoursWorked < 0.25)
+                $hoursWorked = 0.25;
+
             $amount = $hoursWorked * ($task->budget ?? 0);
 
             Payment::create([

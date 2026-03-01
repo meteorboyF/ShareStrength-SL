@@ -90,4 +90,9 @@ class Task extends Model
     {
         return $this->hasMany(Application::class);
     }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class, 'task_id');
+    }
 }

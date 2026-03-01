@@ -25,15 +25,28 @@ class TaskStatus extends Component
         return view('livewire.tasks.task-status');
     }
 
-    public function loadApplications()
+public function loadApplications()
     {
         $helperId = Auth::guard('helpmate')->id();
 
+        // 1. Eager load the task, creator, AND the payment record
         $this->applications = Application::where('helper_id', $helperId)
-            ->with(['task.creator'])
+            ->with(['task.creator', 'task.payment']) 
             ->latest()
             ->get()
             ->map(function ($app) {
+                
+                $liveStatus = $app->task ? $app->task->status : $app->status;
+
+                // 2. Check the actual payment status from the database
+                $paymentStatus = null;
+                if ($app->task && $app->task->payment) {
+                    $paymentStatus = $app->task->payment->status; // Will be 'pending' or 'paid'
+                } elseif ($liveStatus === 'completed') {
+                    // Fallback just in case payment row is missing
+                    $paymentStatus = 'pending'; 
+                }
+
                 return [
                     'id' => $app->id,
                     'task_id' => $app->task_id,
@@ -42,17 +55,19 @@ class TaskStatus extends Component
                     'user_name' => $app->task->creator->name ?? 'Unknown User',
                     'description' => $app->task->description ?? '',
                     'location' => $app->task->location ?? 'Remote',
-                    'skill' => $app->task->required_skills[0] ?? 'General',
+                    'skill' => is_array($app->task->required_skills) ? ($app->task->required_skills[0] ?? 'General') : 'General',
                     'rate' => $app->task->budget ?? 0,
-                    'status' => $app->status,
+                    'status' => $liveStatus,
                     'started_at' => $app->task->started_at,
                     'completed_at' => $app->task->completed_at,
                     'date' => $app->created_at->format('M d, Y'),
+                    
+                    // 3. Pass the true payment status to the view
+                    'payment_status' => $paymentStatus, 
                 ];
             })
             ->toArray();
     }
-
     public function viewDetails($applicationId)
     {
         $this->selectedApplication = collect($this->applications)->firstWhere('id', $applicationId);
@@ -117,11 +132,13 @@ class TaskStatus extends Component
 
     public function getStatusColorClass($status)
     {
-        return match($status) {
-            'accepted' => 'bg-green-100 text-green-800 border-green-200',
-            'pending' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
-            'rejected' => 'bg-red-100 text-red-800 border-red-200',
-            default => 'bg-gray-100 text-gray-800 border-gray-200',
+        return match(strtolower($status)) {
+            'accepted', 'pending_start' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+            'pending' => 'bg-amber-100 text-amber-800 border-amber-200',
+            'in_progress', 'pending_end' => 'bg-blue-100 text-blue-800 border-blue-200',
+            'completed' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+            'rejected', 'cancelled' => 'bg-red-100 text-red-800 border-red-200',
+            default => 'bg-slate-100 text-slate-800 border-slate-200',
         };
     }
 }

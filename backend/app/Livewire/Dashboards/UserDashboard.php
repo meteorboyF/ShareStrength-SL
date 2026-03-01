@@ -17,10 +17,14 @@ class UserDashboard extends Component
     public $openApplicantTask = null;
     public $conversations = [];
 
+    // Review Modal Props
     public $showRateModal = false;
     public $ratingScore = 0;
     public $ratingComment = '';
     public $ratingTaskTitle = '';
+
+    // Task Approval Props
+    public $approvalTask = null; 
 
     #[Layout('components.layouts.app', ['title' => 'Dashboard - ShareStrength'])]
     public function render()
@@ -65,6 +69,70 @@ class UserDashboard extends Component
             'cartCount' => $cartCount,
         ]);
     }
+
+    // --- Task Approval Logic (Poller) ---
+
+    public function checkApprovals()
+    {
+        $this->approvalTask = Task::where('created_by', Auth::guard('pwd')->id())
+            ->whereIn('status', ['pending_start', 'pending_end'])
+            ->with('caregiver')
+            ->first();
+    }
+
+    public function approveStart()
+    {
+        if ($this->approvalTask && $this->approvalTask->status === 'pending_start') {
+            $this->approvalTask->update([
+                'status' => 'in_progress',
+                'started_at' => now(),
+            ]);
+            $this->approvalTask = null; // Close modal
+            session()->flash('success', 'Work started! Timer is running.');
+        }
+    }
+
+    public function approveEnd()
+    {
+        if ($this->approvalTask && $this->approvalTask->status === 'pending_end') {
+            $task = $this->approvalTask;
+            
+            $task->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+
+            // Calculate Payment
+            $hoursWorked = $task->started_at->diffInMinutes($task->completed_at) / 60;
+            // Minimum 15 mins charge
+            if($hoursWorked < 0.25) $hoursWorked = 0.25; 
+            
+            $amount = $hoursWorked * ($task->budget ?? 0);
+
+            Payment::create([
+                'task_id' => $task->id,
+                'payer_id' => $task->created_by,
+                'payee_id' => $task->caregiver_id,
+                'amount' => $amount,
+                'status' => 'pending',
+            ]);
+
+            $this->approvalTask = null; // Close modal
+            session()->flash('success', 'Task completed! Payment calculated.');
+        }
+    }
+
+    public function rejectRequest()
+    {
+        // Revert status back if user says "No"
+        if ($this->approvalTask) {
+            $newStatus = $this->approvalTask->status === 'pending_start' ? 'accepted' : 'in_progress';
+            $this->approvalTask->update(['status' => $newStatus]);
+            $this->approvalTask = null;
+        }
+    }
+
+    // --- End Task Approval Logic ---
 
     public function toggleApplicants($taskId)
     {

@@ -18,17 +18,28 @@ class ServicePayment extends Component
     public $subtotal = 0;
     public $platformFee = 0;
     public $total = 0;
+    public $hoursLogged = 0; // New variable
 
     public function mount($paymentId)
     {
         $this->payment = Payment::with(['task', 'payee'])->findOrFail($paymentId);
+        
         if (!Auth::guard('pwd')->check() || $this->payment->payer_id !== Auth::guard('pwd')->id()) {
             abort(403);
         }
+        
         $this->task = $this->payment->task;
         $this->helper = $this->payment->payee;
 
         $this->subtotal = (float)$this->payment->amount;
+        
+        // 1. Get Hourly Rate
+        $rate = (float)$this->task->budget;
+
+        // 2. Back-calculate hours based on money (Money / Rate = Hours)
+        // This ensures the receipt math is ALWAYS correct.
+        $this->hoursLogged = $rate > 0 ? ($this->subtotal / $rate) : 0;
+
         $this->platformFee = $this->subtotal * 0.10; // 10% platform fee
         $this->total = $this->subtotal + $this->platformFee;
     }
@@ -44,7 +55,6 @@ class ServicePayment extends Component
         $this->processing = true;
 
         try {
-            // Update payment status to paid
             $this->payment->update([
                 'status' => 'paid',
                 'paid_at' => now(),

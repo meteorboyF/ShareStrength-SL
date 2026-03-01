@@ -174,11 +174,11 @@
                                                 <h3 class="text-xl font-bold text-slate-900">{{ $job['title'] }}</h3>
                                                 <p class="text-sm text-slate-600 mt-1">Client: <span class="font-semibold">{{ $job['user_name'] }}</span></p>
                                                 
-                                                <!-- NEW: Show Exact Location for Active Jobs -->
+                                                {{-- NEW: Show Exact Location for Active Jobs --}}
                                                 @if(!empty($job['full_location']))
-                                                    <p class="text-xs text-slate-500 mt-2 flex items-start gap-1.5 max-w-md bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                                        <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                                        <span>{{ $job['full_location'] }}</span>
+                                                    <p class="text-xs text-slate-500 mt-3 flex items-start gap-2 max-w-md bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                                        <svg class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                        <span class="leading-relaxed">{{ $job['full_location'] }}</span>
                                                     </p>
                                                 @endif
                                             </div>
@@ -219,16 +219,15 @@
                                             @endif
 
                                             @if($job['status'] === 'accepted')
-                                                <button wire:click="startTask({{ $job['id'] }})" class="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 shadow-md shadow-emerald-200 transition">
+                                                <button wire:click="requestStart({{ $job['id'] }})" class="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 shadow-md shadow-emerald-200 transition">
                                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                    Start Work
+                                                    Request to Start
                                                 </button>
                                             @endif
 
                                             @if($job['status'] === 'in_progress')
-                                                <button wire:click="endTask({{ $job['id'] }})" class="flex items-center gap-2 px-6 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 shadow-md shadow-red-200 transition ml-auto">
-                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                    Complete Job
+                                                <button wire:click="requestEnd({{ $job['id'] }})" ...>
+                                                    Request to Finish
                                                 </button>
                                             @endif
                                         </div>
@@ -240,12 +239,12 @@
                 </section>
 
 
- {{-- AVAILABLE TASKS FEED --}}
+{{-- AVAILABLE TASKS FEED --}}
                 <section>
                     <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
                         <h2 class="text-lg font-bold text-slate-800">New Opportunities</h2>
                         
-                        <!-- THE TOGGLE IS BACK! -->
+                        <!-- Skill Filter Toggle -->
                         <label class="flex items-center gap-2 cursor-pointer group" title="Toggle to show all jobs, not just those matching your skills.">
                             <span class="text-sm font-medium text-slate-500 group-hover:text-emerald-700 transition-colors">
                                 Show only relevant jobs
@@ -272,6 +271,7 @@
                                                 <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
                                                 <span class="flex items-center gap-1">
                                                     <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                    {{-- This variable now holds the GENERAL location (e.g. "Gulshan 2, Dhaka") due to the PHP update --}}
                                                     {{ $task['location'] ?? 'Remote' }}
                                                 </span>
                                             </div>

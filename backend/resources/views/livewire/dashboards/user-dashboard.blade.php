@@ -1,5 +1,4 @@
-<div class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
-    
+<div class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12" wire:poll.3s="checkApprovals">    
 
 <!-- Top Navigation Bar -->
     <nav class="bg-white border-b border-slate-200 sticky top-0 z-40">
@@ -343,55 +342,72 @@
         </div>
     </div>
 
-    <!-- Messages Slide-over (Cleaned) -->
+<!-- Messages Slide-over (Refined) -->
     <div x-data="{ open: false }" @open-messages.window="open = true">
-        <div x-show="open" x-transition.opacity @click="open = false" class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-50"></div>
+        <!-- Backdrop -->
+        <div x-show="open" x-transition.opacity @click="open = false" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50"></div>
+        
+        <!-- Sidebar Panel -->
         <div x-show="open" 
-             x-transition:enter="transition transform duration-300" 
+             x-transition:enter="transition transform duration-300 ease-out" 
              x-transition:enter-start="translate-x-full" 
              x-transition:enter-end="translate-x-0"
-             x-transition:leave="transition transform duration-300" 
+             x-transition:leave="transition transform duration-200 ease-in" 
              x-transition:leave-start="translate-x-0" 
              x-transition:leave-end="translate-x-full"
              class="fixed inset-y-0 right-0 w-80 sm:w-96 bg-white shadow-2xl z-50 flex flex-col border-l border-slate-100">
             
-            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-white">
-                <h2 class="font-bold text-lg text-slate-800">Messages</h2>
-                <button @click="open = false" class="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-2 rounded-full transition-colors">
+            <!-- Header -->
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                    <h2 class="font-bold text-lg text-slate-800">Messages</h2>
+                    <p class="text-xs text-slate-500">Your recent conversations</p>
+                </div>
+                <button @click="open = false" class="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-100 p-2 rounded-full transition-colors border border-slate-200 shadow-sm">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-2 space-y-1">
+            <!-- List -->
+            <div class="flex-1 overflow-y-auto p-2 space-y-1 bg-white">
                 @forelse($conversations as $conv)
-                    <a href="{{ route('messages', ['conversationId' => $conv['id']]) }}" class="block p-3 hover:bg-indigo-50 rounded-xl transition-colors group">
+                    <a href="{{ route('messages', ['conversationId' => $conv['id']]) }}" class="block p-3 hover:bg-indigo-50/60 rounded-xl transition-all group border border-transparent hover:border-indigo-100">
                         <div class="flex items-center gap-3">
                             <div class="relative">
-                                <img src="{{ $conv['other_user']['profile_photo_url'] ?? 'https://ui-avatars.com/api/?name='.urlencode($conv['other_user']['name']) }}" class="w-10 h-10 rounded-full border border-slate-200">
-                                <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                                <img src="{{ $conv['other_user']['profile_photo_url'] ?? 'https://ui-avatars.com/api/?name='.urlencode($conv['other_user']['name']).'&color=7F9CF5&background=EBF4FF' }}" 
+                                     class="w-12 h-12 rounded-full border border-slate-200 object-cover shadow-sm group-hover:border-indigo-200 transition-colors">
+                                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-baseline">
-                                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-indigo-700 truncate">{{ $conv['other_user']['name'] }}</h3>
-                                    <span class="text-[10px] text-slate-400">{{ $conv['last_message_at'] ? $conv['last_message_at']->diffForHumans(null, true) : '' }}</span>
+                                <div class="flex justify-between items-baseline mb-0.5">
+                                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-indigo-700 truncate transition-colors">{{ $conv['other_user']['name'] }}</h3>
+                                    <span class="text-[10px] text-slate-400 group-hover:text-indigo-400 transition-colors">{{ $conv['last_message_at'] ? $conv['last_message_at']->diffForHumans(null, true) : '' }}</span>
                                 </div>
-                                <p class="text-xs text-slate-500 truncate group-hover:text-indigo-600">{{ $conv['task']['title'] ?? 'Direct Message' }}</p>
+                                <p class="text-xs text-slate-500 truncate group-hover:text-indigo-600/80 transition-colors font-medium">
+                                    @if($conv['task']) 
+                                        <span class="text-slate-400 group-hover:text-indigo-400">Ref:</span> {{ $conv['task']['title'] }} 
+                                    @else 
+                                        Direct Message 
+                                    @endif
+                                </p>
                             </div>
                         </div>
                     </a>
                 @empty
-                    <div class="p-10 text-center">
-                        <div class="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                    <div class="h-full flex flex-col items-center justify-center p-10 text-center">
+                        <div class="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                         </div>
-                        <p class="text-slate-400 text-sm">No recent messages.</p>
+                        <h3 class="text-slate-900 font-bold text-sm">No messages yet</h3>
+                        <p class="text-slate-500 text-xs mt-1 max-w-[150px]">Connect with a HelpMate to start a conversation.</p>
                     </div>
                 @endforelse
             </div>
             
+            <!-- Footer Action -->
             <div class="p-4 border-t border-slate-100 bg-slate-50">
-                <a href="{{ route('messages') }}" class="block w-full bg-white border border-slate-200 text-slate-700 text-center py-2.5 rounded-xl text-sm font-bold hover:bg-slate-50 hover:border-indigo-300 hover:text-indigo-600 transition-all shadow-sm">
-                    Open Full Chat
+                <a href="{{ route('messages') }}" class="block w-full bg-white border border-slate-200 text-slate-700 text-center py-3 rounded-xl text-sm font-bold hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm hover:shadow-md">
+                    Open Full Chat Window
                 </a>
             </div>
         </div>
@@ -444,4 +460,47 @@
         </div>
     @endif
 
+<!-- Approval Modal (Handshake Protocol) -->
+    @if($approvalTask)
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center transform scale-100 transition-all ring-1 ring-white/20">
+                
+                <!-- Icon -->
+                <div class="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6 {{ $approvalTask->status === 'pending_start' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600' }} animate-bounce">
+                    @if($approvalTask->status === 'pending_start')
+                        <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    @else
+                        <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    @endif
+                </div>
+
+                <h3 class="text-2xl font-black text-slate-900 mb-2">
+                    {{ $approvalTask->status === 'pending_start' ? 'Ready to Start?' : 'Job Complete?' }}
+                </h3>
+                
+                <p class="text-slate-600 mb-8 text-lg">
+                    <span class="font-bold text-slate-800">{{ $approvalTask->caregiver->name }}</span> 
+                    has requested to {{ $approvalTask->status === 'pending_start' ? 'begin working on' : 'mark as finished:' }}
+                    <br>
+                    <span class="italic text-slate-500">"{{ $approvalTask->title }}"</span>
+                </p>
+
+                <div class="flex flex-col gap-3">
+                    @if($approvalTask->status === 'pending_start')
+                        <button wire:click="approveStart" class="w-full py-3.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all hover:-translate-y-0.5">
+                            Yes, Start Timer
+                        </button>
+                    @else
+                        <button wire:click="approveEnd" class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5">
+                            Yes, Confirm Completion
+                        </button>
+                    @endif
+
+                    <button wire:click="rejectRequest" class="w-full py-3.5 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-colors">
+                        Not right now
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

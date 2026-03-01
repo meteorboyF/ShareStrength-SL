@@ -27,14 +27,14 @@ class HelpMateDashboard extends Component
         $userId = $user->id;
 
         // Parse skills once safely
-        $mySkills = $user->skills ? array_map('trim', explode(',', str_replace(['[', ']', '"'], '', $user->skills))) :[];
+        $mySkills = $user->skills ? array_map('trim', explode(',', str_replace(['[', ']', '"'], '', $user->skills))) : [];
 
         // Get my applications
         $myApplications = Application::where('helper_id', $userId)->with('task.creator')->get();
         $appliedTaskIds = $myApplications->pluck('task_id')->toArray();
 
         $appliedJobs = $myApplications->map(function ($app) {
-            return[
+            return [
                 'id' => $app->id,
                 'task_id' => $app->task_id,
                 'title' => $app->task->title ?? 'Unknown Task',
@@ -61,20 +61,20 @@ class HelpMateDashboard extends Component
         $availableTasks = $availableTasksQuery->latest()->get()->map(function ($task) {
             // Laravel already casts this to an array, so we just assign it.
             // The '??[]' prevents errors if the column is null.
-            $requiredSkills = $task->required_skills ??[];
+            $requiredSkills = $task->required_skills ?? [];
 
             // Privacy Feature: Extract General Area from Full Address
             $generalLocation = 'Remote';
             if (!empty($task->location)) {
                 $parts = array_map('trim', explode(',', $task->location));
                 $count = count($parts);
-                
+
                 // Nominatim format usually: House, Street, Neighborhood, City, State, ZIP, Country
                 if ($count >= 6) {
                     // Drops House and Street. Keeps Neighborhood and City
                     $generalLocation = $parts[3] . ', ' . $parts[4] . ', ' . $parts[5];
                 } elseif ($count >= 4) {
-                    $generalLocation = $parts[2] . ', ' . $parts[3]; 
+                    $generalLocation = $parts[2] . ', ' . $parts[3];
                 } elseif ($count >= 2) {
                     $generalLocation = $parts[1];
                 } else {
@@ -82,7 +82,7 @@ class HelpMateDashboard extends Component
                 }
             }
 
-            return[
+            return [
                 'id' => $task->id,
                 'title' => $task->title,
                 'description' => $task->description,
@@ -98,29 +98,28 @@ class HelpMateDashboard extends Component
         });
 
         // Active Jobs (Once accepted, show the FULL address)
-        $activeJobs = Task::whereIn('status', ['accepted', 'in_progress'])
+        $activeJobs = Task::whereIn('status', ['accepted', 'in_progress', 'pending_start', 'pending_end'])
             ->where('caregiver_id', $userId)
             ->with('creator')
             ->get()
             ->map(function ($task) {
-                return[
+                return [
                     'id' => $task->id,
                     'title' => $task->title,
                     'user_id' => $task->creator->id ?? null,
                     'user_name' => $task->creator->name ?? 'Unknown',
                     'status' => $task->status,
                     'started_at' => $task->started_at,
-                    'full_location' => $task->location, // <--- Sends the FULL address for accepted jobs
+                    'full_location' => $task->location,
                 ];
             });
-
         // Calculate stats (unchanged)
         $completedJobsCount = Task::where('caregiver_id', $userId)->where('status', 'completed')->count();
         $totalEarnings = Payment::where('payee_id', $userId)->where('status', 'paid')->sum('amount');
 
         $this->loadConversations();
 
-        return view('livewire.dashboards.helpmate-dashboard',[
+        return view('livewire.dashboards.helpmate-dashboard', [
             'user' => $user,
             'skills' => $mySkills,
             'appliedJobs' => $appliedJobs,
@@ -173,45 +172,27 @@ class HelpMateDashboard extends Component
         $this->closeApplyModal();
     }
 
-    public function startTask($taskId)
+public function requestStart($taskId)
     {
         $task = Task::where('id', $taskId)
             ->where('caregiver_id', Auth::guard('helpmate')->id())
             ->first();
 
         if ($task && $task->status === 'accepted') {
-            $task->update([
-                'status' => 'in_progress',
-                'started_at' => now(),
-            ]);
-            session()->flash('success', 'Task started!');
+            $task->update(['status' => 'pending_start']);
+            session()->flash('success', 'Start request sent to client. Please wait for approval.');
         }
     }
 
-    public function endTask($taskId)
+    public function requestEnd($taskId)
     {
         $task = Task::where('id', $taskId)
             ->where('caregiver_id', Auth::guard('helpmate')->id())
             ->first();
 
         if ($task && $task->status === 'in_progress') {
-            $task->update([
-                'status' => 'completed',
-                'completed_at' => now(),
-            ]);
-
-            $hoursWorked = $task->started_at->diffInMinutes($task->completed_at) / 60;
-            $amount = $hoursWorked * ($task->budget ?? 0);
-
-            Payment::create([
-                'task_id' => $task->id,
-                'payer_id' => $task->created_by,
-                'payee_id' => Auth::guard('helpmate')->id(),
-                'amount' => $amount,
-                'status' => 'pending',
-            ]);
-
-            session()->flash('success', 'Task completed! Payment of $' . number_format($amount, 2) . ' calculated.');
+            $task->update(['status' => 'pending_end']);
+            session()->flash('success', 'Completion request sent. Waiting for client confirmation.');
         }
     }
 
@@ -248,7 +229,7 @@ class HelpMateDashboard extends Component
             ->with(['userOne', 'userTwo', 'task'])
             ->get()
             ->map(function ($conv) use ($user) {
-                return[
+                return [
                     'id' => $conv->id,
                     'other_user' => $conv->getOtherUser($user->id, 'helper'),
                     'task' => $conv->task,

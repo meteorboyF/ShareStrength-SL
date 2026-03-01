@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-gray-50 font-sans p-4 sm:p-8 flex items-center justify-center">
-    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden animate-fade-in-up">
 
         <!-- Header -->
         <div class="bg-purple-600 p-6 text-white text-center">
@@ -34,16 +34,13 @@
                     <span class="text-gray-600">Hourly Rate</span>
                     <span class="font-semibold">${{ number_format($task->budget, 2) }}/hr</span>
                 </div>
-                @if($task->started_at && $task->completed_at)
-                    @php
-                        $hours = $task->started_at->diffInMinutes($task->completed_at) / 60;
-                        $hours = max(0.5, ceil($hours * 2) / 2);
-                    @endphp
-                    <div class="flex justify-between mb-3 text-sm">
-                        <span class="text-gray-600">Hours Logged</span>
-                        <span class="font-semibold">{{ $hours }} hrs</span>
-                    </div>
-                @endif
+                
+                <!-- Display Calculated Hours -->
+                <div class="flex justify-between mb-3 text-sm">
+                    <span class="text-gray-600">Hours Logged</span>
+                    <span class="font-semibold">{{ number_format($hoursLogged, 2) }} hrs</span>
+                </div>
+
                 <div class="flex justify-between mb-3 text-sm border-b border-gray-200 pb-3">
                     <span class="text-gray-600">Subtotal</span>
                     <span class="font-semibold">${{ number_format($subtotal, 2) }}</span>

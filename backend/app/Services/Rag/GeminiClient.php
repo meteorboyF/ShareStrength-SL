@@ -83,7 +83,7 @@ class GeminiClient
             ];
         }, $texts);
 
-        $resp = Http::timeout(45)->acceptJson()->post($url, [
+        $resp = Http::withoutVerifying()->timeout(45)->acceptJson()->post($url, [
             'requests' => $requests,
         ]);
 
@@ -129,8 +129,7 @@ class GeminiClient
             rawurlencode($this->apiKey)
         );
 
-        $resp = Http::timeout(60)->acceptJson()->post($url, [
-            'generationConfig' => [
+        $resp = Http::withoutVerifying()->timeout(60)->acceptJson()->post($url, [            'generationConfig' => [
                 'maxOutputTokens' => max(64, $this->maxOutputTokens),
                 'temperature' => max(0.0, min(1.0, $this->temperature)),
             ],
@@ -185,8 +184,8 @@ class GeminiClient
         $client = new GuzzleClient([
             'timeout' => 0,
             'connect_timeout' => 30,
+            'verify' => false, // This is the equivalent of withoutVerifying for Guzzle
         ]);
-
         $resp = $client->request('POST', $url, [
             'headers' => [
                 'Accept' => 'application/json',

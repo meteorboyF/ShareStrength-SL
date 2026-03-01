@@ -121,8 +121,10 @@
 
                 while (true) {
                     const { value, done } = await reader.read();
-                    if (done) break;
-                    buffer += decoder.decode(value, { stream: true });
+                    
+                    if (value) {
+                        buffer += decoder.decode(value, { stream: true });
+                    }
 
                     let idx;
                     while ((idx = buffer.indexOf('\n\n')) !== -1) {
@@ -131,9 +133,17 @@
                         handleEventBlock(block);
                     }
 
+                    // --- THE FIX IS HERE ---
+                    // If the stream is done, check if there are leftover words in the buffer!
+                    if (done) {
+                        if (buffer.trim().length > 0) {
+                            handleEventBlock(buffer);
+                        }
+                        break;
+                    }
+
                     this.scrollToBottom();
                 }
-
                 if (!gotAnyDelta && botMsg.text === 'Thinking…') {
                     botMsg.text = 'Sorry — I did not get a response.';
                 }

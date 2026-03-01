@@ -123,9 +123,11 @@
                                 </div>
                                 <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full
                                     @if($job['status'] === 'pending') bg-amber-100 text-amber-700
-                                    @elseif($job['status'] === 'accepted') bg-emerald-100 text-emerald-700
+                                    @elseif(in_array($job['status'], ['accepted', 'pending_start'])) bg-emerald-100 text-emerald-700
+                                    @elseif(in_array($job['status'], ['in_progress', 'pending_end'])) bg-blue-100 text-blue-700
+                                    @elseif($job['status'] === 'completed') bg-indigo-100 text-indigo-700
                                     @else bg-red-100 text-red-700 @endif">
-                                    {{ $job['status'] }}
+                                    {{ str_replace('_', ' ', $job['status']) }}
                                 </span>
                             </li>
                         @empty

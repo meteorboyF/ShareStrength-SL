@@ -34,12 +34,16 @@ class HelpMateDashboard extends Component
         $appliedTaskIds = $myApplications->pluck('task_id')->toArray();
 
         $appliedJobs = $myApplications->map(function ($app) {
+            // If the task exists, use its status as the source of truth.
+            // Otherwise, fall back to the application's status.
+            $status = $app->task ? $app->task->status : $app->status;
+
             return [
                 'id' => $app->id,
                 'task_id' => $app->task_id,
                 'title' => $app->task->title ?? 'Unknown Task',
                 'user_name' => $app->task->creator->name ?? 'Unknown',
-                'status' => $app->status,
+                'status' => $status, // <-- FIX: This now shows "completed", "in_progress", etc.
             ];
         });
 
@@ -172,7 +176,7 @@ class HelpMateDashboard extends Component
         $this->closeApplyModal();
     }
 
-public function requestStart($taskId)
+    public function requestStart($taskId)
     {
         $task = Task::where('id', $taskId)
             ->where('caregiver_id', Auth::guard('helpmate')->id())
